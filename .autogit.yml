@@ -1,0 +1,7 @@
+domain: tombomeke.com
+
+production: master
+
+setup:
+  - echo "Setup: maak www symlink aan"
+  - ln -sfn checkout/master/$AUTOGIT_COMMIT www
