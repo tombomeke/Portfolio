@@ -4,4 +4,6 @@ production: master
 
 setup:
   - echo "Setup: maak www symlink aan"
-  - ln -sfn checkout/master/$AUTOGIT_COMMIT www
+  - mkdir -p checkout/master
+  - git --work-tree=checkout/master --git-dir=auto.git checkout -f master
+  - ln -sfn checkout/master www
