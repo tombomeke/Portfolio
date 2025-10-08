@@ -1,0 +1,27 @@
+# /.htaccess - Root configuration for shared hosting
+# This ensures clean URLs work properly
+
+RewriteEngine On
+
+# Handle clean URLs
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Security: Block access to sensitive files
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|env)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Block access to app directory from web
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} ^/app/
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>
+
+# Block access to cache directory from web
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} ^/cache/
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>
