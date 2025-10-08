@@ -75,4 +75,3 @@ BESTAND 6: /app/Views/contact.php
         </div>
     </div>
 </section>
-<?php

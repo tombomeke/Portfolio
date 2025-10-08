@@ -32,10 +32,8 @@ BESTAND 2: /app/Views/about.php
                 </div>
             </div>
             <div class="hero-image">
-                <img src="public/images/profile.jpg" alt="<?= htmlspecialchars($name) ?>" class="profile-img">
+                <img src="public/images/profile.png" alt="<?= htmlspecialchars($name) ?>" class="profile-img">
             </div>
         </div>
     </div>
 </section>
-<?php
-/*

@@ -45,5 +45,3 @@ BESTAND 5: /app/Views/projects.php
         </div>
     </div>
 </section>
-<?php
-/*
