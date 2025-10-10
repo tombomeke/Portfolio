@@ -42,21 +42,21 @@ BESTAND 6: /app/Views/contact.php
                         <div class="contact-method-icon"><i class="fas fa-envelope"></i></div>
                         <div class="contact-method-content">
                             <h3>E-mail</h3>
-                            <a href="mailto:jouw@email.com">jouw@email.com</a>
+                            <a href="mailto:tom1dekoning@gmail.com">tom1dekoning@gmail.com</a>
                         </div>
                     </div>
                     <div class="contact-method">
                         <div class="contact-method-icon"><i class="fab fa-linkedin"></i></div>
                         <div class="contact-method-content">
                             <h3>LinkedIn</h3>
-                            <a href="https://linkedin.com/in/jouwprofiel" target="_blank">Bekijk profiel</a>
+                            <a href="https://www.linkedin.com/in/tom-dekoning-567523352/" target="_blank">Bekijk profiel</a>
                         </div>
                     </div>
                     <div class="contact-method">
                         <div class="contact-method-icon"><i class="fab fa-github"></i></div>
                         <div class="contact-method-content">
                             <h3>GitHub</h3>
-                            <a href="https://github.com/jouwusername" target="_blank">Bekijk repositories</a>
+                            <a href="https://github.com/tombomeke" target="_blank">Bekijk repositories</a>
                         </div>
                     </div>
                 </div>

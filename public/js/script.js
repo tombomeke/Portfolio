@@ -42,6 +42,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Debug: Check if elements are found
+    console.log('Tab buttons found:', tabBtns.length);
+    console.log('Tab contents found:', tabContents.length);
+
     tabBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const targetTab = this.getAttribute('data-tab');
@@ -63,6 +67,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterBtns = document.querySelectorAll('.filter-btn');
     const projectCards = document.querySelectorAll('.project-card');
 
+    // Debug: Check if elements are found
+    console.log('Filter buttons found:', filterBtns.length);
+    console.log('Project cards found:', projectCards.length);
+
     filterBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const filterValue = this.getAttribute('data-filter');
@@ -71,23 +79,32 @@ document.addEventListener('DOMContentLoaded', function() {
             filterBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
 
-            // Filter projects
-            projectCards.forEach(card => {
+            // Filter projects with improved animation
+            projectCards.forEach((card, index) => {
                 const category = card.getAttribute('data-category');
 
                 if (filterValue === 'all' || category === filterValue) {
-                    card.style.display = 'block';
-                    // Add fade-in animation
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-
+                    // Show card with staggered animation
                     setTimeout(() => {
+                        card.style.display = 'block';
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(30px) scale(0.95)';
                         card.style.transition = 'all 0.5s ease';
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 100);
+
+                        requestAnimationFrame(() => {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0) scale(1)';
+                        });
+                    }, index * 100); // Stagger the animations
                 } else {
-                    card.style.display = 'none';
+                    // Hide card with fade out
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(-20px) scale(0.95)';
+                    card.style.transition = 'all 0.3s ease';
+                    
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
                 }
             });
         });
@@ -330,6 +347,140 @@ document.addEventListener('DOMContentLoaded', function() {
     statNumbers.forEach(stat => {
         statsObserver.observe(stat);
     });
+
+    // Improved scroll behavior and performance
+    let ticking = false;
+    
+    function updateScrollEffects() {
+        const scrolled = window.pageYOffset;
+        const navbar = document.querySelector('.navbar');
+        
+        // Add/remove scrolled class for navbar styling
+        if (scrolled > 100) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+        
+        ticking = false;
+    }
+    
+    function requestScrollUpdate() {
+        if (!ticking) {
+            requestAnimationFrame(updateScrollEffects);
+            ticking = true;
+        }
+    }
+    
+    window.addEventListener('scroll', requestScrollUpdate, { passive: true });
+    
+    // Improved project page scroll behavior
+    const projectsSection = document.querySelector('.projects');
+    if (projectsSection) {
+        // Ensure proper scrolling on project page
+        projectsSection.style.minHeight = '100vh';
+        projectsSection.style.display = 'block';
+        
+        // Fix any potential overflow issues
+        const projectsGrid = projectsSection.querySelector('.projects-grid');
+        if (projectsGrid) {
+            projectsGrid.style.overflow = 'visible';
+            projectsGrid.style.display = 'grid';
+        }
+    }
+    
+    // Better mobile navigation behavior
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    if (navToggle && navMenu) {
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+                navMenu.classList.remove('active');
+                const bars = document.querySelectorAll('.bar');
+                bars.forEach(bar => {
+                    bar.style.transform = 'none';
+                    bar.style.opacity = '1';
+                });
+            }
+        });
+        
+        // Prevent body scroll when mobile menu is open
+        navToggle.addEventListener('click', function() {
+            if (navMenu.classList.contains('active')) {
+                document.body.style.overflow = '';
+            } else {
+                document.body.style.overflow = 'hidden';
+            }
+        });
+        
+        // Restore body scroll when menu is closed
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                document.body.style.overflow = '';
+            });
+        });
+    }
+    
+    // Performance optimization: Debounce resize events
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            // Recalculate layouts if needed
+            const projectsGrid = document.querySelector('.projects-grid');
+            if (projectsGrid) {
+                projectsGrid.style.display = 'none';
+                requestAnimationFrame(() => {
+                    projectsGrid.style.display = 'grid';
+                });
+            }
+        }, 250);
+    });
+    
+    // Add loading states for external links
+    const externalLinks = document.querySelectorAll('a[target="_blank"]');
+    externalLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Add a small delay to show loading state
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            this.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.style.pointerEvents = 'auto';
+            }, 1500);
+        });
+    });
+    
+    // Improved form validation feedback
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        const inputs = form.querySelectorAll('input, textarea');
+        
+        inputs.forEach(input => {
+            // Real-time validation feedback
+            input.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.classList.remove('error');
+                    this.classList.add('valid');
+                } else {
+                    this.classList.remove('valid');
+                }
+            });
+            
+            // Better focus management
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+        });
+    });
 });
 
 // Add CSS for animations
@@ -352,6 +503,22 @@ style.textContent = `
     .form-group textarea.error {
         border-color: var(--error-color);
         box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+    }
+    
+    .form-group input.valid,
+    .form-group textarea.valid {
+        border-color: var(--success-color);
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+    }
+    
+    .form-group.focused {
+        transform: translateY(-2px);
+    }
+    
+    .navbar.scrolled {
+        background: rgba(15, 23, 42, 0.98);
+        backdrop-filter: blur(15px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
     
             @media (prefers-reduced-motion: reduce) {

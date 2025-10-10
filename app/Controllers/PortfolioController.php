@@ -23,8 +23,8 @@ class PortfolioController {
             'name' => 'Tom Dekoning',
             'intro' => 'Full-stack developer met passie voor gaming en open source projecten. Gespecialiseerd in PHP, JavaScript en Minecraft plugin development. Ik bouw robuuste web applicaties en game servers met focus op performance en gebruikservaring.',
             'email' => 'tom1dekoning@gmail.com',
-            'linkedin' => 'https://linkedin.com/in/jouwprofiel',
-            'github' => 'https://github.com/jouwusername'
+            'linkedin' => 'https://www.linkedin.com/in/tom-dekoning-567523352/',
+            'github' => 'https://github.com/tombomeke'
         ];
         $this->render('about', $data);
     }

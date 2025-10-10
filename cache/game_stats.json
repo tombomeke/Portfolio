@@ -1,0 +1,58 @@
+{
+    "minecraft": {
+        "server_name": "JouwServer.nl",
+        "server_ip": "play.jouwserver.nl",
+        "online": true,
+        "online_players": 13,
+        "max_players": 50,
+        "uptime": "99.8%",
+        "version": "1.20.1",
+        "motd": "Welkom op JouwServer!",
+        "top_players": [
+            {
+                "name": "PlayerOne",
+                "playtime": "245h",
+                "rank": "Admin"
+            },
+            {
+                "name": "BuilderPro",
+                "playtime": "198h",
+                "rank": "Moderator"
+            },
+            {
+                "name": "RedstoneGuru",
+                "playtime": "156h",
+                "rank": "VIP"
+            },
+            {
+                "name": "PvPMaster",
+                "playtime": "134h",
+                "rank": "Member"
+            },
+            {
+                "name": "Miner2023",
+                "playtime": "112h",
+                "rank": "Member"
+            }
+        ],
+        "last_update": 1760138631
+    },
+    "r6siege": {
+        "username": "JouwGamertag",
+        "platform": "PC",
+        "uplay_id": "jouw-uplay-id",
+        "current_rank": "Gold II",
+        "max_rank": "Platinum III",
+        "mmr": "2567",
+        "kd_ratio": "1.23",
+        "win_rate": "54.2%",
+        "kills": "3456",
+        "deaths": "2801",
+        "wins": "543",
+        "losses": "459",
+        "level": 156,
+        "playtime": "487h",
+        "favorite_operator": "Ash",
+        "last_update": 1760138631
+    }
+}
