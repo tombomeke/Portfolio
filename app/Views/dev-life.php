@@ -20,7 +20,7 @@ BESTAND 3: /app/Views/dev-life.php
                             </span>
                         </div>
                         <div class="skill-progress">
-                            <div class="progress-bar" style="width: <?= $skillModel->getLevelPercentage($skill['level']) ?>%"></div>
+                            <div class="progress-bar" data-width="<?= $skillModel->getLevelPercentage($skill['level']) ?>%"></div>
                         </div>
                         <p class="skill-notes"><?= htmlspecialchars($skill['notes']) ?></p>
                         <span class="skill-category"><?= htmlspecialchars($skill['category']) ?></span>

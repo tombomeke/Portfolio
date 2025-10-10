@@ -154,6 +154,47 @@
     margin: 0;
 }
 
+.skill-progress {
+    background: var(--bg-color);
+    height: 8px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin: var(--spacing-md) 0;
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.skill-progress .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: var(--radius-sm);
+    transition: width 1.5s ease-in-out;
+    position: relative;
+    width: 0%;
+    opacity: 1;
+    min-height: 8px;
+}
+
+.skill-progress .progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+.skill-card.animate .skill-progress .progress-bar {
+    animation: none;
+}
+
 .skill-level {
     padding: 0.25rem 0.75rem;
     border-radius: var(--radius-lg);

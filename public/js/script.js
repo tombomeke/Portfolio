@@ -71,6 +71,77 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Filter buttons found:', filterBtns.length);
     console.log('Project cards found:', projectCards.length);
 
+    // Skills Progress Bar Animation
+    const skillCards = document.querySelectorAll('.skill-card');
+    const skillProgressBars = document.querySelectorAll('.skill-progress .progress-bar');
+    
+    // Debug: Check if elements are found
+    console.log('Skill cards found:', skillCards.length);
+    console.log('Progress bars found:', skillProgressBars.length);
+    
+    // Debug: Log all progress bars and their data-width attributes
+    skillProgressBars.forEach((bar, index) => {
+        const targetWidth = bar.getAttribute('data-width');
+        console.log(`Progress bar ${index + 1}: data-width = "${targetWidth}"`);
+    });
+    
+    function animateSkillBars() {
+        console.log('Starting skill bar animations...');
+        skillProgressBars.forEach((bar, index) => {
+            const targetWidth = bar.getAttribute('data-width');
+            console.log(`Processing bar ${index + 1}: targetWidth = "${targetWidth}"`);
+            
+            if (targetWidth) {
+                const skillCard = bar.closest('.skill-card');
+                if (skillCard) {
+                    // Reset width to 0 first
+                    bar.style.width = '0%';
+                    
+                    setTimeout(() => {
+                        // Add animate class and set target width
+                        skillCard.classList.add('animate');
+                        bar.style.width = targetWidth;
+                        
+                        console.log(`Animated bar ${index + 1}: set width to ${targetWidth}`);
+                    }, index * 150); // Stagger the animations
+                } else {
+                    console.log(`Could not find skill card for bar ${index + 1}`);
+                }
+            } else {
+                console.log(`No data-width found for bar ${index + 1}`);
+            }
+        });
+    }
+    
+    // Use Intersection Observer to trigger animations when skills section comes into view
+    if (skillCards.length > 0) {
+        const skillsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    console.log('Skills section in view, starting animations');
+                    animateSkillBars();
+                    skillsObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.3 });
+        
+        const skillsSection = document.querySelector('.skills-section');
+        if (skillsSection) {
+            console.log('Observing skills section');
+            skillsObserver.observe(skillsSection);
+        } else {
+            console.log('Skills section not found');
+        }
+        
+        // Fallback: if intersection observer doesn't work, animate after a delay
+        setTimeout(() => {
+            console.log('Fallback: Starting skill bar animations');
+            animateSkillBars();
+        }, 2000);
+    } else {
+        console.log('No skill cards found');
+    }
+
     filterBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const filterValue = this.getAttribute('data-filter');
@@ -389,10 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Better mobile navigation behavior
-    const navToggle = document.querySelector('.nav-toggle');
-    const navMenu = document.querySelector('.nav-menu');
-    
+    // Better mobile navigation behavior (using existing navToggle and navMenu variables)
     if (navToggle && navMenu) {
         // Close mobile menu when clicking outside
         document.addEventListener('click', function(e) {
@@ -439,21 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 250);
     });
     
-    // Add loading states for external links
-    const externalLinks = document.querySelectorAll('a[target="_blank"]');
-    externalLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            // Add a small delay to show loading state
-            const originalText = this.innerHTML;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            this.style.pointerEvents = 'none';
-            
-            setTimeout(() => {
-                this.innerHTML = originalText;
-                this.style.pointerEvents = 'auto';
-            }, 1500);
-        });
-    });
+    // Note: externalLinks already declared above, no need to redeclare
     
     // Improved form validation feedback
     const forms = document.querySelectorAll('form');
