@@ -63,67 +63,124 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Project Filtering
+// Project Filtering
     const filterBtns = document.querySelectorAll('.filter-btn');
     const projectCards = document.querySelectorAll('.project-card');
 
-    // Debug: Check if elements are found
-    console.log('Filter buttons found:', filterBtns.length);
-    console.log('Project cards found:', projectCards.length);
+    // Only initialize if elements exist
+    if (filterBtns.length > 0 && projectCards.length > 0) {
+        console.log('Filter buttons found:', filterBtns.length);
+        console.log('Project cards found:', projectCards.length);
 
-    // Skills Progress Bar Animation
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const filterValue = this.getAttribute('data-filter');
+
+                // Update active filter button
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                // Filter projects with improved animation
+                projectCards.forEach((card, index) => {
+                    const category = card.getAttribute('data-category');
+
+                    if (filterValue === 'all' || category === filterValue) {
+                        // Show card with staggered animation
+                        setTimeout(() => {
+                            card.style.display = 'block';
+                            card.style.opacity = '0';
+                            card.style.transform = 'translateY(30px) scale(0.95)';
+                            card.style.transition = 'all 0.5s ease';
+
+                            requestAnimationFrame(() => {
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0) scale(1)';
+                            });
+                        }, index * 100); // Stagger the animations
+                    } else {
+                        // Hide card with fade out
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(-20px) scale(0.95)';
+                        card.style.transition = 'all 0.3s ease';
+                        
+                        setTimeout(() => {
+                            card.style.display = 'none';
+                        }, 300);
+                    }
+                });
+            });
+        });
+    }
+
+    // Skills Progress Bar Animation with improved timing
     const skillCards = document.querySelectorAll('.skill-card');
     const skillProgressBars = document.querySelectorAll('.skill-progress .progress-bar');
     
-    // Debug: Check if elements are found
-    console.log('Skill cards found:', skillCards.length);
-    console.log('Progress bars found:', skillProgressBars.length);
-    
-    // Debug: Log all progress bars and their data-width attributes
-    skillProgressBars.forEach((bar, index) => {
-        const targetWidth = bar.getAttribute('data-width');
-        console.log(`Progress bar ${index + 1}: data-width = "${targetWidth}"`);
-    });
-    
-    function animateSkillBars() {
-        console.log('Starting skill bar animations...');
+    if (skillProgressBars.length > 0) {
+        console.log('Skill cards found:', skillCards.length);
+        console.log('Progress bars found:', skillProgressBars.length);
+        
+        // Log all progress bars and their data-width attributes
         skillProgressBars.forEach((bar, index) => {
             const targetWidth = bar.getAttribute('data-width');
-            console.log(`Processing bar ${index + 1}: targetWidth = "${targetWidth}"`);
-            
-            if (targetWidth) {
-                const skillCard = bar.closest('.skill-card');
-                if (skillCard) {
-                    // Reset width to 0 first
-                    bar.style.width = '0%';
-                    
-                    setTimeout(() => {
-                        // Add animate class and set target width
-                        skillCard.classList.add('animate');
-                        bar.style.width = targetWidth;
-                        
-                        console.log(`Animated bar ${index + 1}: set width to ${targetWidth}`);
-                    }, index * 150); // Stagger the animations
-                } else {
-                    console.log(`Could not find skill card for bar ${index + 1}`);
-                }
-            } else {
-                console.log(`No data-width found for bar ${index + 1}`);
-            }
+            console.log(`Progress bar ${index + 1}: data-width = "${targetWidth}"`);
         });
-    }
-    
-    // Use Intersection Observer to trigger animations when skills section comes into view
-    if (skillCards.length > 0) {
+
+        function animateSkillBars() {
+            console.log('Starting skill bar animations...');
+            skillProgressBars.forEach((bar, index) => {
+                const targetWidth = bar.getAttribute('data-width');
+                console.log(`Processing bar ${index + 1}: targetWidth = "${targetWidth}"`);
+
+                if (targetWidth) {
+                    const skillCard = bar.closest('.skill-card');
+                    if (skillCard) {
+                        // Check if already animated
+                        if (bar.classList.contains('animated')) {
+                            console.log(`Bar ${index + 1} already animated, skipping`);
+                            return;
+                        }
+
+                        // Mark as animated immediately to prevent re-animation
+                        bar.classList.add('animated');
+
+                        // Reset width to 0 first
+                        bar.style.width = '0%';
+
+                        // Use longer delay to ensure rendering is complete
+                        setTimeout(() => {
+                            // Add animate class and set target width
+                            skillCard.classList.add('animate');
+                            bar.style.width = targetWidth;
+
+                            console.log(`Animated bar ${index + 1}: set width to ${targetWidth}`);
+                        }, 300 + (index * 150)); // Increased initial delay and stagger
+                    } else {
+                        console.log(`Could not find skill card for bar ${index + 1}`);
+                    }
+                } else {
+                    console.log(`No data-width found for bar ${index + 1}`);
+                }
+            });
+        }
+
+        // Use Intersection Observer - ONLY ONCE
         const skillsObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     console.log('Skills section in view, starting animations');
-                    animateSkillBars();
-                    skillsObserver.unobserve(entry.target);
+                    // Add delay to ensure styles are fully applied
+                    setTimeout(() => {
+                        animateSkillBars();
+                    }, 200);
+                    // Disconnect observer completely to prevent re-triggering
+                    skillsObserver.disconnect();
                 }
             });
-        }, { threshold: 0.3 });
+        }, {
+            threshold: 0.2, // Trigger earlier
+            rootMargin: '50px' // Start animation slightly before element is in view
+        });
         
         const skillsSection = document.querySelector('.skills-section');
         if (skillsSection) {
@@ -132,54 +189,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.log('Skills section not found');
         }
-        
-        // Fallback: if intersection observer doesn't work, animate after a delay
-        setTimeout(() => {
-            console.log('Fallback: Starting skill bar animations');
-            animateSkillBars();
-        }, 2000);
     } else {
-        console.log('No skill cards found');
+        console.log('No progress bars found');
     }
-
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const filterValue = this.getAttribute('data-filter');
-
-            // Update active filter button
-            filterBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-
-            // Filter projects with improved animation
-            projectCards.forEach((card, index) => {
-                const category = card.getAttribute('data-category');
-
-                if (filterValue === 'all' || category === filterValue) {
-                    // Show card with staggered animation
-                    setTimeout(() => {
-                        card.style.display = 'block';
-                        card.style.opacity = '0';
-                        card.style.transform = 'translateY(30px) scale(0.95)';
-                        card.style.transition = 'all 0.5s ease';
-
-                        requestAnimationFrame(() => {
-                            card.style.opacity = '1';
-                            card.style.transform = 'translateY(0) scale(1)';
-                        });
-                    }, index * 100); // Stagger the animations
-                } else {
-                    // Hide card with fade out
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(-20px) scale(0.95)';
-                    card.style.transition = 'all 0.3s ease';
-                    
-                    setTimeout(() => {
-                        card.style.display = 'none';
-                    }, 300);
-                }
-            });
-        });
-    });
 
     // Smooth Scrolling for Internal Links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -309,26 +321,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const animateElements = document.querySelectorAll('.skill-card, .project-card, .stat-item');
     animateElements.forEach(el => {
         observer.observe(el);
-    });
-
-    // Progress Bar Animation
-    const progressBars = document.querySelectorAll('.progress-bar');
-    const progressObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const progressBar = entry.target;
-                const width = progressBar.style.width;
-                progressBar.style.width = '0%';
-
-                setTimeout(() => {
-                    progressBar.style.width = width;
-                }, 200);
-            }
-        });
-    }, observerOptions);
-
-    progressBars.forEach(bar => {
-        progressObserver.observe(bar);
     });
 
     // Navbar Active Link Highlighting
