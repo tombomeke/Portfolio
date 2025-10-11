@@ -13,7 +13,7 @@ class ProjectModel {
                 'tech' => ['Java', 'Spigot API', 'MySQL', 'Maven'],
                 'repo_url' => 'https://github.com/jouwusername/mc-economy',
                 'demo_url' => null,
-                'image' => 'public/images/projects/mc-economy.jpg',
+                'image' => 'public/images/projects/p1.png',
                 'category' => 'minecraft'
             ],
             [
@@ -23,7 +23,7 @@ class ProjectModel {
                 'tech' => ['PHP', 'JavaScript', 'CSS Grid', 'HTML5'],
                 'repo_url' => 'https://github.com/jouwusername/portfolio',
                 'demo_url' => 'https://jouwdomain.nl',
-                'image' => 'public/images/projects/portfolio.jpg',
+                'image' => 'public/images/projects/p2.png',
                 'category' => 'web'
             ],
             [
@@ -33,7 +33,7 @@ class ProjectModel {
                 'tech' => ['PHP', 'JWT', 'WebSockets', 'PostgreSQL'],
                 'repo_url' => 'https://github.com/jouwusername/task-api',
                 'demo_url' => null,
-                'image' => 'public/images/projects/task-api.jpg',
+                'image' => 'public/images/projects/p3.png',
                 'category' => 'api'
             ],
             [
@@ -43,7 +43,7 @@ class ProjectModel {
                 'tech' => ['Java', 'Bukkit API', 'Redis', 'MongoDB'],
                 'repo_url' => 'https://github.com/jouwusername/minigames',
                 'demo_url' => null,
-                'image' => 'public/images/projects/minigames.jpg',
+                'image' => 'public/images/projects/p4.png',
                 'category' => 'minecraft'
             ],
             [
@@ -53,7 +53,7 @@ class ProjectModel {
                 'tech' => ['PHP', 'Laravel', 'Vue.js', 'MySQL', 'Chart.js'],
                 'repo_url' => 'https://github.com/jouwusername/ecommerce-dash',
                 'demo_url' => 'https://demo.jouwdomain.nl',
-                'image' => 'public/images/projects/ecommerce.jpg',
+                'image' => 'public/images/projects/p5.png',
                 'category' => 'web'
             ]
         ];
