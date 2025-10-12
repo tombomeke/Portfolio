@@ -134,6 +134,87 @@ footer {
     transform: translateY(-2px);
 }
 
+/* ===========================================
+   LANGUAGE TOGGLE BUTTON
+   Add this to your layout.css file
+   =========================================== */
+
+/* Language Toggle Button */
+.lang-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(59, 130, 246, 0.1);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-lg);
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.lang-toggle:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.lang-toggle:active {
+    transform: translateY(0);
+}
+
+.lang-toggle .flag {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+/* Animation when language changes */
+@keyframes langChange {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.lang-toggle.changing {
+    animation: langChange 0.3s ease;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .lang-toggle {
+        width: 100%;
+        justify-content: center;
+        padding: var(--spacing-md);
+        margin-top: var(--spacing-sm);
+        font-size: 1rem;
+    }
+
+    .nav-menu.active .lang-toggle {
+        display: flex;
+    }
+}
+
+/* Focus state for accessibility */
+.lang-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Hover effect for flag */
+.lang-toggle:hover .flag {
+    animation: flagWave 0.5s ease;
+}
+
+@keyframes flagWave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+}
+
 /* Responsive Navigation */
 @media (max-width: 768px) {
     .nav-menu {

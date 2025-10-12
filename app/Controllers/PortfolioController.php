@@ -2,6 +2,8 @@
 // /app/Controllers/PortfolioController.php
 session_start();
 
+require_once __DIR__ . '/../Config/translations.php';
+
 require_once __DIR__ . '/../Models/ProjectModels.php';
 require_once __DIR__ . '/../Models/SkillModel.php';
 require_once __DIR__ . '/../Models/GameStatsModel.php';
@@ -19,9 +21,8 @@ class PortfolioController {
 
     public function showAbout() {
         $data = [
-            'title' => 'About Me',
+            'title' => trans('nav_about'),
             'name' => 'Tom Dekoning',
-            'intro' => 'Full-stack developer met passie voor gaming en open source projecten. Gespecialiseerd in PHP, JavaScript en Minecraft plugin development. Ik bouw robuuste web applicaties en game servers met focus op performance en gebruikservaring.',
             'email' => 'tom1dekoning@gmail.com',
             'linkedin' => 'https://www.linkedin.com/in/tom-dekoning-567523352/',
             'github' => 'https://github.com/tombomeke'
@@ -31,21 +32,46 @@ class PortfolioController {
 
     public function showDevLife() {
         $skills = $this->skillModel->getAllSkills();
-        $data = [
-            'title' => 'Developer Life',
-            'skills' => $skills,
-            'skillModel' => $this->skillModel,
-            'education' => [
+
+        // Get current language
+        $lang = Translations::getCurrentLang();
+
+        // Education items (translatable)
+        $education = [
+            'nl' => [
                 'HBO ICT - Hogeschool van Amsterdam (2023-heden)',
                 'Java Certification - Oracle (2023)',
                 'PHP & MySQL - Codecademy (2022)'
             ],
-            'learning_goals' => [
+            'en' => [
+                'HBO ICT - University of Applied Sciences Amsterdam (2023-present)',
+                'Java Certification - Oracle (2023)',
+                'PHP & MySQL - Codecademy (2022)'
+            ]
+        ];
+
+        // Learning goals (translatable)
+        $learning_goals = [
+            'nl' => [
                 'Laravel Framework diepgaand leren',
                 'React.js voor moderne frontends',
                 'Docker & DevOps automation',
                 'Advanced design patterns'
+            ],
+            'en' => [
+                'Learn Laravel Framework in-depth',
+                'React.js for modern frontends',
+                'Docker & DevOps automation',
+                'Advanced design patterns'
             ]
+        ];
+
+        $data = [
+            'title' => trans('nav_devlife'),
+            'skills' => $skills,
+            'skillModel' => $this->skillModel,
+            'education' => $education[$lang],
+            'learning_goals' => $learning_goals[$lang]
         ];
         $this->render('dev-life', $data);
     }
@@ -66,7 +92,8 @@ class PortfolioController {
         $projects = $this->projectModel->getAllProjects();
         $data = [
             'title' => 'Projecten',
-            'projects' => $projects
+            'projects' => $projects,
+            'projectModel' => $this->projectModel
         ];
         $this->render('projects', $data);
     }

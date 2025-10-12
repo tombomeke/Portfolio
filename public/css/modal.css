@@ -68,8 +68,8 @@
 /* Close Button */
 .modal-close {
     position: absolute;
-    top: var(--spacing-lg);
-    right: var(--spacing-lg);
+    top: var(--spacing-md);
+    right: var(--spacing-md);
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -82,18 +82,33 @@
     justify-content: center;
     font-size: 1.2rem;
     transition: all 0.3s ease;
-    z-index: 10;
+    z-index: 100;
+    outline: none !important; /* FORCE remove outline */
+    box-shadow: none !important; /* FORCE remove box-shadow */
 }
 
 .modal-close:hover {
     background: var(--error-color);
     color: white;
-    transform: rotate(90deg);
+    transform: rotate(180deg);
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 .modal-close:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.modal-close:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.modal-close:active {
+    transform: scale(0.95);
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* Modal Content */
@@ -109,6 +124,7 @@
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
     padding-bottom: var(--spacing-lg);
+    padding-right: 50px;
     border-bottom: 2px solid var(--border-color);
 }
 

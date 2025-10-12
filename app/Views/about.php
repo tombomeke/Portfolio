@@ -9,14 +9,14 @@ BESTAND 2: /app/Views/about.php
     <div class="container">
         <div class="hero-content">
             <div class="hero-text">
-                <h1>Hoi, ik ben <?= htmlspecialchars($name) ?></h1>
-                <p class="lead"><?= htmlspecialchars($intro) ?></p>
+                <h1><span data-translate="hero_greeting"><?= trans('hero_greeting') ?></span> <?= htmlspecialchars($name) ?></h1>
+                <p class="lead" data-translate="hero_intro"><?= trans('hero_intro') ?></p>
                 <div class="hero-actions">
                     <a href="?page=projects" class="btn btn-primary">
-                        <i class="fas fa-folder-open"></i> Bekijk mijn werk
+                        <i class="fas fa-folder-open"></i> <span data-translate="hero_view_work"><?= trans('hero_view_work') ?></span>
                     </a>
                     <a href="?page=download-cv" class="btn btn-secondary">
-                        <i class="fas fa-download"></i> Download CV
+                        <i class="fas fa-download"></i> <span data-translate="hero_download_cv"><?= trans('hero_download_cv') ?></span>
                     </a>
                 </div>
                 <div class="contact-info">

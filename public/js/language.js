@@ -93,21 +93,8 @@ class LanguageSwitcher {
         this.currentLang = lang;
         this.storeLanguage(lang);
 
-        // Update toggle button
-        const toggleBtn = document.getElementById('lang-toggle');
-        if (toggleBtn) {
-            this.updateToggleButton(toggleBtn);
-        }
-
-        // Apply new language
-        this.applyLanguage(lang);
-
-        // Trigger custom event for other components
-        window.dispatchEvent(new CustomEvent('languageChanged', {
-            detail: { language: lang }
-        }));
-
-        console.log('Language switched to:', lang);
+        // Reload page to apply PHP translations
+        window.location.reload();
     }
 
     /**
@@ -130,6 +117,21 @@ class LanguageSwitcher {
                 }
             }
         });
+
+        // Update form input placeholders separately
+        const nameInput = document.querySelector('input[name="name"]');
+        const emailInput = document.querySelector('input[name="email"]');
+        const messageInput = document.querySelector('textarea[name="message"]');
+
+        if (nameInput) {
+            nameInput.placeholder = this.translate('contact_name_placeholder', lang);
+        }
+        if (emailInput) {
+            emailInput.placeholder = this.translate('contact_email_placeholder', lang);
+        }
+        if (messageInput) {
+            messageInput.placeholder = this.translate('contact_message_placeholder', lang);
+        }
 
         // Update document language attribute
         document.documentElement.lang = lang;
