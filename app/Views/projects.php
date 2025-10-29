@@ -24,6 +24,9 @@ BESTAND: /app/Views/projects.php (UPDATED with Modal Support)
             <button class="filter-btn" data-filter="api">
                 <i class="fas fa-code"></i> <span data-translate="projects_filter_api"><?= trans('projects_filter_api') ?></span>
             </button>
+            <button class="filter-btn" data-filter="cli">
+                <i class="fas fa-code"></i> <span data-translate="projects_filter_cli"><?= trans('projects_filter_cli') ?></span>
+            </button>
         </div>
 
         <div class="projects-grid">

@@ -33,39 +33,35 @@ class ProjectModel {
         $projectsData = [
             [
                 'id' => 1,
-                'title' => 'Minecraft Economy Plugin',
+                'title' => 'RPG Manager',
                 'description' => [
-                    'nl' => 'Een complete economie plugin voor Minecraft servers met shops, banking en trading systeem. Ondersteunt meerdere valuta\'s en een dynamische markt.',
-                    'en' => 'A complete economy plugin for Minecraft servers with shops, banking and trading system. Supports multiple currencies and a dynamic market.'
+                    'nl' => 'RPG Manager is een console-based role-playing game framework in C# met een modulair systeem voor werelden, locaties, helden en wapens. Inclusief JSON-saves en een uitbreidbare architectuur.',
+                    'en' => 'RPG Manager is a console-based role-playing game framework in C# featuring a modular system for worlds, locations, heroes and weapons. Includes JSON saves and an extensible architecture.'
                 ],
                 'long_description' => [
-                    'nl' => 'Dit project is een volledig uitgewerkt economie systeem voor Minecraft servers. Het bevat een geavanceerde shop system, banking functionaliteit, en een dynamische marktplaats waar spelers items kunnen verhandelen. De plugin is volledig configureerbaar en ondersteunt meerdere valuta\'s.',
-                    'en' => 'This project is a fully developed economy system for Minecraft servers. It includes an advanced shop system, banking functionality, and a dynamic marketplace where players can trade items. The plugin is fully configurable and supports multiple currencies.'
+                    'nl' => 'Het project bestaat uit namespaces zoals <code>Characters</code>, <code>Weapons</code>, <code>Worlds</code>, <code>Locations</code>, <code>UI</code> en <code>Saves</code>. Spelers maken helden (bv. Warrior, Mage), kiezen wapens en verkennen werelden. Voortgang wordt opgeslagen via <code>System.Text.Json</code>.<br><br><strong>Belangrijkste kenmerken</strong><br>• Modulair systeem (makkelijk uitbreiden met nieuwe werelden/klassen/wapens)<br>• Wapen- en inventarissysteem met rarity, durability en upgrades<br>• Persistente opslag met JSON-saves<br>• Heldensysteem met levels/skills<br>• Wereldstructuur met moeilijkheidsgraden en unlockbare locaties',
+                    'en' => 'The project is organized into namespaces like <code>Characters</code>, <code>Weapons</code>, <code>Worlds</code>, <code>Locations</code>, <code>UI</code>, and <code>Saves</code>. Players create heroes (e.g., Warrior, Mage), choose weapons, and explore worlds. Progress is saved using <code>System.Text.Json</code>.<br><br><strong>Key features</strong><br>• Modular system (easily add worlds/classes/weapons)<br>• Weapon & inventory with rarity, durability, and upgrades<br>• Persistent storage via JSON saves<br>• Hero system with levels/skills<br>• World structure with difficulties and unlockable locations'
                 ],
-                'tech' => ['Java', 'Spigot API', 'MySQL', 'Maven'],
-                'repo_url' => 'https://github.com/tombomeke/mc-economy',
-                'demo_url' => null,
+                'tech' => ['C#', '.NET', 'Object-Oriented Design', 'System.Text.Json', 'Console Application'],
+                'repo_url' => 'https://github.com/tombomeke-ehb/RPGManager',
+                'demo_url' => 'https://github.com/tombomeke-ehb/RPGManager/releases/latest/',
                 'image' => 'public/images/projects/p1.png',
-                'category' => 'minecraft',
-                'status' => 'active',
+                'category' => 'cli',
+                'status' => 'development',
                 'features' => [
                     'nl' => [
-                        'Multi-valuta ondersteuning',
-                        'Dynamisch marktplaats systeem',
-                        'Banking met rentetarieven',
-                        'Speler-naar-speler handel',
-                        'Admin GUI voor beheer',
-                        'MySQL database integratie',
-                        'Volledig configureerbaar via YAML'
+                        'Modulaire architectuur',
+                        'JSON-opslaan en laden',
+                        'Wapenrarity & upgrades',
+                        'Heldensysteem met levels',
+                        'Uitbreidbare wereld/locatie-structuur'
                     ],
                     'en' => [
-                        'Multi-currency support',
-                        'Dynamic marketplace system',
-                        'Banking with interest rates',
-                        'Player-to-player trading',
-                        'Admin GUI for management',
-                        'MySQL database integration',
-                        'Fully configurable via YAML'
+                        'Modular architecture',
+                        'JSON save/load',
+                        'Weapon rarity & upgrades',
+                        'Hero system with levels',
+                        'Extensible world/location structure'
                     ]
                 ]
             ],
@@ -107,125 +103,8 @@ class ProjectModel {
                     ]
                 ]
             ],
-            [
-                'id' => 3,
-                'title' => 'Task Manager API',
-                'description' => [
-                    'nl' => 'RESTful API voor taakbeheer met JWT authenticatie en real-time updates via WebSockets. Ondersteunt team collaboration.',
-                    'en' => 'RESTful API for task management with JWT authentication and real-time updates via WebSockets. Supports team collaboration.'
-                ],
-                'long_description' => [
-                    'nl' => 'Een professionele RESTful API voor taakbeheer gebouwd met PHP. Bevat JWT authenticatie, real-time updates via WebSockets, en uitgebreide functionaliteit voor team samenwerking inclusief rollen, permissions en activity logs.',
-                    'en' => 'A professional RESTful API for task management built with PHP. Includes JWT authentication, real-time updates via WebSockets, and extensive functionality for team collaboration including roles, permissions and activity logs.'
-                ],
-                'tech' => ['PHP', 'JWT', 'WebSockets', 'PostgreSQL'],
-                'repo_url' => 'https://github.com/tombomeke/task-api',
-                'demo_url' => null,
-                'image' => 'public/images/projects/p3.png',
-                'category' => 'api',
-                'status' => 'completed',
-                'features' => [
-                    'nl' => [
-                        'JWT authenticatie',
-                        'Real-time updates via WebSockets',
-                        'Team collaboration features',
-                        'Rol-gebaseerde rechten',
-                        'Activity logging',
-                        'RESTful endpoints',
-                        'API documentatie met Swagger'
-                    ],
-                    'en' => [
-                        'JWT authentication',
-                        'Real-time updates via WebSockets',
-                        'Team collaboration features',
-                        'Role-based permissions',
-                        'Activity logging',
-                        'RESTful endpoints',
-                        'API documentation with Swagger'
-                    ]
-                ]
-            ],
-            [
-                'id' => 4,
-                'title' => 'Minecraft Minigames',
-                'description' => [
-                    'nl' => 'Collection van populaire minigames zoals BedWars, SkyWars en Murder Mystery. Volledig configureerbaar via YAML files.',
-                    'en' => 'Collection of popular minigames like BedWars, SkyWars and Murder Mystery. Fully configurable via YAML files.'
-                ],
-                'long_description' => [
-                    'nl' => 'Een uitgebreide collectie van populaire Minecraft minigames. Elk spel is volledig configureerbaar, ondersteunt meerdere arena\'s tegelijk, en bevat een geavanceerd statistics systeem. Perfect voor servers die verschillende game modes willen aanbieden.',
-                    'en' => 'An extensive collection of popular Minecraft minigames. Each game is fully configurable, supports multiple arenas simultaneously, and includes an advanced statistics system. Perfect for servers that want to offer different game modes.'
-                ],
-                'tech' => ['Java', 'Bukkit API', 'Redis', 'MongoDB'],
-                'repo_url' => 'https://github.com/tombomeke/minigames',
-                'demo_url' => null,
-                'image' => 'public/images/projects/p4.png',
-                'category' => 'minecraft',
-                'status' => 'development',
-                'features' => [
-                    'nl' => [
-                        'BedWars met team systeem',
-                        'SkyWars met kits',
-                        'Murder Mystery mode',
-                        'Multi-arena ondersteuning',
-                        'Statistieken tracking',
-                        'Leaderboards',
-                        'Cosmetische beloningen systeem',
-                        'Party systeem'
-                    ],
-                    'en' => [
-                        'BedWars with team system',
-                        'SkyWars with kits',
-                        'Murder Mystery mode',
-                        'Multi-arena support',
-                        'Statistics tracking',
-                        'Leaderboards',
-                        'Cosmetic rewards system',
-                        'Party system'
-                    ]
-                ]
-            ],
-            [
-                'id' => 5,
-                'title' => 'E-commerce Dashboard',
-                'description' => [
-                    'nl' => 'Admin dashboard voor e-commerce platform met analytics, inventory management en order processing.',
-                    'en' => 'Admin dashboard for e-commerce platform with analytics, inventory management and order processing.'
-                ],
-                'long_description' => [
-                    'nl' => 'Een professionele admin dashboard voor e-commerce platforms. Bevat real-time analytics met grafieken, geavanceerd inventory management, order processing workflow, en customer relationship management functionaliteit.',
-                    'en' => 'A professional admin dashboard for e-commerce platforms. Features real-time analytics with charts, advanced inventory management, order processing workflow, and customer relationship management functionality.'
-                ],
-                'tech' => ['PHP', 'Laravel', 'Vue.js', 'MySQL', 'Chart.js'],
-                'repo_url' => 'https://github.com/tombomeke/ecommerce-dash',
-                'demo_url' => 'https://demo.tomdekoning.nl',
-                'image' => 'public/images/projects/p5.png',
-                'category' => 'web',
-                'status' => 'active',
-                'features' => [
-                    'nl' => [
-                        'Real-time analytics dashboard',
-                        'Inventory management',
-                        'Order processing workflow',
-                        'Customer management',
-                        'Sales rapporten met grafieken',
-                        'Productcatalogus beheer',
-                        'Responsive design',
-                        'Exporteer data naar CSV/PDF'
-                    ],
-                    'en' => [
-                        'Real-time analytics dashboard',
-                        'Inventory management',
-                        'Order processing workflow',
-                        'Customer management',
-                        'Sales reports with charts',
-                        'Product catalog management',
-                        'Responsive design',
-                        'Export data to CSV/PDF'
-                    ]
-                ]
-            ]
         ];
+
 
         // Convert to current language
         $projects = [];

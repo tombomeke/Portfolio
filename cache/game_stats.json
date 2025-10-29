@@ -3,7 +3,7 @@
         "server_name": "JouwServer.nl",
         "server_ip": "play.jouwserver.nl",
         "online": true,
-        "online_players": 9,
+        "online_players": 11,
         "max_players": 50,
         "uptime": "99.8%",
         "version": "1.20.1",
@@ -35,7 +35,7 @@
                 "rank": "Member"
             }
         ],
-        "last_update": 1760306135
+        "last_update": 1761780141
     },
     "r6siege": {
         "username": "JouwGamertag",
@@ -53,6 +53,6 @@
         "level": 156,
         "playtime": "487h",
         "favorite_operator": "Ash",
-        "last_update": 1760306135
+        "last_update": 1761780141
     }
 }

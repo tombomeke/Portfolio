@@ -448,7 +448,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const projectsGrid = projectsSection.querySelector('.projects-grid');
         if (projectsGrid) {
             projectsGrid.style.overflow = 'visible';
-            projectsGrid.style.display = 'grid';
+            projectsGrid.style.display = 'flex';
+            projectsGrid.style.flexWrap = 'wrap';
+            projectsGrid.style.justifyContent = 'center';
+            projectsGrid.style.gap = getComputedStyle(projectsGrid).gap || '2rem';
         }
     }
     
@@ -493,7 +496,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (projectsGrid) {
                 projectsGrid.style.display = 'none';
                 requestAnimationFrame(() => {
-                    projectsGrid.style.display = 'grid';
+                    projectsGrid.style.display = 'flex';
+                    projectsGrid.style.flexWrap = 'wrap';
+                    projectsGrid.style.justifyContent = 'center';
                 });
             }
         }, 250);
