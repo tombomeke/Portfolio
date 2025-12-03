@@ -147,8 +147,8 @@ class SkillModel {
             [
                 'name' => 'Python',
                 'level' => 1,
-                'category' => 'languages, Business Analytics',
-                'notes' => 'Learning fundamentals, automation scripts',
+                'category' => 'languages',
+                'notes' => 'Learning fundamentals, automation scripts, Business Analytics',
                 'projects' => []
             ],
 
