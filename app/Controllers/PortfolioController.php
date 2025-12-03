@@ -36,42 +36,12 @@ class PortfolioController {
         // Get current language
         $lang = Translations::getCurrentLang();
 
-        // Education items (translatable)
-        $education = [
-            'nl' => [
-                'HBO ICT - Hogeschool van Amsterdam (2023-heden)',
-                'Java Certification - Oracle (2023)',
-                'PHP & MySQL - Codecademy (2022)'
-            ],
-            'en' => [
-                'HBO ICT - University of Applied Sciences Amsterdam (2023-present)',
-                'Java Certification - Oracle (2023)',
-                'PHP & MySQL - Codecademy (2022)'
-            ]
-        ];
-
-        // Learning goals (translatable)
-        $learning_goals = [
-            'nl' => [
-                'Laravel Framework diepgaand leren',
-                'React.js voor moderne frontends',
-                'Docker & DevOps automation',
-                'Advanced design patterns'
-            ],
-            'en' => [
-                'Learn Laravel Framework in-depth',
-                'React.js for modern frontends',
-                'Docker & DevOps automation',
-                'Advanced design patterns'
-            ]
-        ];
-
         $data = [
             'title' => trans('nav_devlife'),
             'skills' => $skills,
             'skillModel' => $this->skillModel,
-            'education' => $education[$lang],
-            'learning_goals' => $learning_goals[$lang]
+            'education' => $this->skillModel->getEducation($lang),
+            'learning_goals' => $this->skillModel->getLearningGoals($lang)
         ];
         $this->render('dev-life', $data);
     }

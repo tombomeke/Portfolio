@@ -38,16 +38,14 @@ BESTAND: /app/Views/dev-life.php (UPDATED with Modal Support)
 
             <ul class="education-list">
                 <?php foreach ($education as $index => $item): ?>
-                    <li data-modal='<?= htmlspecialchars(json_encode([
-                            'id' => $index,
-                            'title' => $item,
-                            'institution' => explode(' - ', $item)[0] ?? $item,
-                            'period' => explode('(', $item)[1] ?? '',
-                            'description' => 'Uitgebreide opleiding gericht op moderne softwareontwikkeling en best practices.',
-                            'skills' => ['Problem Solving', 'Software Architecture', 'Team Collaboration']
-                    ]), ENT_QUOTES, 'UTF-8') ?>'>
+                    <?php
+                        $educationTitle = is_array($item)
+                            ? ($item['title'] ?? (isset($item['title_key']) ? trans($item['title_key']) : ''))
+                            : $item;
+                    ?>
+                    <li data-modal='<?= $skillModel->buildEducationModalData($item, $index) ?>'>
                         <i class="fas fa-check-circle"></i>
-                        <span><?= htmlspecialchars($item) ?></span>
+                        <span><?= htmlspecialchars($educationTitle) ?></span>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -59,20 +57,14 @@ BESTAND: /app/Views/dev-life.php (UPDATED with Modal Support)
 
             <ul class="learning-list">
                 <?php foreach ($learning_goals as $index => $goal): ?>
-                    <li data-modal='<?= htmlspecialchars(json_encode([
-                            'id' => $index,
-                            'title' => $goal,
-                            'description' => 'Actief bezig met het leren van ' . strtolower($goal) . ' door middel van online cursussen en praktijkprojecten.',
-                            'progress' => rand(20, 80),
-                            'resources' => [
-                                    ['name' => 'Official Documentation', 'url' => '#'],
-                                    ['name' => 'Udemy Course', 'url' => '#'],
-                                    ['name' => 'YouTube Tutorials', 'url' => '#']
-                            ],
-                            'timeline' => '3-6 maanden'
-                    ]), ENT_QUOTES, 'UTF-8') ?>'>
+                    <?php
+                        $learningTitle = is_array($goal)
+                            ? ($goal['title'] ?? (isset($goal['title_key']) ? trans($goal['title_key']) : ''))
+                            : $goal;
+                    ?>
+                    <li data-modal='<?= $skillModel->buildLearningModalData($goal, $index) ?>'>
                         <i class="fas fa-arrow-right"></i>
-                        <span><?= htmlspecialchars($goal) ?></span>
+                        <span><?= htmlspecialchars($learningTitle) ?></span>
                     </li>
                 <?php endforeach; ?>
             </ul>

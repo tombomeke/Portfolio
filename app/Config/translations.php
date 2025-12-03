@@ -75,6 +75,12 @@ class Translations {
             // Education Section
             'education_title' => 'Opleiding & Certificaten',
             'education_click_details' => 'Klik voor meer details',
+            // Education content keys (voorbeeld)
+            'education_hbo_title' => 'HBO ICT - Hogeschool van Amsterdam (2023-heden)',
+            'education_hbo_inst' => 'Hogeschool van Amsterdam',
+            'education_hbo_period' => '2023-heden',
+            'education_hbo_desc' => 'Uitgebreide opleiding met focus op softwareontwikkeling en best practices.',
+            'education_hbo_skill_arch' => 'Software Architectuur',
 
             // Education Modal
             'modal_education_institution' => 'Instelling',
@@ -85,6 +91,11 @@ class Translations {
             // Learning Goals Section
             'learning_title' => 'Huidige Leerdoelen',
             'learning_click_details' => 'Klik voor meer details',
+            // Learning content keys (voorbeeld)
+            'learning_laravel_title' => 'Laravel Framework diepgaand leren',
+            'learning_laravel_desc' => 'Van routing en Eloquent tot queues, testing en deployment.',
+            'learning_laravel_timeline' => '3-6 maanden',
+            'learning_resource_docs' => 'Officiële documentatie',
 
             // Learning Modal
             'modal_learning_goal' => 'Leerdoel',
@@ -241,6 +252,12 @@ class Translations {
             // Education Section
             'education_title' => 'Education & Certificates',
             'education_click_details' => 'Click for more details',
+            // Education content keys (example)
+            'education_hbo_title' => 'HBO ICT - University of Applied Sciences Amsterdam (2023-present)',
+            'education_hbo_inst' => 'University of Applied Sciences Amsterdam',
+            'education_hbo_period' => '2023-present',
+            'education_hbo_desc' => 'Comprehensive program focused on software development and best practices.',
+            'education_hbo_skill_arch' => 'Software Architecture',
 
             // Education Modal
             'modal_education_institution' => 'Institution',
@@ -251,6 +268,11 @@ class Translations {
             // Learning Goals Section
             'learning_title' => 'Current Learning Goals',
             'learning_click_details' => 'Click for more details',
+            // Learning content keys (example)
+            'learning_laravel_title' => 'Learn Laravel Framework in-depth',
+            'learning_laravel_desc' => 'From routing and Eloquent to queues, testing, and deployment.',
+            'learning_laravel_timeline' => '3-6 months',
+            'learning_resource_docs' => 'Official documentation',
 
             // Learning Modal
             'modal_learning_goal' => 'Learning Goal',
