@@ -131,6 +131,18 @@ class Translations {
             'error_404_home' => 'Terug naar Home',
             'error_404_suggestions' => 'Misschien zoek je:',
 
+            // WIP Page
+            'wip_page_title' => 'Work in progress',
+            'wip_heading' => 'Bijna klaar',
+            'wip_intro' => 'Ik ben bezig met {page}. Binnenkort staat hier meer.',
+            'wip_secondary' => 'In de tussentijd kun je mijn projecten bekijken of mij direct een bericht sturen.',
+            'wip_status_badge' => 'In ontwikkeling',
+            'wip_back_home' => 'Terug naar home',
+            'wip_view_projects' => 'Bekijk projecten',
+            'wip_contact' => 'Plan een gesprek',
+            'wip_feedback' => 'Heb je specifieke wensen? Laat het me weten, dan neem ik het mee.',
+            'wip_default_page_name' => 'deze pagina',
+
             // Games Section
             'games_title' => 'Gaming Stats',
             'games_minecraft' => 'Minecraft',
@@ -279,6 +291,18 @@ class Translations {
             'error_404_message' => 'Sorry, the page you\'re looking for doesn\'t exist or has been moved.',
             'error_404_home' => 'Back to Home',
             'error_404_suggestions' => 'You might be looking for:',
+
+            // WIP Page
+            'wip_page_title' => 'Work in progress',
+            'wip_heading' => 'Almost there',
+            'wip_intro' => 'I\'m polishing the {page} page. New content is coming soon.',
+            'wip_secondary' => 'In the meantime, feel free to browse my projects or drop me a message.',
+            'wip_status_badge' => 'In progress',
+            'wip_back_home' => 'Back to home',
+            'wip_view_projects' => 'View projects',
+            'wip_contact' => 'Schedule a chat',
+            'wip_feedback' => 'Have requests? Let me know and I\'ll include them.',
+            'wip_default_page_name' => 'this page',
 
             // Games Section
             'games_title' => 'Gaming Stats',

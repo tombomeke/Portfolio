@@ -5,6 +5,14 @@ require_once 'app/Controllers/PortfolioController.php';
 $controller = new PortfolioController();
 $page = $_GET['page'] ?? 'home';
 
+// Pages that should temporarily show the WIP screen
+$wipPages = ['games']; // Add a page slug here to send it to the WIP view
+
+if (in_array($page, $wipPages, true)) {
+    $controller->showWIP($page);
+    exit;
+}
+
 // Route handling
 switch($page) {
     case 'home':

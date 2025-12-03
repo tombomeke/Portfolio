@@ -820,6 +820,118 @@
     width: 20px;
 }
 
+/* WIP Page */
+.wip-section {
+    padding: var(--spacing-3xl) 0;
+    background: linear-gradient(135deg, var(--bg-color) 0%, var(--surface-color) 100%);
+}
+
+.wip-card {
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--spacing-2xl);
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    text-align: center;
+}
+
+.wip-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(236, 72, 153, 0.08));
+    z-index: 0;
+}
+
+.wip-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.wip-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 0.4rem 0.85rem;
+    background: var(--bg-color);
+    color: var(--primary-color);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: var(--spacing-md);
+}
+
+.wip-card h1 {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.wip-lead {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.7;
+}
+
+.wip-note {
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-lg);
+}
+
+.wip-meta {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+}
+
+.wip-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.9rem;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.wip-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-md);
+}
+
+.wip-contact {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+}
+
+.wip-contact:hover {
+    color: var(--accent-color);
+}
+
+.wip-feedback {
+    color: var(--text-muted);
+    max-width: 720px;
+    margin: 0 auto;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .hero {
@@ -866,6 +978,19 @@
         grid-template-columns: repeat(2, 1fr);
     }
     
+    .wip-card {
+        padding: var(--spacing-xl);
+    }
+    
+    .wip-card h1 {
+        font-size: 2.1rem;
+    }
+    
+    .wip-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
     .error-code {
         font-size: 5rem;
     }
@@ -909,5 +1034,13 @@
     
     .stats-row {
         grid-template-columns: 1fr;
+    }
+    
+    .wip-card h1 {
+        font-size: 1.8rem;
+    }
+    
+    .wip-lead {
+        font-size: 1.05rem;
     }
 }

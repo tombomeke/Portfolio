@@ -88,6 +88,15 @@ class PortfolioController {
         $this->render('games', $data);
     }
 
+    public function showWIP($page = '') {
+        $data = [
+            'title' => trans('wip_page_title'),
+            'pageLabel' => $this->getPageLabel($page),
+            'pageKey' => $page
+        ];
+        $this->render('WIP', $data);
+    }
+
     public function showProjects() {
         $projects = $this->projectModel->getAllProjects();
         $data = [
@@ -195,6 +204,27 @@ class PortfolioController {
 
     private function sanitizeInput($input) {
         return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+    }
+
+    private function getPageLabel($page) {
+        $labels = [
+            'home' => trans('nav_about'),
+            'about' => trans('nav_about'),
+            'dev-life' => trans('nav_devlife'),
+            'games' => trans('nav_games'),
+            'projects' => trans('nav_projects'),
+            'contact' => trans('nav_contact')
+        ];
+
+        if (isset($labels[$page])) {
+            return $labels[$page];
+        }
+
+        if (!empty($page)) {
+            return ucwords(str_replace(['-', '_'], ' ', $page));
+        }
+
+        return trans('wip_default_page_name');
     }
 }
 ?>
