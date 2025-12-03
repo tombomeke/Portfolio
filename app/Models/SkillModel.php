@@ -35,45 +35,46 @@ class SkillModel {
             // Programming Languages
             [
                 'name' => 'PHP',
-                'level' => 3,
+                'level' => 1,
                 'category' => 'languages',
                 'notes' => 'Object-oriented, Laravel, API development',
-                'projects' => ['Portfolio Website', 'Task Manager API', 'E-commerce Dashboard']
+                'projects' => ['Portfolio Website', 'Laravel Project']
             ],
             [
                 'name' => 'Java',
-                'level' => 3,
+                'level' => 1,
                 'category' => 'languages',
-                'notes' => 'Minecraft plugins, Spring basics',
-                'projects' => ['Minecraft Economy Plugin', 'Minecraft Minigames']
+                'notes' => 'Minecraft plugins, Spring basics, Basic Projects',
+                'projects' => []
             ],
             [
                 'name' => 'JavaScript',
-                'level' => 2,
+                'level' => 1,
                 'category' => 'languages',
                 'notes' => 'ES6+, DOM manipulation, AJAX',
-                'projects' => ['Portfolio Website', 'Interactive Dashboard']
+                'projects' => ['Portfolio Website', 'Contract Companion', 'Lyrics Finder']
             ],
             [
                 'name' => 'Python',
                 'level' => 1,
-                'category' => 'languages',
+                'category' => 'languages, Business Analytics',
                 'notes' => 'Learning fundamentals, automation scripts',
                 'projects' => []
             ],
+
             [
                 'name' => 'SQL',
                 'level' => 2,
                 'category' => 'languages',
-                'notes' => 'MySQL, PostgreSQL, query optimization',
-                'projects' => ['Task Manager API', 'E-commerce Dashboard']
+                'notes' => 'Oracle, Database',
+                'projects' => ['Contract Companion']
             ],
             [
                 'name' => 'HTML/CSS',
                 'level' => 3,
                 'category' => 'languages',
                 'notes' => 'Semantic HTML, CSS Grid, Flexbox',
-                'projects' => ['Portfolio Website', 'All web projects']
+                'projects' => ['Portfolio Website', 'Contract Companion']
             ],
 
             // Frameworks & Tools
@@ -85,78 +86,34 @@ class SkillModel {
                 'projects' => []
             ],
             [
-                'name' => 'React',
-                'level' => 1,
-                'category' => 'frameworks',
-                'notes' => 'Basic components and hooks',
-                'projects' => []
-            ],
-            [
                 'name' => 'Vue.js',
                 'level' => 1,
                 'category' => 'frameworks',
                 'notes' => 'Learning reactive programming',
-                'projects' => ['E-commerce Dashboard']
+                'projects' => ['Contract Companion']
             ],
             [
                 'name' => 'Spigot/Bukkit',
-                'level' => 3,
+                'level' => 1,
                 'category' => 'frameworks',
                 'notes' => 'Advanced plugin development',
-                'projects' => ['Minecraft Economy Plugin', 'Minecraft Minigames']
-            ],
-            [
-                'name' => 'Bootstrap',
-                'level' => 2,
-                'category' => 'frameworks',
-                'notes' => 'Responsive design, components',
-                'projects' => ['Various web projects']
-            ],
-
-            // Database & DevOps
-            [
-                'name' => 'MySQL',
-                'level' => 2,
-                'category' => 'database',
-                'notes' => 'Database design, optimization',
-                'projects' => ['Task Manager API', 'E-commerce Dashboard']
-            ],
-            [
-                'name' => 'MongoDB',
-                'level' => 1,
-                'category' => 'database',
-                'notes' => 'NoSQL basics, CRUD operations',
-                'projects' => ['Minecraft Minigames']
-            ],
-            [
-                'name' => 'Redis',
-                'level' => 1,
-                'category' => 'database',
-                'notes' => 'Caching, session storage',
-                'projects' => ['Minecraft Minigames']
+                'projects' => []
             ],
 
             // Tools
             [
                 'name' => 'Git',
-                'level' => 2,
+                'level' => 3,
                 'category' => 'tools',
                 'notes' => 'Version control, branching, collaboration',
                 'projects' => ['All projects']
             ],
             [
-                'name' => 'Docker',
+                'name' => 'Linux',
                 'level' => 1,
                 'category' => 'tools',
-                'notes' => 'Containerization basics',
-                'projects' => []
-            ],
-            [
-                'name' => 'Linux',
-                'level' => 2,
-                'category' => 'tools',
                 'notes' => 'Server management, bash scripting',
-                'projects' => ['Minecraft servers', 'Web hosting']
+                'projects' => []
             ],
             [
                 'name' => 'VS Code',
