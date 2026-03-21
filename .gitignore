@@ -1,0 +1,47 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Secrets / local environment
+.env
+.env.*
+*.env
+*.local
+*.secret
+secrets.*
+!.env.example
+
+# Certificates / private keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# Logs / runtime temp
+*.log
+logs/
+tmp/
+temp/
+
+# Dependency and build outputs
+vendor/
+node_modules/
+dist/
+build/
+coverage/
+
+# Local cache artifacts
+cache/*.tmp
+cache/*.log
+cache/game_stats.json
+
+# Optional uploads/temp public files
+public/uploads/
+public/files/tmp/

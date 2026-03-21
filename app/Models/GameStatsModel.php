@@ -216,7 +216,10 @@ class GameStatsModel {
         // Example implementation with R6Stats API
         // You'll need to sign up for API key at: https://r6stats.com/
 
-        $apiKey = 'YOUR_R6STATS_API_KEY'; // Add your API key here
+        $apiKey = getenv('R6STATS_API_KEY') ?: ($_ENV['R6STATS_API_KEY'] ?? '');
+        if (empty($apiKey)) {
+            return null;
+        }
         $apiUrl = "https://api2.r6stats.com/public-api/stats/{$username}/{$platform}/generic";
 
         $ch = curl_init($apiUrl);
