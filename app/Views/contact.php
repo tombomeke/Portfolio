@@ -24,7 +24,7 @@ BESTAND: /app/Views/contact.php
         <div class="contact-content">
             <div class="contact-form-wrapper">
                 <h2 data-translate="contact_send_message"><?= trans('contact_send_message') ?></h2>
-                <form method="POST" action="?page=contact" class="contact-form">
+                <form method="POST" action="index.php?page=contact" class="contact-form">
                     <div class="form-group">
                         <label for="name">
                             <i class="fas fa-user"></i> <span data-translate="contact_name"><?= trans('contact_name') ?></span> *

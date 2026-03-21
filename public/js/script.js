@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Form Validation Enhancement
-    const contactForm = document.querySelector('form');
+    const contactForm = document.querySelector('.contact-form');
     if (contactForm) {
         const inputs = contactForm.querySelectorAll('input, textarea');
 
@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         contactForm.addEventListener('submit', function(e) {
             let isValid = true;
+            const submitButton = contactForm.querySelector('button[type="submit"]');
 
             inputs.forEach(input => {
                 if (!validateField(input)) {
@@ -244,6 +245,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (firstError) {
                     firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
+                if (submitButton) {
+                    submitButton.classList.remove('loading');
+                    submitButton.disabled = false;
+                }
+            } else if (submitButton) {
+                submitButton.classList.add('loading');
+                submitButton.disabled = true;
             }
         });
     }
