@@ -12,6 +12,7 @@ class PortfolioController {
     private $projectModel;
     private $skillModel;
     private $gameStatsModel;
+    private $contactRecipient = 'tom1dekoning@gmail.com';
 
     public function __construct() {
         $this->projectModel = new ProjectModel();
@@ -117,18 +118,36 @@ class PortfolioController {
             exit;
         }
 
-        // Send email (simplified - configure for production)
-        $to = 'jouw@email.com';
+        if (!function_exists('mail')) {
+            $_SESSION['contact_error'] = 'Mailfunctie is niet beschikbaar op deze server. Mail direct naar ' . $this->contactRecipient;
+            header('Location: ?page=contact');
+            exit;
+        }
+
+        // Send email using a trusted sender and user Reply-To for better deliverability.
+        $to = $this->contactRecipient;
         $subject = 'Portfolio Contact: ' . $name;
         $emailBody = "Naam: $name\nE-mail: $email\n\nBericht:\n$message";
-        $headers = "From: $email\r\n";
-        $headers .= "Reply-To: $email\r\n";
-        $headers .= "X-Mailer: PHP/" . phpversion();
+        $serverName = $_SERVER['SERVER_NAME'] ?? 'localhost';
+        $serverName = preg_replace('/^www\./i', '', $serverName);
+        $fromAddress = 'noreply@' . $serverName;
 
-        if (mail($to, $subject, $emailBody, $headers)) {
+        if (!filter_var($fromAddress, FILTER_VALIDATE_EMAIL)) {
+            $fromAddress = 'noreply@localhost.localdomain';
+        }
+
+        $headers = [];
+        $headers[] = 'From: Portfolio Website <' . $fromAddress . '>';
+        $headers[] = 'Reply-To: ' . $email;
+        $headers[] = 'MIME-Version: 1.0';
+        $headers[] = 'Content-Type: text/plain; charset=UTF-8';
+        $headers[] = 'X-Mailer: PHP/' . phpversion();
+        $headerString = implode("\r\n", $headers);
+
+        if (mail($to, $subject, $emailBody, $headerString)) {
             $_SESSION['contact_success'] = 'Bericht succesvol verzonden! Ik neem zo snel mogelijk contact met je op.';
         } else {
-            $_SESSION['contact_error'] = 'Er is een fout opgetreden bij het verzenden. Probeer het later opnieuw of mail direct naar ' . $to;
+            $_SESSION['contact_error'] = 'Er is een fout opgetreden bij het verzenden. Probeer het later opnieuw of mail direct naar ' . $this->contactRecipient;
         }
 
         header('Location: ?page=contact');
