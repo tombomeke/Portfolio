@@ -12,8 +12,8 @@ require_once __DIR__ . '/../Models/FaqModel.php';
 
 class PortfolioController {
     private $projectModel;
-    private NewsModel $newsModel;
-    private FaqModel $faqModel;
+    private $newsModel;
+    private $faqModel;
     private $skillModel;
     private $gameStatsModel;
     private $contactRecipient = 'tom1dekoning@gmail.com';
@@ -192,7 +192,7 @@ class PortfolioController {
         ]);
     }
 
-    public function showNewsItem(int $id) {
+    public function showNewsItem($id) {
         $lang = Translations::getCurrentLang();
         $item = $this->newsModel->getById($id, $lang);
 
@@ -289,7 +289,7 @@ class PortfolioController {
         include __DIR__ . '/../Views/layout.php';
     }
 
-    private function isValidGitHubUrl(?string $url): bool {
+    private function isValidGitHubUrl($url) {
         if (empty($url)) return false;
         $parsed = parse_url($url);
         return isset($parsed['scheme'], $parsed['host'], $parsed['path'])

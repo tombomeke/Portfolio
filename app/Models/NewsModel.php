@@ -3,7 +3,7 @@ require_once __DIR__ . '/../Config/Database.php';
 
 class NewsModel {
 
-    public function getAll(string $lang = 'nl', int $limit = 20, int $offset = 0): array {
+    public function getAll($lang = 'nl', $limit = 20, $offset = 0) {
         $db  = Database::getConnection();
         $sql = "SELECT n.id, n.image_path, n.published_at,
                        t.title, t.content
@@ -22,7 +22,7 @@ class NewsModel {
         return $stmt->fetchAll();
     }
 
-    public function getById(int $id, string $lang = 'nl'): ?array {
+    public function getById($id, $lang = 'nl') {
         $db   = Database::getConnection();
         $stmt = $db->prepare(
             "SELECT n.id, n.image_path, n.published_at,
@@ -37,7 +37,7 @@ class NewsModel {
         return $row ?: null;
     }
 
-    public function count(string $lang = 'nl'): int {
+    public function count($lang = 'nl') {
         $db   = Database::getConnection();
         $stmt = $db->prepare(
             "SELECT COUNT(*) FROM news_items n

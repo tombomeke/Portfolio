@@ -2,9 +2,9 @@
 require_once __DIR__ . '/db.php';
 
 class Database {
-    private static ?PDO $connection = null;
+    private static $connection = null;
 
-    public static function getConnection(): PDO {
+    public static function getConnection() {
         if (self::$connection === null) {
             $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
             self::$connection = new PDO($dsn, DB_USER, DB_PASS, [

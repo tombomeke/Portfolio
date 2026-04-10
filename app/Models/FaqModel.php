@@ -4,7 +4,7 @@ require_once __DIR__ . '/../Config/Database.php';
 class FaqModel {
 
     /** Alle categorieën met hun items voor de gegeven taal */
-    public function getAllWithItems(string $lang = 'nl'): array {
+    public function getAllWithItems($lang = 'nl') {
         $db = Database::getConnection();
 
         $cats = $db->prepare(
