@@ -9,6 +9,7 @@ desktop.ini
 .idea/
 
 # Secrets / local environment
+app/Config/db.php
 .env
 .env.*
 *.env

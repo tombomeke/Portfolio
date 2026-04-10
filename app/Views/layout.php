@@ -33,6 +33,8 @@ require_once __DIR__ . '/../Config/translations.php';
                     <a href="?page=dev-life" class="nav-link" data-translate="nav_devlife"><?= trans('nav_devlife') ?></a>
                     <a href="?page=games" class="nav-link" data-translate="nav_games"><?= trans('nav_games') ?></a>
                     <a href="?page=projects" class="nav-link" data-translate="nav_projects"><?= trans('nav_projects') ?></a>
+                    <a href="?page=news" class="nav-link">News</a>
+                    <a href="?page=readmesync" class="nav-link">ReadmeSync</a>
                     <a href="?page=contact" class="nav-link" data-translate="nav_contact"><?= trans('nav_contact') ?></a>
 
                     <!-- Language Toggle Button -->

@@ -28,6 +28,12 @@ switch($page) {
     case 'projects':
         $controller->showProjects();
         break;
+    case 'news':
+        $controller->showNews();
+        break;
+    case 'news-item':
+        $controller->showNewsItem((int) ($_GET['id'] ?? 0));
+        break;
     case 'readmesync':
         $controller->showReadmeSync();
         break;

@@ -7,17 +7,20 @@ require_once __DIR__ . '/../Config/translations.php';
 require_once __DIR__ . '/../Models/ProjectModels.php';
 require_once __DIR__ . '/../Models/SkillModel.php';
 require_once __DIR__ . '/../Models/GameStatsModel.php';
+require_once __DIR__ . '/../Models/NewsModel.php';
 
 class PortfolioController {
     private $projectModel;
+    private NewsModel $newsModel;
     private $skillModel;
     private $gameStatsModel;
     private $contactRecipient = 'tom1dekoning@gmail.com';
 
     public function __construct() {
-        $this->projectModel = new ProjectModel();
-        $this->skillModel = new SkillModel();
+        $this->projectModel   = new ProjectModel();
+        $this->skillModel     = new SkillModel();
         $this->gameStatsModel = new GameStatsModel();
+        $this->newsModel      = new NewsModel();
     }
 
     public function showAbout() {
@@ -168,6 +171,37 @@ class PortfolioController {
         } else {
             $this->show404();
         }
+    }
+
+    public function showNews() {
+        $lang    = Translations::getCurrentLang();
+        $perPage = 9;
+        $page    = max(1, (int) ($_GET['p'] ?? 1));
+        $offset  = ($page - 1) * $perPage;
+        $total   = $this->newsModel->count($lang);
+        $items   = $this->newsModel->getAll($lang, $perPage, $offset);
+
+        $this->render('news', [
+            'title'      => 'News',
+            'items'      => $items,
+            'page'       => $page,
+            'totalPages' => (int) ceil($total / $perPage),
+        ]);
+    }
+
+    public function showNewsItem(int $id) {
+        $lang = Translations::getCurrentLang();
+        $item = $this->newsModel->getById($id, $lang);
+
+        if (!$item) {
+            $this->show404();
+            return;
+        }
+
+        $this->render('news-item', [
+            'title' => htmlspecialchars($item['title'], ENT_QUOTES, 'UTF-8'),
+            'item'  => $item,
+        ]);
     }
 
     public function showReadmeSync() {
