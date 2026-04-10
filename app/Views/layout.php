@@ -34,6 +34,7 @@ require_once __DIR__ . '/../Config/translations.php';
                     <a href="?page=games" class="nav-link" data-translate="nav_games"><?= trans('nav_games') ?></a>
                     <a href="?page=projects" class="nav-link" data-translate="nav_projects"><?= trans('nav_projects') ?></a>
                     <a href="?page=news" class="nav-link">News</a>
+                    <a href="?page=faq" class="nav-link">FAQ</a>
                     <a href="?page=readmesync" class="nav-link">ReadmeSync</a>
                     <a href="?page=contact" class="nav-link" data-translate="nav_contact"><?= trans('nav_contact') ?></a>
 

@@ -34,6 +34,9 @@ switch($page) {
     case 'news-item':
         $controller->showNewsItem((int) ($_GET['id'] ?? 0));
         break;
+    case 'faq':
+        $controller->showFaq();
+        break;
     case 'readmesync':
         $controller->showReadmeSync();
         break;

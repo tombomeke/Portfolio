@@ -26,8 +26,8 @@ Migrations draaien we manueel of via een simpel PHP-script (geen ORM).
 
 ## Migratie van backend-web-portfolio
 **tombomeke-ehb/backend-web-portfolio** is een Laravel 12 app (5x uitgebreider) die we aan het migreren zijn naar déze structuur. Prioriteit:
-1. News systeem (nieuwsberichten, NL/EN) ← bezig
-2. FAQ systeem
+1. ✅ News systeem (nieuwsberichten, NL/EN)
+2. ✅ FAQ systeem
 3. Projects DB-driven (nu nog statische array in ProjectModels.php)
 4. Contact berichten opslaan in DB (nu alleen e-mail)
 

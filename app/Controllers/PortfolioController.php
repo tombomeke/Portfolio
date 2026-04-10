@@ -8,10 +8,12 @@ require_once __DIR__ . '/../Models/ProjectModels.php';
 require_once __DIR__ . '/../Models/SkillModel.php';
 require_once __DIR__ . '/../Models/GameStatsModel.php';
 require_once __DIR__ . '/../Models/NewsModel.php';
+require_once __DIR__ . '/../Models/FaqModel.php';
 
 class PortfolioController {
     private $projectModel;
     private NewsModel $newsModel;
+    private FaqModel $faqModel;
     private $skillModel;
     private $gameStatsModel;
     private $contactRecipient = 'tom1dekoning@gmail.com';
@@ -21,6 +23,7 @@ class PortfolioController {
         $this->skillModel     = new SkillModel();
         $this->gameStatsModel = new GameStatsModel();
         $this->newsModel      = new NewsModel();
+        $this->faqModel       = new FaqModel();
     }
 
     public function showAbout() {
@@ -201,6 +204,14 @@ class PortfolioController {
         $this->render('news-item', [
             'title' => htmlspecialchars($item['title'], ENT_QUOTES, 'UTF-8'),
             'item'  => $item,
+        ]);
+    }
+
+    public function showFaq() {
+        $lang = Translations::getCurrentLang();
+        $this->render('faq', [
+            'title'      => 'FAQ',
+            'categories' => $this->faqModel->getAllWithItems($lang),
         ]);
     }
 
