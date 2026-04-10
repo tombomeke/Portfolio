@@ -170,6 +170,59 @@ class PortfolioController {
         }
     }
 
+    public function showReadmeSync() {
+        $apiUrl  = 'https://tombomekestudio.com/api/readmesync/generate';
+        $repoUrl = isset($_GET['repo']) ? trim($_GET['repo']) : '';
+
+        $result   = null;
+        $error    = null;
+        $language = null;
+
+        if ($repoUrl !== '') {
+            if (!$this->isValidGitHubUrl($repoUrl)) {
+                $error = 'Ongeldige GitHub URL. Verwacht: https://github.com/owner/repo';
+            } else {
+                $payload = json_encode(['githubRepoUrl' => $repoUrl]);
+
+                $ch = curl_init($apiUrl);
+                curl_setopt_array($ch, [
+                    CURLOPT_POST           => true,
+                    CURLOPT_POSTFIELDS     => $payload,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT        => 35,
+                    CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Accept: application/json'],
+                    CURLOPT_SSL_VERIFYPEER => true,
+                ]);
+
+                $raw      = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curlErr  = curl_error($ch);
+                curl_close($ch);
+
+                if ($curlErr) {
+                    $error = 'De ReadmeSync API is momenteel niet bereikbaar.';
+                } elseif ($httpCode === 200) {
+                    $data     = json_decode($raw, true);
+                    $result   = $data['content']  ?? null;
+                    $language = $data['language'] ?? null;
+                } elseif ($httpCode === 404) {
+                    $error = 'Repository niet gevonden of is privé.';
+                } else {
+                    $decoded = json_decode($raw, true);
+                    $error   = $decoded['detail'] ?? $decoded['error'] ?? 'Er is een fout opgetreden bij het genereren.';
+                }
+            }
+        }
+
+        $this->render('readmesync', [
+            'title'    => 'ReadmeSync – Live Code Overview',
+            'repoUrl'  => htmlspecialchars($repoUrl, ENT_QUOTES, 'UTF-8'),
+            'result'   => $result,
+            'language' => $language,
+            'error'    => $error,
+        ]);
+    }
+
     public function show404() {
         http_response_code(404);
         $data = ['title' => '404 - Pagina niet gevonden'];
@@ -189,6 +242,15 @@ class PortfolioController {
 
         $content = ob_get_clean();
         include __DIR__ . '/../Views/layout.php';
+    }
+
+    private function isValidGitHubUrl(?string $url): bool {
+        if (empty($url)) return false;
+        $parsed = parse_url($url);
+        return isset($parsed['scheme'], $parsed['host'], $parsed['path'])
+            && in_array($parsed['scheme'], ['https', 'http'], true)
+            && $parsed['host'] === 'github.com'
+            && substr_count(trim($parsed['path'], '/'), '/') >= 1;
     }
 
     private function sanitizeInput($input) {

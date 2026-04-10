@@ -28,6 +28,9 @@ switch($page) {
     case 'projects':
         $controller->showProjects();
         break;
+    case 'readmesync':
+        $controller->showReadmeSync();
+        break;
     case 'contact':
         if ($_POST) {
             $controller->handleContact($_POST);
