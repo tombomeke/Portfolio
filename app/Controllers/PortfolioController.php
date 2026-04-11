@@ -523,10 +523,21 @@ class PortfolioController {
                     $language = $data['language'] ?? null;
                     $debugHttpCode = null; // no debug needed on success
                 } elseif ($httpCode === 404) {
-                    $error = 'Repository niet gevonden of is privé.';
+                    $decoded = json_decode((string) $raw, true);
+                    $detail  = strtolower((string) ($decoded['detail'] ?? $decoded['error'] ?? $raw ?? ''));
+                    if (strpos($detail, 'ssl') !== false || strpos($detail, 'certificate') !== false) {
+                        $error = 'ReadmeSync backend SSL-probleem: certificaat verlopen of ongeldig.';
+                    } else {
+                        $error = 'Repository niet gevonden of is privé.';
+                    }
                 } else {
                     $decoded = json_decode($raw, true);
-                    $error   = $decoded['detail'] ?? $decoded['error'] ?? 'Er is een fout opgetreden bij het genereren.';
+                    $detail  = strtolower((string) ($decoded['detail'] ?? $decoded['error'] ?? $raw ?? ''));
+                    if (strpos($detail, 'ssl') !== false || strpos($detail, 'certificate') !== false) {
+                        $error = 'ReadmeSync backend SSL-probleem: certificaat verlopen of ongeldig.';
+                    } else {
+                        $error = $decoded['detail'] ?? $decoded['error'] ?? 'Er is een fout opgetreden bij het genereren.';
+                    }
                 }
             }
         }

@@ -2,6 +2,8 @@
     <div class="flash <?= htmlspecialchars($flash['type']) ?>"><?= htmlspecialchars($flash['message']) ?></div>
 <?php endif; ?>
 
+<?php $defaultRepoUrl = !empty($config['repoUrl']) ? (string) $config['repoUrl'] : 'https://github.com/tombomeke/Portfolio'; ?>
+
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header">
         <span class="card-title"><i class="fas fa-wand-magic-sparkles"></i> Sync vanuit ReadmeSync</span>
@@ -12,7 +14,7 @@
 
         <div class="form-group">
             <label>GitHub repository URL</label>
-            <input type="url" name="repo_url" placeholder="https://github.com/owner/repo" value="<?= htmlspecialchars((string) ($config['repoUrl'] ?? '')) ?>" required>
+            <input type="url" name="repo_url" placeholder="https://github.com/owner/repo" value="<?= htmlspecialchars($defaultRepoUrl) ?>" required>
             <span class="form-hint">Leest checklist-items uit ReadmeSync output. Gebruik markdown checkboxes: - [ ] en - [x].</span>
         </div>
 

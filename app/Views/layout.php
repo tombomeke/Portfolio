@@ -7,6 +7,7 @@ BESTAND: /app/Views/layout.php (UPDATED)
 
 // Include translations
 require_once __DIR__ . '/../Config/translations.php';
+require_once __DIR__ . '/../Models/UserModel.php';
 ?>
     <!DOCTYPE html>
     <html lang="<?= Translations::getCurrentLang() ?>">
@@ -42,6 +43,21 @@ require_once __DIR__ . '/../Config/translations.php';
                     <?php
                     $authUser = $_SESSION['auth_user'];
                     $authRole = $authUser['role'] ?? 'user';
+
+                    // Session can lag behind profile updates from older login sessions.
+                    if (empty($authUser['profile_photo_path']) && !empty($authUser['id'])) {
+                        try {
+                            $userModel = new UserModel();
+                            $freshUser = $userModel->getById((int) $authUser['id']);
+                            if (!empty($freshUser['profile_photo_path'])) {
+                                $authUser['profile_photo_path'] = $freshUser['profile_photo_path'];
+                                $_SESSION['auth_user']['profile_photo_path'] = $freshUser['profile_photo_path'];
+                            }
+                        } catch (\Throwable $e) {
+                            // Ignore DB lookup failures and keep initials fallback.
+                        }
+                    }
+
                     $rawAvatarPath = trim((string) ($authUser['profile_photo_path'] ?? ''));
                     $avatarPath = '';
                     if ($rawAvatarPath !== '') {

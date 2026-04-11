@@ -1517,12 +1517,50 @@ class AdminController {
         $curlErr = curl_error($ch);
         curl_close($ch);
 
+        // SSL fallback: shared hosting can have outdated CA bundles.
+        if ($curlErr) {
+            $curlErrLower = strtolower($curlErr);
+            if (strpos($curlErrLower, 'ssl') !== false || strpos($curlErrLower, 'certificate') !== false) {
+                $ch2 = curl_init($this->readmeSyncApiUrl);
+                $fallback = [
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => $payload,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_CONNECTTIMEOUT => 10,
+                    CURLOPT_TIMEOUT => 35,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                ];
+                curl_setopt_array($ch2, $fallback);
+                $raw2 = curl_exec($ch2);
+                $httpCode2 = (int) curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+                $curlErr2 = curl_error($ch2);
+                curl_close($ch2);
+
+                if (!$curlErr2) {
+                    $raw = $raw2;
+                    $httpCode = $httpCode2;
+                    $curlErr = '';
+                }
+            }
+        }
+
         if ($curlErr) {
             $error = 'ReadmeSync niet bereikbaar: ' . $curlErr;
             return null;
         }
         if ($httpCode !== 200) {
-            $error = 'ReadmeSync gaf HTTP ' . $httpCode . '.';
+            $decoded = json_decode((string) $raw, true);
+            $detail = strtolower((string) ($decoded['detail'] ?? $decoded['error'] ?? $raw ?? ''));
+            if (strpos($detail, 'ssl') !== false || strpos($detail, 'certificate') !== false) {
+                $error = 'ReadmeSync backend SSL-probleem: certificaat verlopen of ongeldig.';
+            } elseif ($httpCode === 404) {
+                $error = 'Repository niet gevonden of API kan GitHub niet bereiken.';
+            } else {
+                $error = 'ReadmeSync gaf HTTP ' . $httpCode . '.';
+            }
             return null;
         }
 
