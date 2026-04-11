@@ -1437,6 +1437,7 @@ class AdminController {
             if ($action === 'sync') {
                 $repoUrl = trim($_POST['repo_url'] ?? '');
                 $todosOnly = isset($_POST['todos_only']) && $_POST['todos_only'] === '1';
+                $mergeMode = isset($_POST['merge_mode']) && $_POST['merge_mode'] === '1';
 
                 // TODO(roadmap): add optional "target section" input so parsing can focus on a single README block (e.g. Roadmap/TODO).
 
@@ -1454,11 +1455,13 @@ class AdminController {
 
                 $items = $this->parseChecklistItems($content, $todosOnly);
                 if (empty($items)) {
-                    $this->flash('error', 'Geen checklist-items gevonden in de ReadmeSync output.');
+                    $this->flash('error', 'Geen roadmap-, checklist- of TODO-items gevonden in de ReadmeSync output.');
                     header('Location: ?page=admin&section=roadmap'); exit;
                 }
 
-                // TODO(roadmap): support merge mode (keep manual items + upsert synced items by normalized title).
+                if ($mergeMode) {
+                    $items = $this->mergeRoadmapItems((array) ($config['items'] ?? []), $items);
+                }
 
                 $config['items'] = $items;
                 $config['repoUrl'] = $repoUrl;
@@ -1466,8 +1469,10 @@ class AdminController {
                 $config['lastSyncAt'] = date('c');
                 $this->saveRoadmapConfig($config);
 
-                ActivityLogModel::log('updated', 'Synced roadmap from ReadmeSync (' . count($items) . ' items)');
-                $this->flash('success', 'Roadmap gesynchroniseerd vanuit ReadmeSync.');
+                ActivityLogModel::log('updated', 'Synced roadmap from ReadmeSync (' . count($items) . ' items, merge=' . ($mergeMode ? 'yes' : 'no') . ')');
+                $this->flash('success', $mergeMode
+                    ? 'Roadmap gemerged en gesynchroniseerd vanuit ReadmeSync.'
+                    : 'Roadmap gesynchroniseerd vanuit ReadmeSync.');
                 header('Location: ?page=admin&section=roadmap'); exit;
             }
 
@@ -1774,53 +1779,283 @@ class AdminController {
 
     private function parseChecklistItems(string $markdown, bool $todosOnly): array {
         $cleanMarkdown = preg_replace('/```.*?```/s', '', $markdown) ?? $markdown;
+        $lines = preg_split('/\R/', $cleanMarkdown) ?: [];
+        $sectionLines = $this->extractRoadmapSectionLines($lines);
+        $targetLines = !empty($sectionLines) ? $sectionLines : $lines;
+        $hasSectionTargeting = !empty($sectionLines);
 
-        preg_match_all('/^\s*[-*]\s*\[( |x|X)\]\s+(.+)$/m', $cleanMarkdown, $matches, PREG_SET_ORDER);
         $items = [];
+        $seenNormalizedTitles = [];
 
-        // TODO(roadmap): enrich parsing with priority labels and owner tags (e.g. [P1], @owner).
         // TODO(roadmap): keep source line numbers to improve traceability in roadmap UI.
 
-        foreach ($matches as $index => $match) {
-            $status = strtolower(trim($match[1])) === 'x' ? 'done' : 'todo';
+        foreach ($targetLines as $lineIndex => $lineEntry) {
+            $line = is_array($lineEntry) ? (string) ($lineEntry['line'] ?? '') : (string) $lineEntry;
+            $lineNumber = is_array($lineEntry) && isset($lineEntry['lineNumber'])
+                ? (int) $lineEntry['lineNumber']
+                : $lineIndex + 1;
+            $section = is_array($lineEntry) ? (string) ($lineEntry['section'] ?? '') : '';
+
+            $parsed = $this->parseRoadmapLine($line);
+            if ($parsed === null) {
+                continue;
+            }
+
+            $status = $parsed['status'];
+            $title = $parsed['title'];
+            $priority = (string) ($parsed['priority'] ?? 'normal');
             if ($todosOnly && $status === 'done') {
                 continue;
             }
-            $title = trim(strip_tags($match[2]));
-            if ($title === '') {
+
+            $normalizedTitle = $this->normalizeRoadmapTitle($title);
+            if ($normalizedTitle === '' || isset($seenNormalizedTitles[$normalizedTitle])) {
                 continue;
             }
+            $seenNormalizedTitles[$normalizedTitle] = true;
+
             $items[] = [
-                'id' => 'synced-' . ($index + 1) . '-' . substr(md5($title), 0, 8),
+                'id' => 'synced-' . $lineNumber . '-' . substr(md5($title), 0, 8),
                 'title' => $title,
                 'description' => '',
                 'status' => $status,
+                'priority' => $priority,
+                'sourceLine' => $lineNumber,
+                'sourceSection' => $hasSectionTargeting ? ($section !== '' ? $section : 'roadmap') : null,
             ];
         }
 
-        // Fallback: support plain markdown bullet lists when no checkboxes are present.
-        if (empty($items)) {
-            preg_match_all('/^\s*(?:[-*]|\d+\.)\s+(.+)$/m', $cleanMarkdown, $bulletMatches, PREG_SET_ORDER);
-            foreach ($bulletMatches as $index => $match) {
-                $title = trim(strip_tags((string) ($match[1] ?? '')));
-                if ($title === '' || strlen($title) < 3) {
-                    continue;
-                }
+        return $items;
+    }
 
-                if (preg_match('/^(#{1,6}|[-=]{3,})\s*$/', $title)) {
-                    continue;
-                }
+    private function extractRoadmapSectionLines(array $lines): array {
+        $sectionLines = [];
+        $activeSection = null;
+        $foundTargetSection = false;
 
-                $items[] = [
-                    'id' => 'synced-bullet-' . ($index + 1) . '-' . substr(md5($title), 0, 8),
-                    'title' => $title,
-                    'description' => '',
-                    'status' => 'todo',
+        foreach ($lines as $lineNumber => $line) {
+            $text = trim((string) $line);
+            if ($text === '') {
+                if ($activeSection !== null) {
+                    $sectionLines[] = [
+                        'line' => $line,
+                        'lineNumber' => $lineNumber + 1,
+                        'section' => $activeSection,
+                    ];
+                }
+                continue;
+            }
+
+            if (preg_match('/^#{1,6}\s*(.+?)\s*$/', $text, $headingMatch)) {
+                $heading = trim((string) $headingMatch[1]);
+                if (preg_match('/^(roadmap|todo)(?:\b|\s*[:\-].*)?$/i', $heading)) {
+                    $activeSection = strtolower(preg_replace('/\s*[:\-].*$/', '', $heading));
+                    $foundTargetSection = true;
+                } else {
+                    $activeSection = null;
+                }
+                continue;
+            }
+
+            if ($activeSection !== null) {
+                $sectionLines[] = [
+                    'line' => $line,
+                    'lineNumber' => $lineNumber + 1,
+                    'section' => $activeSection,
                 ];
             }
         }
 
-        return $items;
+        return $foundTargetSection ? $sectionLines : [];
+    }
+
+    private function parseRoadmapLine(string $line): ?array {
+        $trimmed = trim(strip_tags($line));
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if ($this->isRoadmapNoiseLine($trimmed)) {
+            return null;
+        }
+
+        if (preg_match('/^\s*[-*]\s*\[( |x|X)\]\s+(.+)$/', $line, $match)) {
+            $title = trim(strip_tags((string) $match[2]));
+            if ($title === '') {
+                return null;
+            }
+
+            [$title, $priority] = $this->extractPriorityAndNormalizeTitle($title);
+
+            return [
+                'title' => $title,
+                'status' => strtolower(trim((string) $match[1])) === 'x' ? 'done' : 'todo',
+                'priority' => $priority,
+            ];
+        }
+
+        if (preg_match('/^\s*(?:[-*]|\d+\.)\s+(.+)$/', $line, $match)) {
+            $title = trim(strip_tags((string) $match[1]));
+            if ($title === '' || strlen($title) < 3) {
+                return null;
+            }
+
+            if (preg_match('/^(#{1,6}|[-=]{3,})\s*$/', $title)) {
+                return null;
+            }
+
+            [$title, $priority] = $this->extractPriorityAndNormalizeTitle($title);
+
+            return [
+                'title' => $title,
+                'status' => 'todo',
+                'priority' => $priority,
+            ];
+        }
+
+        if (preg_match('/^\s*(?:[#>\-\*]\s*)?(?:TODO|TO DO)\s*[:\-]\s*(.+)$/i', $line, $match)) {
+            $title = trim(strip_tags((string) $match[1]));
+            if ($title === '') {
+                return null;
+            }
+
+            [$title, $priority] = $this->extractPriorityAndNormalizeTitle($title);
+
+            return [
+                'title' => $title,
+                'status' => 'todo',
+                'priority' => $priority,
+            ];
+        }
+
+        // Accept inline TODO markers outside bullet lists, e.g. "Refactor auth TODO: split service"
+        if (preg_match('/\b(?:TODO|TO DO)\b\s*[:\-]\s*(.+)$/i', $trimmed, $match)) {
+            $title = trim(strip_tags((string) $match[1]));
+            if ($title === '') {
+                return null;
+            }
+
+            [$title, $priority] = $this->extractPriorityAndNormalizeTitle($title);
+
+            return [
+                'title' => $title,
+                'status' => 'todo',
+                'priority' => $priority,
+            ];
+        }
+
+        // Accept bracket notation, e.g. "[TODO] improve telemetry card"
+        if (preg_match('/^\s*\[\s*(?:TODO|TO DO)\s*\]\s*(.+)$/i', $trimmed, $match)) {
+            $title = trim(strip_tags((string) $match[1]));
+            if ($title === '') {
+                return null;
+            }
+
+            [$title, $priority] = $this->extractPriorityAndNormalizeTitle($title);
+
+            return [
+                'title' => $title,
+                'status' => 'todo',
+                'priority' => $priority,
+            ];
+        }
+
+        return null;
+    }
+
+    private function isRoadmapNoiseLine(string $line): bool {
+        // Ignore summary/stat lines from generated output, e.g. "0 Packages · 0 Types · 0 Methods · 0 TODOs".
+        if (preg_match('/^\**\s*\d+\s+packages?\s*[\-\x{00B7}]\s*\d+\s+types?\s*[\-\x{00B7}]\s*\d+\s+methods?\s*[\-\x{00B7}]\s*\d+\s+todos?\s*\**$/iu', $line)) {
+            return true;
+        }
+
+        if (preg_match('/^\s*\d+\s+todos?\s*$/i', $line)) {
+            return true;
+        }
+
+        if (preg_match('/^\s*(?:language|last updated|auto-generated|code overview)\b/i', $line)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function extractPriorityAndNormalizeTitle(string $title): array {
+        $priority = 'normal';
+
+        if (preg_match('/\[(p1|p2|p3|high|medium|med|low)\]/i', $title, $match)) {
+            $token = strtolower((string) $match[1]);
+            if ($token === 'p1' || $token === 'high') {
+                $priority = 'high';
+            } elseif ($token === 'p2' || $token === 'medium' || $token === 'med') {
+                $priority = 'medium';
+            } elseif ($token === 'p3' || $token === 'low') {
+                $priority = 'low';
+            }
+        }
+
+        $cleanTitle = trim((string) preg_replace('/\[(p1|p2|p3|high|medium|med|low)\]/i', '', $title));
+        if ($cleanTitle === '') {
+            $cleanTitle = trim($title);
+        }
+
+        return [$cleanTitle, $priority];
+    }
+
+    private function normalizeRoadmapTitle(string $title): string {
+        $normalized = strtolower(trim($title));
+        $normalized = (string) preg_replace('/\[(p1|p2|p3|high|medium|med|low)\]/i', '', $normalized);
+        $normalized = (string) preg_replace('/\s+/', ' ', $normalized);
+        $normalized = (string) preg_replace('/[^a-z0-9 ]/', '', $normalized);
+        return trim($normalized);
+    }
+
+    private function mergeRoadmapItems(array $existingItems, array $syncedItems): array {
+        $merged = $existingItems;
+        $indexByTitle = [];
+
+        foreach ($merged as $index => $item) {
+            $title = trim((string) ($item['title'] ?? ''));
+            if ($title === '') {
+                continue;
+            }
+            $key = $this->normalizeRoadmapTitle($title);
+            if ($key !== '' && !isset($indexByTitle[$key])) {
+                $indexByTitle[$key] = $index;
+            }
+        }
+
+        foreach ($syncedItems as $synced) {
+            $title = trim((string) ($synced['title'] ?? ''));
+            if ($title === '') {
+                continue;
+            }
+
+            $key = $this->normalizeRoadmapTitle($title);
+            if ($key !== '' && isset($indexByTitle[$key])) {
+                $targetIndex = $indexByTitle[$key];
+                $current = (array) $merged[$targetIndex];
+
+                $current['title'] = $synced['title'] ?? ($current['title'] ?? $title);
+                $current['status'] = $synced['status'] ?? ($current['status'] ?? 'todo');
+                $current['priority'] = $synced['priority'] ?? ($current['priority'] ?? 'normal');
+                $current['sourceLine'] = $synced['sourceLine'] ?? ($current['sourceLine'] ?? null);
+                $current['sourceSection'] = $synced['sourceSection'] ?? ($current['sourceSection'] ?? null);
+                $current['syncSource'] = 'readmesync';
+
+                $merged[$targetIndex] = $current;
+                continue;
+            }
+
+            $synced['syncSource'] = 'readmesync';
+            $merged[] = $synced;
+            $newIndex = count($merged) - 1;
+            if ($key !== '') {
+                $indexByTitle[$key] = $newIndex;
+            }
+        }
+
+        return $merged;
     }
 
     private function parseGitHubOwnerRepo(string $url): ?array {

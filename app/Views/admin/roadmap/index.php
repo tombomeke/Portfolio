@@ -15,13 +15,20 @@
         <div class="form-group">
             <label>GitHub repository URL</label>
             <input type="url" name="repo_url" placeholder="https://github.com/owner/repo" value="<?= htmlspecialchars($defaultRepoUrl) ?>" required>
-            <span class="form-hint">Leest checklist-items uit ReadmeSync output. Gebruik markdown checkboxes: - [ ] en - [x].</span>
+            <span class="form-hint">Leest items uit de ReadmeSync output. Ondersteunt checkboxes, bullets en TODO-regels zoals <strong># TODO:</strong>. Bij aanwezigheid van een Roadmap- of TODO-sectie wordt alleen die sectie gesynchroniseerd.</span>
         </div>
 
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
                 <input type="checkbox" name="todos_only" value="1" checked>
                 <span>Importeer alleen TODO items (onafgevinkt)</span>
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+                <input type="checkbox" name="merge_mode" value="1" checked>
+                <span>Merge mode: behoud bestaande items en update gematchte titels</span>
             </label>
         </div>
 
@@ -58,6 +65,12 @@
                     <input type="checkbox" name="done[]" value="<?= htmlspecialchars($id) ?>" <?= $isDone ? 'checked' : '' ?>>
                     <span>
                         <strong style="display:block"><?= htmlspecialchars((string) ($item['title'] ?? 'Roadmap item')) ?></strong>
+                        <?php if (!empty($item['priority']) && $item['priority'] !== 'normal'): ?>
+                            <small class="text-muted" style="display:inline-block;margin-top:.2rem">Prioriteit: <?= htmlspecialchars((string) $item['priority']) ?></small>
+                        <?php endif; ?>
+                        <?php if (!empty($item['sourceLine'])): ?>
+                            <small class="text-muted" style="display:block">Bronregel: #<?= (int) $item['sourceLine'] ?><?= !empty($item['sourceSection']) ? ' · Sectie: ' . htmlspecialchars((string) $item['sourceSection']) : '' ?></small>
+                        <?php endif; ?>
                         <?php if (!empty($item['description'])): ?>
                             <small class="text-muted"><?= htmlspecialchars((string) $item['description']) ?></small>
                         <?php endif; ?>
@@ -87,6 +100,9 @@
     <div class="card-header">
         <span class="card-title"><i class="fas fa-lightbulb"></i> TODO verbeteringen</span>
     </div>
+    <p class="text-muted text-sm" style="margin:0 0 .75rem">
+        Deze roadmap wordt gedeeld met de website via <code>app/Config/roadmap_items.json</code>. De sync schrijft dus naar dezelfde bron als de publieke roadmapweergave.
+    </p>
     <ul style="margin-left:1.1rem;display:grid;gap:.35rem;color:var(--text-muted)">
         <li>Section-targeted parsing: sync alleen uit README sectie "Roadmap" of "TODO".</li>
         <li>Merge mode: bewaar handmatige items en werk alleen gematchte synced items bij.</li>
@@ -100,17 +116,18 @@
         <span class="card-title"><i class="fas fa-file-lines"></i> Roadmap markdown template</span>
     </div>
     <p class="text-muted text-sm" style="margin:0 0 .75rem">
-        Gebruik dit formaat om checklist-items snel te copy-pasten in je README. De sync herkent zowel checkboxes als gewone bullets.
+        Gebruik dit formaat om checklist-items snel te copy-pasten in je README. De sync herkent checkboxes, gewone bullets en <strong># TODO:</strong>-regels.
     </p>
     <textarea id="roadmap-template" class="form-input" rows="10" style="width:100%;font-family:Consolas,monospace">## Roadmap
 
-- [ ] Voeg item 1 toe
-- [ ] Voeg item 2 toe
+- [ ] [P1] Voeg item 1 toe
+- [ ] [low] Voeg item 2 toe
 - [x] Reeds afgewerkt item
 
 ## TODO
 
 - Extra taak zonder checkbox (fallback naar todo)
+# TODO: Nog een taak als compacte TODO-regel
 - Nog een task
 </textarea>
     <div class="form-actions" style="margin-top:.75rem">
