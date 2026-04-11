@@ -447,7 +447,7 @@ class PortfolioController {
     }
 
     public function showReadmeSync() {
-        $apiUrl  = 'https://tombomekestudio.com/api/readmesync/generate';
+        $apiUrl  = getenv('READMESYNC_API_URL') ?: 'https://tombomekestudio.com/api/readmesync/generate';
         $repoUrl = isset($_GET['repo']) ? trim($_GET['repo']) : '';
 
         $result   = null;

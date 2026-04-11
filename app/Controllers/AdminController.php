@@ -29,6 +29,9 @@ class AdminController {
     private SiteSettingModel    $settings;
     private string              $contactEmail = 'tom1dekoning@gmail.com';
     private string              $readmeSyncApiUrl = 'https://tombomekestudio.com/api/readmesync/generate';
+    private string              $readmeSyncTelemetryApiUrl = 'https://tombomekestudio.com/api/v1/admin/telemetry';
+    private string              $readmeSyncTelemetryExportUrl = 'https://tombomekestudio.com/api/v1/admin/telemetry/export';
+    private string              $readmeSyncAdminApiKey = '';
 
     public function __construct() {
         $this->news        = new NewsModel();
@@ -41,6 +44,11 @@ class AdminController {
         $this->comments    = new NewsCommentModel();
         $this->activityLog = new ActivityLogModel();
         $this->settings    = new SiteSettingModel();
+
+        $this->readmeSyncApiUrl = getenv('READMESYNC_API_URL') ?: $this->readmeSyncApiUrl;
+        $this->readmeSyncTelemetryApiUrl = getenv('READMESYNC_ADMIN_TELEMETRY_URL') ?: $this->readmeSyncTelemetryApiUrl;
+        $this->readmeSyncTelemetryExportUrl = getenv('READMESYNC_ADMIN_TELEMETRY_EXPORT_URL') ?: $this->readmeSyncTelemetryExportUrl;
+        $this->readmeSyncAdminApiKey = getenv('READMESYNC_ADMIN_API_KEY') ?: '';
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -116,6 +124,10 @@ class AdminController {
             case 'roadmap':
                 Auth::requireOwner();
                 $this->routeRoadmap($isPost);
+                break;
+            case 'telemetry':
+                Auth::requireOwner();
+                $this->routeTelemetry();
                 break;
             default:
                 $this->showDashboard();
@@ -1441,8 +1453,138 @@ class AdminController {
         $this->renderAdmin('roadmap/index', compact('config', 'flash'), 'Roadmap Beheer');
     }
 
+    private function routeTelemetry(): void {
+        $filters = [
+            'telemetry_page' => max(1, (int) ($_GET['telemetry_page'] ?? 1)),
+            'eventType'      => trim($_GET['eventType'] ?? ''),
+            'repo'           => trim($_GET['repo'] ?? ''),
+            'language'       => trim($_GET['language'] ?? ''),
+            'os'             => trim($_GET['os'] ?? ''),
+            'fromUtc'        => trim($_GET['fromUtc'] ?? ''),
+            'toUtc'          => trim($_GET['toUtc'] ?? ''),
+        ];
+
+        $apiError = null;
+        $telemetry = $this->fetchReadmeSyncTelemetry($filters, $apiError) ?? [];
+        $summary = is_array($telemetry['summary'] ?? null) ? $telemetry['summary'] : [];
+        $items = is_array($telemetry['items'] ?? null) ? $telemetry['items'] : [];
+
+        $viewData = [
+            'telemetry' => $telemetry,
+            'summary' => $summary,
+            'items' => $items,
+            'filters' => $filters,
+            'apiError' => $apiError,
+            'exportUrl' => $this->buildReadmeSyncTelemetryUrl(true, $filters),
+            'listUrl' => $this->buildReadmeSyncTelemetryUrl(false, $filters),
+        ];
+
+        $flash = $this->popFlash();
+        $this->renderAdmin('telemetry/index', array_merge($viewData, compact('flash')), 'Telemetry');
+    }
+
     private function roadmapConfigPath(): string {
         return __DIR__ . '/../../app/Config/roadmap_items.json';
+    }
+
+    private function fetchReadmeSyncTelemetry(array $filters, ?string &$error): ?array {
+        $error = null;
+
+        if (!function_exists('curl_init')) {
+            $error = 'cURL niet beschikbaar op server.';
+            return null;
+        }
+
+        if ($this->readmeSyncAdminApiKey === '') {
+            $error = 'ReadmeSync admin API-key ontbreekt op de server.';
+            return null;
+        }
+
+        $url = $this->buildReadmeSyncTelemetryUrl(false, $filters);
+        $headers = [
+            'Accept: application/json',
+            'X-API-Key: ' . $this->readmeSyncAdminApiKey,
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 25,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+        ]);
+
+        $raw = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlErr) {
+            $curlErrLower = strtolower($curlErr);
+            if (strpos($curlErrLower, 'ssl') !== false || strpos($curlErrLower, 'certificate') !== false) {
+                $ch2 = curl_init($url);
+                curl_setopt_array($ch2, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_CONNECTTIMEOUT => 10,
+                    CURLOPT_TIMEOUT => 25,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_HTTPHEADER => $headers,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                ]);
+                $raw2 = curl_exec($ch2);
+                $httpCode2 = (int) curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+                $curlErr2 = curl_error($ch2);
+                curl_close($ch2);
+
+                if (!$curlErr2) {
+                    $raw = $raw2;
+                    $httpCode = $httpCode2;
+                    $curlErr = '';
+                }
+            }
+        }
+
+        if ($curlErr) {
+            $error = 'ReadmeSync telemetry niet bereikbaar: ' . $curlErr;
+            return null;
+        }
+
+        $decoded = json_decode((string) $raw, true);
+        if ($httpCode !== 200) {
+            $detail = is_array($decoded) ? (string) ($decoded['detail'] ?? $decoded['title'] ?? '') : '';
+            $error = $detail !== '' ? $detail : 'ReadmeSync telemetry gaf HTTP ' . $httpCode . '.';
+            return null;
+        }
+
+        if (!is_array($decoded)) {
+            $error = 'ReadmeSync telemetry response is ongeldig.';
+            return null;
+        }
+
+        return $decoded;
+    }
+
+    private function buildReadmeSyncTelemetryUrl(bool $export, array $filters): string {
+        $baseUrl = $export ? $this->readmeSyncTelemetryExportUrl : $this->readmeSyncTelemetryApiUrl;
+        $query = array_filter($filters, static fn($value) => $value !== null && $value !== '');
+
+        if ($export) {
+            unset($query['telemetry_page']);
+        } else {
+            $query['page'] = $query['telemetry_page'] ?? 1;
+            $query['pageSize'] = 50;
+            unset($query['telemetry_page']);
+        }
+
+        if (empty($query)) {
+            return $baseUrl;
+        }
+
+        return $baseUrl . '?' . http_build_query($query);
     }
 
     private function getDefaultRoadmapItems(): array {

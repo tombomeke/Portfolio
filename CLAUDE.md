@@ -52,7 +52,8 @@ WIP-routing is configureerbaar:
 - Owner kan dit beheren via `?page=admin&section=wip`.
 
 ## Database (Combell MySQL)
-Credentials staan in `app/Config/db.php` (niet in git). Gebruik PDO via `Database::getConnection()`.
+Credentials komen nu uit `PORTFOLIO_DB_HOST`, `PORTFOLIO_DB_NAME`, `PORTFOLIO_DB_USER` en `PORTFOLIO_DB_PASS` via `app/Config/db.php`.
+Gebruik PDO via `Database::getConnection()`.
 Migrations draaien we manueel of via een simpel PHP-script (geen ORM).
 
 `migrate_v2.sql` is aangepast voor MySQL 5.7-compatibiliteit:
@@ -98,6 +99,9 @@ Session payload bevat naast role/username ook profieldata (zoals `profile_photo_
 `?page=readmesync` → cURL call naar `https://tombomekestudio.com/api/readmesync/generate`
 Toont live code-overzicht van elke publieke GitHub repo.
 
+Telemetry wordt nu ook server-side opgehaald via de ReadmeSync API-admin endpoint en getoond in `?page=admin&section=telemetry`.
+Daarvoor worden `READMESYNC_API_URL`, `READMESYNC_ADMIN_TELEMETRY_URL` en `READMESYNC_ADMIN_API_KEY` uit env gebruikt.
+
 Recente hardening in Portfolio:
 - cURL guard op `curl_init`,
 - `CURLOPT_CONNECTTIMEOUT` + `CURLOPT_FOLLOWLOCATION`,
@@ -110,9 +114,10 @@ Auth-gedrag:
 Praktische debugflow bij "Repository niet gevonden of is privé":
 1. open page source en zoek comment `[ReadmeSync debug]`.
 2. check `http_code` en `curl_error`.
-3. bij structurele 404 vanuit API: controleer ReadmeSync.API GitHub token configuratie (`GitHub:Token`) en redeploy API.
+3. bij structurele 404 vanuit API: controleer ReadmeSync.API GitHub token configuratie (`GitHub:Tokens` / `GitHub__Tokens__*`) en redeploy API.
 
 Let op: GitHub token staat in de API-repo (`ReadmeSync.API`), niet in deze Portfolio-repo.
+Let op: database- en API-secrets staan niet meer hardcoded in de repo; zet ze server-side via env vars.
 
 ## Recente terminal geschiedenis (Claude)
 - WIP admin-sectie toegevoegd (`admin/wip`) + `wip_pages.json` configuratie.

@@ -79,6 +79,9 @@ $isAuth = isset($authUser);
         <a href="?page=admin&section=activity-logs" class="sidebar-link <?= ($currentSection === 'activity-logs') ? 'active' : '' ?>">
             <i class="fas fa-history fa-fw"></i> Activity Log
         </a>
+        <a href="?page=admin&section=telemetry" class="sidebar-link <?= ($currentSection === 'telemetry') ? 'active' : '' ?>">
+            <i class="fas fa-chart-line fa-fw"></i> Telemetry
+        </a>
         <?php endif; ?>
 
         <div class="nav-section-label" style="margin-top:.75rem">Account</div>

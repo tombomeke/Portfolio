@@ -131,6 +131,7 @@
             <span class="status-chip status-chip--ok"><i class="fas fa-check-circle"></i> FAQ live</span>
             <span class="status-chip status-chip--ok"><i class="fas fa-check-circle"></i> Profielen live</span>
             <a href="?page=admin&section=wip" class="status-chip status-chip--link"><i class="fas fa-hard-hat"></i> WIP beheer</a>
+            <a href="?page=admin&section=telemetry" class="status-chip status-chip--link"><i class="fas fa-chart-line"></i> Telemetry</a>
             <a href="?page=readmesync" class="status-chip status-chip--link"><i class="fas fa-code-branch"></i> ReadmeSync testen</a>
         </div>
     </div>
