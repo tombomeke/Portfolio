@@ -94,3 +94,57 @@
         <li>Traceability: sla source line nummers op voor debug links naar bronregels.</li>
     </ul>
 </div>
+
+<div class="card" style="margin-top:1rem">
+    <div class="card-header">
+        <span class="card-title"><i class="fas fa-file-lines"></i> Roadmap markdown template</span>
+    </div>
+    <p class="text-muted text-sm" style="margin:0 0 .75rem">
+        Gebruik dit formaat om checklist-items snel te copy-pasten in je README. De sync herkent zowel checkboxes als gewone bullets.
+    </p>
+    <textarea id="roadmap-template" class="form-input" rows="10" style="width:100%;font-family:Consolas,monospace">## Roadmap
+
+- [ ] Voeg item 1 toe
+- [ ] Voeg item 2 toe
+- [x] Reeds afgewerkt item
+
+## TODO
+
+- Extra taak zonder checkbox (fallback naar todo)
+- Nog een task
+</textarea>
+    <div class="form-actions" style="margin-top:.75rem">
+        <button type="button" id="copy-roadmap-template" class="btn btn-ghost"><i class="fas fa-copy"></i> Copy template</button>
+        <button type="button" id="download-roadmap-template" class="btn btn-ghost"><i class="fas fa-download"></i> Download .md</button>
+    </div>
+</div>
+
+<script>
+(() => {
+    const template = document.getElementById('roadmap-template');
+    const copyBtn = document.getElementById('copy-roadmap-template');
+    const downloadBtn = document.getElementById('download-roadmap-template');
+    if (!template || !copyBtn || !downloadBtn) return;
+
+    copyBtn.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(template.value);
+            copyBtn.textContent = 'Gekopieerd';
+            setTimeout(() => { copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy template'; }, 1300);
+        } catch (_) {
+            template.select();
+            document.execCommand('copy');
+        }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+        const blob = new Blob([template.value], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'roadmap-template.md';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+})();
+</script>

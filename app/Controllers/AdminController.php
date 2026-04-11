@@ -1512,7 +1512,7 @@ class AdminController {
         }
 
         if ($this->readmeSyncAdminApiKey === '') {
-            $error = 'ReadmeSync admin API-key ontbreekt op de server.';
+            $error = 'ReadmeSync admin API-key ontbreekt op de server. Zet READMESYNC_ADMIN_API_KEY in .env (project root of server) of als server environment variable.';
             return null;
         }
 
@@ -1737,7 +1737,9 @@ class AdminController {
     }
 
     private function parseChecklistItems(string $markdown, bool $todosOnly): array {
-        preg_match_all('/^\s*[-*]\s*\[( |x|X)\]\s+(.+)$/m', $markdown, $matches, PREG_SET_ORDER);
+        $cleanMarkdown = preg_replace('/```.*?```/s', '', $markdown) ?? $markdown;
+
+        preg_match_all('/^\s*[-*]\s*\[( |x|X)\]\s+(.+)$/m', $cleanMarkdown, $matches, PREG_SET_ORDER);
         $items = [];
 
         // TODO(roadmap): enrich parsing with priority labels and owner tags (e.g. [P1], @owner).
@@ -1758,6 +1760,28 @@ class AdminController {
                 'description' => '',
                 'status' => $status,
             ];
+        }
+
+        // Fallback: support plain markdown bullet lists when no checkboxes are present.
+        if (empty($items)) {
+            preg_match_all('/^\s*(?:[-*]|\d+\.)\s+(.+)$/m', $cleanMarkdown, $bulletMatches, PREG_SET_ORDER);
+            foreach ($bulletMatches as $index => $match) {
+                $title = trim(strip_tags((string) ($match[1] ?? '')));
+                if ($title === '' || strlen($title) < 3) {
+                    continue;
+                }
+
+                if (preg_match('/^(#{1,6}|[-=]{3,})\s*$/', $title)) {
+                    continue;
+                }
+
+                $items[] = [
+                    'id' => 'synced-bullet-' . ($index + 1) . '-' . substr(md5($title), 0, 8),
+                    'title' => $title,
+                    'description' => '',
+                    'status' => 'todo',
+                ];
+            }
         }
 
         return $items;
