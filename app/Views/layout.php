@@ -39,25 +39,35 @@ require_once __DIR__ . '/../Config/translations.php';
                     <a href="?page=contact" class="nav-link" data-translate="nav_contact"><?= trans('nav_contact') ?></a>
 
                     <?php if (isset($_SESSION['auth_user'])): ?>
+                    <?php $authUser = $_SESSION['auth_user']; $authRole = $authUser['role'] ?? 'user'; ?>
                     <div class="nav-user-dropdown">
                         <button class="nav-user-trigger" aria-expanded="false" aria-haspopup="true">
-                            <span class="nav-user-avatar"><?= htmlspecialchars(strtoupper(substr($_SESSION['auth_user']['username'], 0, 1))) ?></span>
-                            <span class="nav-user-name"><?= htmlspecialchars($_SESSION['auth_user']['username']) ?></span>
-                            <?php if ($_SESSION['auth_user']['role'] === 'owner'): ?>
+                            <span class="nav-user-avatar"><?= htmlspecialchars(strtoupper(substr($authUser['username'], 0, 1))) ?></span>
+                            <span class="nav-user-name"><?= htmlspecialchars($authUser['username']) ?></span>
+                            <?php if ($authRole === 'owner'): ?>
                                 <span class="nav-user-badge">owner</span>
+                            <?php elseif ($authRole === 'admin'): ?>
+                                <span class="nav-user-badge">admin</span>
                             <?php endif; ?>
                             <i class="fas fa-chevron-down nav-user-chevron"></i>
                         </button>
                         <div class="nav-user-menu">
+                            <?php if (in_array($authRole, ['owner', 'admin'], true)): ?>
                             <a href="?page=admin" class="nav-user-item">
                                 <i class="fas fa-gauge-high"></i> Dashboard
                             </a>
+                            <?php endif; ?>
+                            <a href="?page=profile&u=<?= urlencode($authUser['username']) ?>" class="nav-user-item">
+                                <i class="fas fa-user-circle"></i> Mijn profiel
+                            </a>
                             <div class="nav-user-divider"></div>
-                            <a href="?page=admin&section=logout" class="nav-user-item nav-user-item--danger">
+                            <a href="?page=logout" class="nav-user-item nav-user-item--danger">
                                 <i class="fas fa-right-from-bracket"></i> Uitloggen
                             </a>
                         </div>
                     </div>
+                    <?php else: ?>
+                    <a href="?page=login" class="nav-link nav-link--login"><i class="fas fa-sign-in-alt"></i> Inloggen</a>
                     <?php endif; ?>
 
                     <!-- Language Toggle Button -->
