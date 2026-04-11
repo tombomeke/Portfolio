@@ -38,6 +38,12 @@ require_once __DIR__ . '/../Config/translations.php';
                     <a href="?page=readmesync" class="nav-link">ReadmeSync</a>
                     <a href="?page=contact" class="nav-link" data-translate="nav_contact"><?= trans('nav_contact') ?></a>
 
+                    <?php if (isset($_SESSION['auth_user'])): ?>
+                    <a href="?page=admin" class="nav-link" style="opacity:.7;font-size:.85rem">
+                        <i class="fas fa-gauge-high"></i> Admin
+                    </a>
+                    <?php endif; ?>
+
                     <!-- Language Toggle Button -->
                     <button id="lang-toggle" class="lang-toggle" aria-label="Switch language">
                         <span class="flag"><?= Translations::getCurrentLang() === 'nl' ? '🇳🇱' : '🇬🇧' ?></span>

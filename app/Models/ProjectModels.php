@@ -1,157 +1,199 @@
 <?php
-// ============================================
-// FILE: /app/Models/ProjectModel.php (UPDATED)
-// ============================================
-/**
- * PROJECT MODEL - Easy Content Management
- *
- * HOW TO ADD A NEW PROJECT:
- * 1. Copy an existing project array below
- * 2. Change the values:
- *    - 'id': Unique number (increment from last)
- *    - 'title': Project name
- *    - 'description': Short description (1-2 sentences)
- *    - 'long_description': (Optional) Detailed description
- *    - 'tech': Array of technologies used
- *    - 'category': 'minecraft', 'web', or 'api'
- *    - 'repo_url': GitHub link (or null if private)
- *    - 'demo_url': Live demo link (or null if not available)
- *    - 'image': Path to screenshot (or null)
- *    - 'status': 'active', 'completed', or 'development'
- *    - 'features': (Optional) Array of key features
- * 3. Save the file - that's it!
- */
+// app/Models/ProjectModels.php — DB-driven (migrated from static array)
+require_once __DIR__ . '/../Config/Database.php';
 
 class ProjectModel {
-    /**
-     * Get all projects with modal data
-     * @return array All projects
-     */
-    public function getAllProjects() {
+
+    // ── Public-facing ────────────────────────────────────────────────────────
+
+    public function getAllProjects(): array {
         $lang = Translations::getCurrentLang();
+        $db   = Database::getConnection();
 
-        $projectsData = [
-            [
-                'id' => 1,
-                'title' => 'RPG Manager',
-                'description' => [
-                    'nl' => 'RPG Manager is een console-based role-playing game framework in C# met een modulair systeem voor werelden, locaties, helden en wapens. Inclusief JSON-saves en een uitbreidbare architectuur.',
-                    'en' => 'RPG Manager is a console-based role-playing game framework in C# featuring a modular system for worlds, locations, heroes and weapons. Includes JSON saves and an extensible architecture.'
-                ],
-                'long_description' => [
-                    'nl' => 'Het project bestaat uit namespaces zoals <code>Characters</code>, <code>Weapons</code>, <code>Worlds</code>, <code>Locations</code>, <code>UI</code> en <code>Saves</code>. Spelers maken helden (bv. Warrior, Mage), kiezen wapens en verkennen werelden. Voortgang wordt opgeslagen via <code>System.Text.Json</code>.<br><br><strong>Belangrijkste kenmerken</strong><br>• Modulair systeem (makkelijk uitbreiden met nieuwe werelden/klassen/wapens)<br>• Wapen- en inventarissysteem met rarity, durability en upgrades<br>• Persistente opslag met JSON-saves<br>• Heldensysteem met levels/skills<br>• Wereldstructuur met moeilijkheidsgraden en unlockbare locaties',
-                    'en' => 'The project is organized into namespaces like <code>Characters</code>, <code>Weapons</code>, <code>Worlds</code>, <code>Locations</code>, <code>UI</code>, and <code>Saves</code>. Players create heroes (e.g., Warrior, Mage), choose weapons, and explore worlds. Progress is saved using <code>System.Text.Json</code>.<br><br><strong>Key features</strong><br>• Modular system (easily add worlds/classes/weapons)<br>• Weapon & inventory with rarity, durability, and upgrades<br>• Persistent storage via JSON saves<br>• Hero system with levels/skills<br>• World structure with difficulties and unlockable locations'
-                ],
-                'tech' => ['C#', '.NET', 'Object-Oriented Design', 'System.Text.Json', 'Console Application'],
-                'repo_url' => 'https://github.com/tombomeke-ehb/RPGManager',
-                'demo_url' => 'https://github.com/tombomeke-ehb/RPGManager/releases/latest/',
-                'image' => 'public/images/projects/p1.png',
-                'category' => 'cli',
-                'status' => 'development',
-                'features' => [
-                    'nl' => [
-                        'Modulaire architectuur',
-                        'JSON-opslaan en laden',
-                        'Wapenrarity & upgrades',
-                        'Heldensysteem met levels',
-                        'Uitbreidbare wereld/locatie-structuur'
-                    ],
-                    'en' => [
-                        'Modular architecture',
-                        'JSON save/load',
-                        'Weapon rarity & upgrades',
-                        'Hero system with levels',
-                        'Extensible world/location structure'
-                    ]
-                ]
-            ],
-            [
-                'id' => 2,
-                'title' => 'Portfolio Website',
-                'description' => [
-                    'nl' => 'Deze responsive portfolio website gebouwd met vanilla PHP en moderne CSS. Features include project showcase, skill tracking en contact form.',
-                    'en' => 'This responsive portfolio website built with vanilla PHP and modern CSS. Features include project showcase, skill tracking and contact form.'
-                ],
-                'long_description' => [
-                    'nl' => 'Een modern portfolio website gebouwd van scratch met PHP MVC architectuur. Bevat een geavanceerd modal systeem, meertalige ondersteuning (NL/EN), en een responsief design dat perfect werkt op alle apparaten.',
-                    'en' => 'A modern portfolio website built from scratch with PHP MVC architecture. Features an advanced modal system, multi-language support (NL/EN), and a responsive design that works perfectly on all devices.'
-                ],
-                'tech' => ['PHP', 'JavaScript', 'CSS Grid', 'HTML5'],
-                'repo_url' => 'https://github.com/tombomeke/portfolio',
-                'demo_url' => 'https://tomdekoning.nl',
-                'image' => 'public/images/projects/p2.png',
-                'category' => 'web',
-                'status' => 'active',
-                'features' => [
-                    'nl' => [
-                        'Meertalige ondersteuning (NL/EN)',
-                        'Universeel modal systeem',
-                        'Responsive design',
-                        'Contactformulier met validatie',
-                        'Dark theme',
-                        'Vloeiende animaties',
-                        'SEO geoptimaliseerd'
-                    ],
-                    'en' => [
-                        'Multi-language support (NL/EN)',
-                        'Universal modal system',
-                        'Responsive design',
-                        'Contact form with validation',
-                        'Dark theme',
-                        'Smooth animations',
-                        'SEO optimized'
-                    ]
-                ]
-            ],
-        ];
+        $stmt = $db->prepare(
+            "SELECT p.id, p.slug, p.category, p.status, p.image_path, p.repo_url, p.demo_url, p.tech,
+                    t.title, t.description, t.long_description, t.features
+             FROM   projects p
+             JOIN   project_translations t ON t.project_id = p.id AND t.lang = :lang
+             ORDER  BY p.sort_order ASC, p.id ASC"
+        );
+        $stmt->execute([':lang' => $lang]);
+        $rows = $stmt->fetchAll();
 
-
-        // Convert to current language
-        $projects = [];
-        foreach ($projectsData as $project) {
-            $project['description'] = $project['description'][$lang];
-            $project['long_description'] = $project['long_description'][$lang] ?? $project['description'];
-            $project['features'] = $project['features'][$lang] ?? [];
-            $projects[] = $project;
-        }
-
-        return $projects;
+        return array_map([$this, 'decodeRow'], $rows);
     }
 
-    /**
-     * Get projects by category
-     * @param string $category Category name
-     * @return array Filtered projects
-     */
-    public function getProjectsByCategory($category) {
-        $projects = $this->getAllProjects();
-        return array_filter($projects, function($project) use ($category) {
-            return $project['category'] === $category;
-        });
+    public function getProjectById(int $id): ?array {
+        $lang = Translations::getCurrentLang();
+        $db   = Database::getConnection();
+
+        $stmt = $db->prepare(
+            "SELECT p.id, p.slug, p.category, p.status, p.image_path, p.repo_url, p.demo_url, p.tech,
+                    t.title, t.description, t.long_description, t.features
+             FROM   projects p
+             JOIN   project_translations t ON t.project_id = p.id AND t.lang = :lang
+             WHERE  p.id = :id LIMIT 1"
+        );
+        $stmt->execute([':lang' => $lang, ':id' => $id]);
+        $row = $stmt->fetch();
+        return $row ? $this->decodeRow($row) : null;
     }
 
-    /**
-     * Get project by ID
-     * @param int $id Project ID
-     * @return array|null Project data or null if not found
-     */
-    public function getProjectById($id) {
-        $projects = $this->getAllProjects();
-        foreach ($projects as $project) {
-            if ($project['id'] == $id) {
-                return $project;
-            }
-        }
-        return null;
+    public function getProjectsByCategory(string $category): array {
+        return array_values(
+            array_filter($this->getAllProjects(), fn($p) => $p['category'] === $category)
+        );
     }
 
-    /**
-     * Get modal data for a project (JSON encoded)
-     * @param array $project Project array
-     * @return string JSON string for data-modal attribute
-     */
-    public function getModalData($project) {
+    public function getModalData(array $project): string {
         return htmlspecialchars(json_encode($project), ENT_QUOTES, 'UTF-8');
     }
+
+    // ── Admin ────────────────────────────────────────────────────────────────
+
+    public function getAllForAdmin(): array {
+        $db   = Database::getConnection();
+        $stmt = $db->query(
+            "SELECT p.*,
+                    nl.title           AS title_nl,  nl.description AS desc_nl,
+                    nl.long_description AS long_desc_nl, nl.features AS features_nl,
+                    en.title           AS title_en,  en.description AS desc_en,
+                    en.long_description AS long_desc_en, en.features AS features_en
+             FROM   projects p
+             LEFT JOIN project_translations nl ON nl.project_id = p.id AND nl.lang = 'nl'
+             LEFT JOIN project_translations en ON en.project_id = p.id AND en.lang = 'en'
+             ORDER  BY p.sort_order ASC, p.id ASC"
+        );
+        $rows = $stmt->fetchAll();
+
+        foreach ($rows as &$row) {
+            $row['tech']        = json_decode($row['tech']        ?? '[]', true) ?? [];
+            $row['features_nl'] = json_decode($row['features_nl'] ?? '[]', true) ?? [];
+            $row['features_en'] = json_decode($row['features_en'] ?? '[]', true) ?? [];
+        }
+        return $rows;
+    }
+
+    public function getByIdForAdmin(int $id): ?array {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "SELECT p.*,
+                    nl.title            AS title_nl, nl.description AS desc_nl,
+                    nl.long_description AS long_desc_nl, nl.features AS features_nl,
+                    en.title            AS title_en, en.description AS desc_en,
+                    en.long_description AS long_desc_en, en.features AS features_en
+             FROM   projects p
+             LEFT JOIN project_translations nl ON nl.project_id = p.id AND nl.lang = 'nl'
+             LEFT JOIN project_translations en ON en.project_id = p.id AND en.lang = 'en'
+             WHERE  p.id = :id LIMIT 1"
+        );
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        if (!$row) return null;
+
+        $row['tech']        = json_decode($row['tech']        ?? '[]', true) ?? [];
+        $row['features_nl'] = json_decode($row['features_nl'] ?? '[]', true) ?? [];
+        $row['features_en'] = json_decode($row['features_en'] ?? '[]', true) ?? [];
+        return $row;
+    }
+
+    public function create(array $data): int {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "INSERT INTO projects (slug, category, status, image_path, repo_url, demo_url, tech, sort_order)
+             VALUES (:slug, :category, :status, :image_path, :repo_url, :demo_url, :tech, :sort_order)"
+        );
+        $stmt->execute([
+            ':slug'       => $data['slug'],
+            ':category'   => $data['category'],
+            ':status'     => $data['status']     ?? null,
+            ':image_path' => $data['image_path'] ?? null,
+            ':repo_url'   => $data['repo_url']   ?? null,
+            ':demo_url'   => $data['demo_url']   ?? null,
+            ':tech'       => json_encode($data['tech'] ?? []),
+            ':sort_order' => (int) ($data['sort_order'] ?? 0),
+        ]);
+        $id = (int) $db->lastInsertId();
+
+        foreach (['nl', 'en'] as $lang) {
+            $db->prepare(
+                "INSERT INTO project_translations (project_id, lang, title, description, long_description, features)
+                 VALUES (:project_id, :lang, :title, :description, :long_description, :features)"
+            )->execute([
+                ':project_id'       => $id,
+                ':lang'             => $lang,
+                ':title'            => $data["title_{$lang}"],
+                ':description'      => $data["description_{$lang}"],
+                ':long_description' => $data["long_description_{$lang}"] ?? null,
+                ':features'         => json_encode($data["features_{$lang}"] ?? []),
+            ]);
+        }
+        return $id;
+    }
+
+    public function update(int $id, array $data): void {
+        $db = Database::getConnection();
+        $db->prepare(
+            "UPDATE projects
+             SET slug=:slug, category=:category, status=:status, image_path=:image_path,
+                 repo_url=:repo_url, demo_url=:demo_url, tech=:tech, sort_order=:sort_order,
+                 updated_at=NOW()
+             WHERE id=:id"
+        )->execute([
+            ':slug'       => $data['slug'],
+            ':category'   => $data['category'],
+            ':status'     => $data['status']     ?? null,
+            ':image_path' => $data['image_path'] ?? null,
+            ':repo_url'   => $data['repo_url']   ?? null,
+            ':demo_url'   => $data['demo_url']   ?? null,
+            ':tech'       => json_encode($data['tech'] ?? []),
+            ':sort_order' => (int) ($data['sort_order'] ?? 0),
+            ':id'         => $id,
+        ]);
+
+        foreach (['nl', 'en'] as $lang) {
+            $db->prepare(
+                "INSERT INTO project_translations (project_id, lang, title, description, long_description, features)
+                 VALUES (:project_id, :lang, :title, :description, :long_description, :features)
+                 ON DUPLICATE KEY UPDATE
+                   title=VALUES(title), description=VALUES(description),
+                   long_description=VALUES(long_description), features=VALUES(features), updated_at=NOW()"
+            )->execute([
+                ':project_id'       => $id,
+                ':lang'             => $lang,
+                ':title'            => $data["title_{$lang}"],
+                ':description'      => $data["description_{$lang}"],
+                ':long_description' => $data["long_description_{$lang}"] ?? null,
+                ':features'         => json_encode($data["features_{$lang}"] ?? []),
+            ]);
+        }
+    }
+
+    public function delete(int $id): void {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare("SELECT image_path FROM projects WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+
+        if ($row && $row['image_path']) {
+            $fullPath = __DIR__ . '/../../' . $row['image_path'];
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+        }
+
+        $db->prepare("DELETE FROM projects WHERE id = :id")->execute([':id' => $id]);
+    }
+
+    public function count(): int {
+        return (int) Database::getConnection()->query("SELECT COUNT(*) FROM projects")->fetchColumn();
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private function decodeRow(array $row): array {
+        $row['tech']     = json_decode($row['tech']     ?? '[]', true) ?? [];
+        $row['features'] = json_decode($row['features'] ?? '[]', true) ?? [];
+        return $row;
+    }
 }
-?>

@@ -1,20 +1,31 @@
 <?php
-// /index.php - Main entry point for shared hosting
-require_once 'app/Controllers/PortfolioController.php';
+// index.php — Main entry point
 
-$controller = new PortfolioController();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $page = $_GET['page'] ?? 'home';
 
-// Pages that should temporarily show the WIP screen
-$wipPages = ['games']; // Add a page slug here to send it to the WIP view
+// ── Admin & setup routes (handled by AdminController) ─────────────────────
+if ($page === 'admin' || $page === 'setup') {
+    require_once 'app/Controllers/AdminController.php';
+    (new AdminController())->dispatch($page);
+    exit;
+}
 
+// ── Public routes ─────────────────────────────────────────────────────────
+require_once 'app/Controllers/PortfolioController.php';
+$controller = new PortfolioController();
+
+// Pages temporarily showing WIP
+$wipPages = []; // Add page slugs here to redirect to WIP view
 if (in_array($page, $wipPages, true)) {
     $controller->showWIP($page);
     exit;
 }
 
-// Route handling
-switch($page) {
+switch ($page) {
     case 'home':
     case 'about':
         $controller->showAbout();
@@ -41,7 +52,7 @@ switch($page) {
         $controller->showReadmeSync();
         break;
     case 'contact':
-        if ($_POST) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->handleContact($_POST);
         }
         $controller->showContact();
@@ -52,4 +63,3 @@ switch($page) {
     default:
         $controller->show404();
 }
-?>

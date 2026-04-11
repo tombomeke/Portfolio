@@ -1,8 +1,11 @@
 <?php
 // /app/Controllers/PortfolioController.php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 require_once __DIR__ . '/../Config/translations.php';
+require_once __DIR__ . '/../Models/ContactMessageModel.php';
 
 require_once __DIR__ . '/../Models/ProjectModels.php';
 require_once __DIR__ . '/../Models/SkillModel.php';
@@ -16,6 +19,7 @@ class PortfolioController {
     private $faqModel;
     private $skillModel;
     private $gameStatsModel;
+    private $contactModel;
     private $contactRecipient = 'tom1dekoning@gmail.com';
 
     public function __construct() {
@@ -24,6 +28,7 @@ class PortfolioController {
         $this->gameStatsModel = new GameStatsModel();
         $this->newsModel      = new NewsModel();
         $this->faqModel       = new FaqModel();
+        $this->contactModel   = new ContactMessageModel();
     }
 
     public function showAbout() {
@@ -150,10 +155,13 @@ class PortfolioController {
         $headers[] = 'X-Mailer: PHP/' . phpversion();
         $headerString = implode("\r\n", $headers);
 
+        // Always save to database so nothing is lost
+        $this->contactModel->save(trim($postData['name']), trim($postData['email']), trim($postData['message']));
+
         if (mail($to, $subject, $emailBody, $headerString)) {
             $_SESSION['contact_success'] = 'Bericht succesvol verzonden! Ik neem zo snel mogelijk contact met je op.';
         } else {
-            $_SESSION['contact_error'] = 'Er is een fout opgetreden bij het verzenden. Probeer het later opnieuw of mail direct naar ' . $this->contactRecipient;
+            $_SESSION['contact_success'] = 'Bericht ontvangen! Ik neem zo snel mogelijk contact met je op.';
         }
 
         header('Location: ?page=contact');

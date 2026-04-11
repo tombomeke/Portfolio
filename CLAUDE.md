@@ -6,15 +6,34 @@ Custom PHP MVC — geen framework. Eigenhandig gebouwd.
 
 ## Structuur
 ```
-index.php                  ← router (?page=xxx)
+index.php                          ← router (?page=xxx)
 app/
-  Controllers/PortfolioController.php  ← enige controller
-  Models/         ← data classes (deels statisch, deels DB)
-  Views/          ← PHP partials, worden via render() in layout.php geladen
-  Config/translations.php  ← NL/EN vertaalsysteem
+  Auth/Auth.php                    ← session auth helper (login, logout, CSRF, roles)
+  Controllers/
+    PortfolioController.php        ← publieke pagina's
+    AdminController.php            ← admin panel (dispatch via ?page=admin&section=...)
+  Models/
+    NewsModel.php                  ← news (DB, R+W)
+    FaqModel.php                   ← FAQ categories + items (DB, R+W)
+    ProjectModels.php              ← projecten (DB, R+W — was statische array)
+    ContactMessageModel.php        ← contact inbox (DB)
+    UserModel.php                  ← gebruikers (owner/admin)
+    SkillModel.php                 ← skills (statisch)
+    GameStatsModel.php             ← game stats (API cache)
+  Views/
+    layout.php + *.php             ← publieke views
+    admin/layout.php               ← admin layout
+    admin/{news,faq,projects,contact,users}/  ← admin views
+  Config/
+    translations.php               ← NL/EN vertaalsysteem
+    Database.php                   ← PDO singleton
+    db.php                         ← credentials (niet in git)
 public/
-  css/            ← style.css + deelbestanden
-  images/, js/
+  css/style.css, admin.css         ← stylesheets
+  images/uploads/{news,projects}/  ← geüploade afbeeldingen
+database/
+  migrate.sql                      ← alle CREATE TABLE statements
+  seed_projects.sql                ← initiële projectdata (run na migrate)
 ```
 
 ## Routing
@@ -31,7 +50,20 @@ Migrations draaien we manueel of via een simpel PHP-script (geen ORM).
 3. Projects DB-driven (nu nog statische array in ProjectModels.php)
 4. Contact berichten opslaan in DB (nu alleen e-mail)
 
-Geen user-auth, geen admin dashboard gepland (te complex voor nu).
+## Auth & Admin systeem
+Session-based auth met twee rollen: `owner` (tombomeke) en `admin` (vertrouwde vrienden).
+- Owner kan alles + admins toevoegen/verwijderen
+- Admin kan content beheren (news, FAQ, projects, contact)
+- Geen publieke registratie — owner maakt admins aan via `?page=admin&section=users`
+- Eerste owner-account aanmaken via `?page=setup` (werkt alleen als er nog geen users zijn)
+
+## Gepland voor later (nog niet gebouwd)
+- News comments + moderatie
+- Tag-systeem voor nieuws (many-to-many)
+- Activity logs (admin acties bijhouden)
+- E-mailverificatie voor admins
+- Publieke gebruikersprofielen
+- Site settings (dynamische configuratie via DB)
 
 ## ReadmeSync integratie
 `?page=readmesync` → cURL call naar `https://tombomekestudio.com/api/readmesync/generate`
