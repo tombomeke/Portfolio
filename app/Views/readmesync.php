@@ -58,6 +58,17 @@
         <div class="alert alert-error">
             <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
         </div>
+        <?php if (!empty($_SESSION['auth_user']) && in_array(($_SESSION['auth_user']['role'] ?? ''), ['owner', 'admin'], true)): ?>
+        <details class="readmesync-debug">
+            <summary>Debug details (admin)</summary>
+            <div class="debug-grid">
+                <div><strong>HTTP code:</strong> <?= (int)($debugHttpCode ?? 0) ?></div>
+                <div><strong>cURL error:</strong> <?= htmlspecialchars((string)($debugCurlErr ?? 'none'), ENT_QUOTES, 'UTF-8') ?></div>
+                <div><strong>Body snippet:</strong></div>
+                <pre><?= htmlspecialchars((string)($debugRawBody ?? 'empty'), ENT_QUOTES, 'UTF-8') ?></pre>
+            </div>
+        </details>
+        <?php endif; ?>
         <?php if ($debugHttpCode): ?>
         <!-- [ReadmeSync debug] http_code: <?= $debugHttpCode ?> | curl_error: <?= $debugCurlErr ?? 'none' ?> | body: <?= $debugRawBody ?? 'empty' ?> -->
         <?php endif; ?>
@@ -101,6 +112,10 @@
 .alert-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
 .alert-info  { background: rgba(59,130,246,.06); color: var(--primary-color,#1d4ed8); border: 1px solid rgba(59,130,246,.25); }
 .alert-info a { color: inherit; font-weight: 600; }
+.readmesync-debug { margin-top: -0.5rem; margin-bottom: 1.2rem; border: 1px dashed rgba(148,163,184,.45); border-radius: 8px; padding: .7rem .9rem; }
+.readmesync-debug summary { cursor: pointer; font-weight: 600; color: var(--text-secondary,#cbd5e1); margin-bottom: .55rem; }
+.readmesync-debug .debug-grid { display: grid; gap: .45rem; color: var(--text-muted,#94a3b8); font-size: .88rem; }
+.readmesync-debug pre { white-space: pre-wrap; word-break: break-word; background: rgba(15,23,42,.75); border-radius: 6px; padding: .6rem; max-height: 220px; overflow:auto; }
 .readmesync-result { margin-top: 1.5rem; }
 .result-meta {
     display: flex; align-items: center; gap: .5rem; font-size: .9rem;

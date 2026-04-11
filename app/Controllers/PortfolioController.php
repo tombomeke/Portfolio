@@ -528,7 +528,12 @@ class PortfolioController {
                     if (strpos($detail, 'ssl') !== false || strpos($detail, 'certificate') !== false) {
                         $error = 'ReadmeSync backend SSL-probleem: certificaat verlopen of ongeldig.';
                     } else {
-                        $error = 'Repository niet gevonden of is privé.';
+                        $repoPublic = $this->isGitHubRepoPublic($repoUrl);
+                        if ($repoPublic === true) {
+                            $error = 'Repository is publiek bereikbaar, maar ReadmeSync API kan GitHub niet ophalen (controleer API GitHub token/certificaat).';
+                        } else {
+                            $error = 'Repository niet gevonden of is privé.';
+                        }
                     }
                 } else {
                     $decoded = json_decode($raw, true);
@@ -582,6 +587,54 @@ class PortfolioController {
             && in_array($parsed['scheme'], ['https', 'http'], true)
             && $parsed['host'] === 'github.com'
             && substr_count(trim($parsed['path'], '/'), '/') >= 1;
+    }
+
+    private function parseGitHubOwnerRepo(string $url): ?array {
+        $path = trim((string) (parse_url($url, PHP_URL_PATH) ?? ''), '/');
+        $parts = explode('/', $path);
+        if (count($parts) < 2) {
+            return null;
+        }
+        return [
+            'owner' => $parts[0],
+            'repo'  => preg_replace('/\.git$/i', '', $parts[1]),
+        ];
+    }
+
+    private function isGitHubRepoPublic(string $url): ?bool {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+        $parsed = $this->parseGitHubOwnerRepo($url);
+        if (!$parsed) {
+            return null;
+        }
+
+        $api = 'https://api.github.com/repos/' . rawurlencode($parsed['owner']) . '/' . rawurlencode($parsed['repo']);
+        $ch = curl_init($api);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_TIMEOUT => 12,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => ['User-Agent: Tombomeke-Portfolio/1.0', 'Accept: application/vnd.github+json'],
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+        curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err  = curl_error($ch);
+        curl_close($ch);
+
+        if ($err) {
+            return null;
+        }
+        if ($code === 200) {
+            return true;
+        }
+        if ($code === 404) {
+            return false;
+        }
+        return null;
     }
 
     private function sanitizeInput($input) {
