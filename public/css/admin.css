@@ -168,21 +168,150 @@ body {
 
 .card-title { font-size: 1rem; font-weight: 600; }
 
+/* ── Dashboard welcome ────────────────────────────── */
+.dashboard-welcome {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: linear-gradient(135deg, rgba(59,130,246,.12) 0%, rgba(139,92,246,.08) 100%);
+    border: 1px solid rgba(59,130,246,.25);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.dashboard-welcome h2 { font-size: 1.15rem; margin-bottom: .2rem; }
+.dashboard-welcome p  { font-size: .85rem; color: var(--text-muted); margin: 0; }
+.dashboard-welcome-actions { display: flex; gap: .5rem; flex-shrink: 0; }
+
 /* ── Stats grid ───────────────────────────────────── */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .stat-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.25rem;
+    border-radius: 10px;
+    padding: 1.25rem 1.25rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: border-color .15s, transform .15s;
+}
+.stat-card--link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+.stat-card--link:hover { border-color: var(--primary); transform: translateY(-1px); }
+.stat-card--alert      { border-color: var(--warning); }
+
+.stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--icon-color) 15%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: var(--icon-color);
+    flex-shrink: 0;
+}
+.stat-body { min-width: 0; }
+.stat-value {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+}
+.stat-label {
+    font-size: .78rem;
+    color: var(--text-muted);
+    margin-top: .15rem;
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+}
+.stat-label small { font-size: .7rem; opacity: .75; }
+
+/* ── Badge (inline) ───────────────────────────────── */
+.badge {
+    display: inline-block;
+    padding: .15rem .45rem;
+    border-radius: 4px;
+    font-size: .68rem;
+    font-weight: 600;
+    background: rgba(148,163,184,.12);
+    color: var(--text-muted);
+    vertical-align: middle;
+}
+.badge--success { background: rgba(34,197,94,.12);  color: #86efac; }
+.badge--warning { background: rgba(245,158,11,.12); color: #fcd34d; }
+.badge--danger  { background: rgba(239,68,68,.12);  color: #fca5a5; }
+
+/* ── Dashboard 2-col ──────────────────────────────── */
+.dashboard-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
+/* ── Table utilities ──────────────────────────────── */
+.text-muted { color: var(--text-muted); }
+.text-sm    { font-size: .8rem; }
+.text-warning { color: var(--warning); }
+.row--unread td { background: rgba(245,158,11,.04); }
+
+td small { display: block; font-size: .72rem; color: var(--text-muted); }
+
+.btn-xs { padding: .2rem .5rem; font-size: .75rem; }
+
+/* ── Empty state ──────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: .875rem;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+}
+
+/* ── Roadmap / migration status ───────────────────── */
+.roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: .75rem;
+    padding: 1rem;
+}
+.roadmap-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: .85rem;
+}
+.roadmap-item i { margin-top: .15rem; font-size: .9rem; flex-shrink: 0; }
+.roadmap-item--done { border-color: rgba(34,197,94,.3); background: rgba(34,197,94,.05); }
+.roadmap-item--done i { color: #86efac; }
+.roadmap-item--todo { border-color: rgba(245,158,11,.2); background: rgba(245,158,11,.04); }
+.roadmap-item--todo i { color: #fcd34d; }
+.roadmap-item strong { display: block; margin-bottom: .15rem; }
+.roadmap-item span   { color: var(--text-muted); font-size: .78rem; }
+
+/* Old compat */
 .stat-card .label { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .4rem; }
 .stat-card .value { font-size: 2rem; font-weight: 700; color: var(--text); }
 .stat-card .value.danger  { color: var(--danger); }

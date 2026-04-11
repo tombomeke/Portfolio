@@ -156,20 +156,29 @@ class AdminController {
     // ═══════════════════════════════════════════════════════════════════════
 
     private function showDashboard(): void {
-        $stats = [
-            'news'            => $this->news->countAll(),
-            'faq_categories'  => $this->faq->countCategories(),
-            'faq_items'       => $this->faq->countItems(),
-            'projects'        => $this->projects->count(),
-            'messages'        => $this->contact->count(),
-            'unread_messages' => $this->contact->countUnread(),
-            'users'           => $this->users->count(),
-            'skills'          => $this->skills->countSkills(),
-            'education'       => $this->skills->countEducation(),
-            'goals'           => $this->skills->countGoals(),
-        ];
+        try {
+            $stats = [
+                'news'            => $this->news->countAll(),
+                'faq_categories'  => $this->faq->countCategories(),
+                'faq_items'       => $this->faq->countItems(),
+                'projects'        => $this->projects->count(),
+                'messages'        => $this->contact->count(),
+                'unread_messages' => $this->contact->countUnread(),
+                'users'           => $this->users->count(),
+                'skills'          => $this->skills->countSkills(),
+                'education'       => $this->skills->countEducation(),
+                'goals'           => $this->skills->countGoals(),
+            ];
+            $recentNews     = $this->news->getAllForAdmin(5);
+            $recentMessages = $this->contact->getAll(5);
+        } catch (\Throwable $e) {
+            $stats = array_fill_keys(
+                ['news','faq_categories','faq_items','projects','messages','unread_messages','users','skills','education','goals'], 0
+            );
+            $recentNews = $recentMessages = [];
+        }
         $flash = $this->popFlash();
-        $this->renderAdmin('dashboard', compact('stats', 'flash'), 'Dashboard');
+        $this->renderAdmin('dashboard', compact('stats', 'recentNews', 'recentMessages', 'flash'), 'Dashboard');
     }
 
     // ═══════════════════════════════════════════════════════════════════════
