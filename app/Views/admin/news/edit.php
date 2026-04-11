@@ -67,6 +67,20 @@
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Opslaan</button>
                 <a href="?page=admin&section=news" class="btn btn-ghost">Annuleren</a>
             </div>
+            <?php if (!empty($allTags)): ?>
+            <div class="form-group" style="margin-top:1rem">
+                <label>Tags</label>
+                <div style="display:flex;flex-wrap:wrap;gap:.5rem;padding:.5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px">
+                    <?php foreach ($allTags as $tag): ?>
+                    <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer;font-size:.85rem">
+                        <input type="checkbox" name="tags[]" value="<?= $tag['id'] ?>"
+                               <?= in_array($tag['id'], $currentTagIds ?? [], true) ? 'checked' : '' ?>>
+                        <?= htmlspecialchars($tag['name']) ?>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </form>
 </div>

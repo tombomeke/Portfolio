@@ -91,6 +91,7 @@
         <?php if (empty($recentNews)): ?>
             <p class="empty-state"><i class="fas fa-inbox"></i> Nog geen nieuwsberichten.</p>
         <?php else: ?>
+        <div class="table-wrapper">
         <table class="table">
             <thead><tr><th>Titel</th><th>Status</th><th>Datum</th><th></th></tr></thead>
             <tbody>
@@ -112,6 +113,7 @@
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
         <?php endif; ?>
     </div>
 
@@ -124,6 +126,7 @@
         <?php if (empty($recentMessages)): ?>
             <p class="empty-state"><i class="fas fa-inbox"></i> Nog geen berichten.</p>
         <?php else: ?>
+        <div class="table-wrapper">
         <table class="table">
             <thead><tr><th>Van</th><th>Onderwerp</th><th></th></tr></thead>
             <tbody>
@@ -140,6 +143,7 @@
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
         <?php endif; ?>
     </div>
 

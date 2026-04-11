@@ -40,6 +40,15 @@ $isAuth = isset($authUser);
         <a href="?page=admin&section=dev-life" class="sidebar-link <?= ($currentSection === 'dev-life') ? 'active' : '' ?>">
             <i class="fas fa-laptop-code fa-fw"></i> Dev Life
         </a>
+        <a href="?page=admin&section=tags" class="sidebar-link <?= ($currentSection === 'tags') ? 'active' : '' ?>">
+            <i class="fas fa-tags fa-fw"></i> Tags
+        </a>
+        <a href="?page=admin&section=comments" class="sidebar-link <?= ($currentSection === 'comments') ? 'active' : '' ?>">
+            <i class="fas fa-comments fa-fw"></i> Reacties
+            <?php if (($pendingComments ?? 0) > 0): ?>
+                <span class="badge"><?= $pendingComments ?></span>
+            <?php endif; ?>
+        </a>
 
         <div class="nav-section-label" style="margin-top:.75rem">Inbox</div>
         <a href="?page=admin&section=contact" class="sidebar-link <?= ($currentSection === 'contact') ? 'active' : '' ?>">
@@ -55,6 +64,21 @@ $isAuth = isset($authUser);
             <i class="fas fa-users fa-fw"></i> Gebruikers
         </a>
         <?php endif; ?>
+
+        <?php if (isset($authUser) && $authUser['role'] === 'owner'): ?>
+        <div class="nav-section-label" style="margin-top:.75rem">Systeem</div>
+        <a href="?page=admin&section=settings" class="sidebar-link <?= ($currentSection === 'settings') ? 'active' : '' ?>">
+            <i class="fas fa-sliders-h fa-fw"></i> Instellingen
+        </a>
+        <a href="?page=admin&section=activity-logs" class="sidebar-link <?= ($currentSection === 'activity-logs') ? 'active' : '' ?>">
+            <i class="fas fa-history fa-fw"></i> Activity Log
+        </a>
+        <?php endif; ?>
+
+        <div class="nav-section-label" style="margin-top:.75rem">Account</div>
+        <a href="?page=admin&section=profile" class="sidebar-link <?= ($currentSection === 'profile') ? 'active' : '' ?>">
+            <i class="fas fa-user-circle fa-fw"></i> Mijn profiel
+        </a>
 
         <div class="nav-section-label" style="margin-top:.75rem">Site</div>
         <a href="?page=home" target="_blank" class="sidebar-link">
