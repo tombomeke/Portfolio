@@ -39,9 +39,25 @@ require_once __DIR__ . '/../Config/translations.php';
                     <a href="?page=contact" class="nav-link" data-translate="nav_contact"><?= trans('nav_contact') ?></a>
 
                     <?php if (isset($_SESSION['auth_user'])): ?>
-                    <a href="?page=admin" class="nav-link" style="opacity:.7;font-size:.85rem">
-                        <i class="fas fa-gauge-high"></i> Admin
-                    </a>
+                    <div class="nav-user-dropdown">
+                        <button class="nav-user-trigger" aria-expanded="false" aria-haspopup="true">
+                            <span class="nav-user-avatar"><?= htmlspecialchars(strtoupper(substr($_SESSION['auth_user']['username'], 0, 1))) ?></span>
+                            <span class="nav-user-name"><?= htmlspecialchars($_SESSION['auth_user']['username']) ?></span>
+                            <?php if ($_SESSION['auth_user']['role'] === 'owner'): ?>
+                                <span class="nav-user-badge">owner</span>
+                            <?php endif; ?>
+                            <i class="fas fa-chevron-down nav-user-chevron"></i>
+                        </button>
+                        <div class="nav-user-menu">
+                            <a href="?page=admin" class="nav-user-item">
+                                <i class="fas fa-gauge-high"></i> Dashboard
+                            </a>
+                            <div class="nav-user-divider"></div>
+                            <a href="?page=admin&section=logout" class="nav-user-item nav-user-item--danger">
+                                <i class="fas fa-right-from-bracket"></i> Uitloggen
+                            </a>
+                        </div>
+                    </div>
                     <?php endif; ?>
 
                     <!-- Language Toggle Button -->

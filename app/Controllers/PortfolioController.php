@@ -43,17 +43,22 @@ class PortfolioController {
     }
 
     public function showDevLife() {
-        $skills = $this->skillModel->getAllSkills();
-
-        // Get current language
-        $lang = Translations::getCurrentLang();
+        try {
+            $lang = Translations::getCurrentLang();
+            $skills         = $this->skillModel->getAllSkills();
+            $education      = $this->skillModel->getEducation($lang);
+            $learning_goals = $this->skillModel->getLearningGoals($lang);
+        } catch (\Throwable $e) {
+            $skills = $education = $learning_goals = [];
+            $lang   = 'nl';
+        }
 
         $data = [
-            'title' => trans('nav_devlife'),
-            'skills' => $skills,
-            'skillModel' => $this->skillModel,
-            'education' => $this->skillModel->getEducation($lang),
-            'learning_goals' => $this->skillModel->getLearningGoals($lang)
+            'title'          => trans('nav_devlife'),
+            'skills'         => $skills,
+            'skillModel'     => $this->skillModel,
+            'education'      => $education,
+            'learning_goals' => $learning_goals,
         ];
         $this->render('dev-life', $data);
     }

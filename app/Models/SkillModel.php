@@ -369,7 +369,7 @@ class SkillModel {
         $lines     = array_filter(array_map('trim', explode("\n", $raw)));
         $resources = [];
         foreach ($lines as $line) {
-            if (str_contains($line, '|')) {
+            if (strpos($line, '|') !== false) {
                 [$name, $url] = array_map('trim', explode('|', $line, 2));
                 $resources[]  = ['name' => $name, 'url' => $url];
             } else {

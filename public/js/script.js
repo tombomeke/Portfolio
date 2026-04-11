@@ -463,6 +463,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // ── User dropdown in navbar ────────────────────────────────────────────
+    const userTrigger = document.querySelector('.nav-user-trigger');
+    const userMenu    = document.querySelector('.nav-user-menu');
+
+    if (userTrigger && userMenu) {
+        userTrigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isOpen = userMenu.classList.toggle('open');
+            userTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!userTrigger.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.remove('open');
+                userTrigger.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
     // Better mobile navigation behavior (using existing navToggle and navMenu variables)
     if (navToggle && navMenu) {
         // Close mobile menu when clicking outside

@@ -936,7 +936,11 @@ class AdminController {
     private function renderAdmin(string $view, array $data = [], string $title = 'Admin'): void {
         $data['pageTitle'] = $title;
         $data['authUser']  = Auth::user();
-        $data['unreadMessages'] = $this->contact->countUnread();
+        try {
+            $data['unreadMessages'] = $this->contact->countUnread();
+        } catch (\Throwable $e) {
+            $data['unreadMessages'] = 0;
+        }
         extract($data);
 
         ob_start();
