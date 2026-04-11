@@ -5,6 +5,7 @@
 <!-- Welcome banner -->
 <div class="dashboard-welcome">
     <div>
+        <small class="dashboard-eyebrow">Admin overzicht</small>
         <h2>Welkom terug, <strong><?= htmlspecialchars($authUser['username'] ?? 'admin') ?></strong></h2>
         <p>Hier is een overzicht van je portfolio op <?= date('d F Y') ?>.</p>
     </div>
@@ -88,6 +89,53 @@
     <?php endif; ?>
 </div>
 
+<!-- Action center -->
+<div class="dashboard-quickgrid">
+    <div class="card quick-card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-bolt"></i> Actiecentrum</span>
+        </div>
+        <div class="quick-actions">
+            <a href="?page=admin&section=contact" class="quick-action <?= ($stats['unread_messages'] ?? 0) > 0 ? 'quick-action--warning' : '' ?>">
+                <i class="fas fa-envelope"></i>
+                <span>Inbox bekijken</span>
+                <?php if (($stats['unread_messages'] ?? 0) > 0): ?>
+                    <strong><?= (int) ($stats['unread_messages'] ?? 0) ?> ongelezen</strong>
+                <?php else: ?>
+                    <strong>Alles gelezen</strong>
+                <?php endif; ?>
+            </a>
+            <a href="?page=admin&section=comments" class="quick-action <?= ($stats['pending_comments'] ?? 0) > 0 ? 'quick-action--warning' : '' ?>">
+                <i class="fas fa-comments"></i>
+                <span>Reacties modereren</span>
+                <?php if (($stats['pending_comments'] ?? 0) > 0): ?>
+                    <strong><?= (int) ($stats['pending_comments'] ?? 0) ?> wachtend</strong>
+                <?php else: ?>
+                    <strong>Geen wachtrij</strong>
+                <?php endif; ?>
+            </a>
+            <a href="?page=admin&section=activity-logs" class="quick-action">
+                <i class="fas fa-clock-rotate-left"></i>
+                <span>Laatste activiteit</span>
+                <strong>Open logboek</strong>
+            </a>
+        </div>
+    </div>
+
+    <div class="card quick-card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-satellite-dish"></i> Systeemstatus</span>
+        </div>
+        <div class="status-chips">
+            <span class="status-chip status-chip--ok"><i class="fas fa-check-circle"></i> News live</span>
+            <span class="status-chip status-chip--ok"><i class="fas fa-check-circle"></i> FAQ live</span>
+            <span class="status-chip status-chip--ok"><i class="fas fa-check-circle"></i> Profielen live</span>
+            <a href="?page=admin&section=wip" class="status-chip status-chip--link"><i class="fas fa-hard-hat"></i> WIP beheer</a>
+            <a href="?page=readmesync" class="status-chip status-chip--link"><i class="fas fa-code-branch"></i> ReadmeSync testen</a>
+        </div>
+    </div>
+</div>
+
 <!-- Two column: recent news + recent messages -->
 <div class="dashboard-columns">
 
@@ -158,47 +206,49 @@
 
 </div>
 
-<!-- Migratiestatus -->
+<!-- Roadmap status -->
 <div class="card" style="margin-top:1.5rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-check-circle" style="color:var(--success)"></i> Migratie voltooid</span>
-        <span class="badge badge--success">Laravel → PHP MVC</span>
+        <?php $todoCount = (int) ($roadmapMeta['todoCount'] ?? 0); ?>
+        <?php $doneCount = (int) ($roadmapMeta['doneCount'] ?? 0); ?>
+        <span class="card-title">
+            <?php if ($todoCount > 0): ?>
+                <i class="fas fa-road" style="color:var(--warning)"></i> Roadmap in uitvoering
+            <?php else: ?>
+                <i class="fas fa-check-circle" style="color:var(--success)"></i> Migratie voltooid
+            <?php endif; ?>
+        </span>
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+            <span class="badge <?= $todoCount > 0 ? 'badge--warning' : 'badge--success' ?>"><?= $doneCount ?> done</span>
+            <?php if ($todoCount > 0): ?><span class="badge badge--warning"><?= $todoCount ?> todo</span><?php endif; ?>
+            <?php if (($authUser['role'] ?? '') === 'owner'): ?>
+                <a href="?page=admin&section=roadmap" class="btn btn-ghost btn-sm">Beheer roadmap</a>
+            <?php endif; ?>
+        </div>
     </div>
+
+    <?php if (!empty($roadmapMeta['lastSyncAt'])): ?>
+        <p class="text-muted text-sm" style="margin:0 0 .8rem">
+            Bron: <?= htmlspecialchars($roadmapMeta['source'] ?? 'manual') ?>
+            <?php if (!empty($roadmapMeta['repoUrl'])): ?>
+                · <a href="<?= htmlspecialchars($roadmapMeta['repoUrl']) ?>" target="_blank" rel="noopener" class="text-muted">repo</a>
+            <?php endif; ?>
+            · laatst gesynchroniseerd op <?= date('d/m/Y H:i', strtotime((string) $roadmapMeta['lastSyncAt'])) ?>
+        </p>
+    <?php endif; ?>
+
     <div class="roadmap-grid">
-        <div class="roadmap-item roadmap-item--done">
-            <i class="fas fa-check"></i>
-            <div>
-                <strong>Tags</strong>
-                <span>Many-to-many tags op nieuwsberichten, tag-filter op news-pagina</span>
+        <?php foreach (($roadmapItems ?? []) as $item): ?>
+            <?php $isDone = (($item['status'] ?? 'todo') === 'done'); ?>
+            <div class="roadmap-item <?= $isDone ? 'roadmap-item--done' : 'roadmap-item--todo' ?>">
+                <i class="fas <?= $isDone ? 'fa-check' : 'fa-list-check' ?>"></i>
+                <div>
+                    <strong><?= htmlspecialchars($item['title'] ?? 'Roadmap item') ?></strong>
+                    <?php if (!empty($item['description'])): ?>
+                        <span><?= htmlspecialchars($item['description']) ?></span>
+                    <?php endif; ?>
+                </div>
             </div>
-        </div>
-        <div class="roadmap-item roadmap-item--done">
-            <i class="fas fa-check"></i>
-            <div>
-                <strong>News comments</strong>
-                <span>Reacties op nieuwsberichten met moderatie en goedkeuringsflow</span>
-            </div>
-        </div>
-        <div class="roadmap-item roadmap-item--done">
-            <i class="fas fa-check"></i>
-            <div>
-                <strong>Activity logs</strong>
-                <span>Alle admin-acties worden bijgehouden met filter en paginering</span>
-            </div>
-        </div>
-        <div class="roadmap-item roadmap-item--done">
-            <i class="fas fa-check"></i>
-            <div>
-                <strong>Site settings</strong>
-                <span>Dynamische configuratie per groep instelbaar via admin</span>
-            </div>
-        </div>
-        <div class="roadmap-item roadmap-item--done">
-            <i class="fas fa-check"></i>
-            <div>
-                <strong>User profiles + auth</strong>
-                <span>Publiek registreren, inloggen, profielpagina en comment-auth</span>
-            </div>
-        </div>
+        <?php endforeach; ?>
     </div>
 </div>

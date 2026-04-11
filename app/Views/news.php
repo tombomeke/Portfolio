@@ -4,15 +4,15 @@
             <h1>News</h1>
             <?php if (!empty($activeTag)): ?>
             <div class="active-filter" style="display:flex;align-items:center;gap:.6rem;margin-top:.6rem">
-                <span style="font-size:.85rem;color:var(--text-muted)">Gefilterd op:</span>
+                <span style="font-size:.85rem;color:var(--text-muted)"><?= trans('news_filtered_by') ?></span>
                 <span class="tag-chip"><i class="fas fa-tag"></i> <?= htmlspecialchars($activeTag) ?></span>
-                <a href="?page=news" class="btn btn-outline btn-sm"><i class="fas fa-times"></i> Wis filter</a>
+                <a href="?page=news" class="btn btn-outline btn-sm"><i class="fas fa-times"></i> <?= trans('news_clear_filter') ?></a>
             </div>
             <?php endif; ?>
         </div>
 
         <?php if (empty($items)): ?>
-            <p class="no-content">Nog geen nieuwsberichten gepubliceerd.</p>
+            <p class="no-content"><?= trans('news_no_items') ?></p>
         <?php else: ?>
         <div class="news-grid">
             <?php foreach ($items as $item): ?>
@@ -45,7 +45,7 @@
                         <?= htmlspecialchars(mb_substr(strip_tags($item['content']), 0, 160)) ?>…
                     </p>
                     <a href="?page=news-item&id=<?= (int) $item['id'] ?>" class="btn btn-outline btn-sm">
-                        Lees meer →
+                        <?= trans('read_more') ?> →
                     </a>
                 </div>
             </article>
@@ -56,11 +56,11 @@
         <nav class="pagination">
             <?php $tagQs = !empty($activeTag) ? '&tag=' . urlencode($activeTag) : ''; ?>
             <?php if ($page > 1): ?>
-                <a href="?page=news&p=<?= $page - 1 ?><?= $tagQs ?>" class="btn btn-outline">&laquo; Vorige</a>
+                <a href="?page=news&p=<?= $page - 1 ?><?= $tagQs ?>" class="btn btn-outline">&laquo; <?= trans('news_prev') ?></a>
             <?php endif; ?>
             <span><?= $page ?> / <?= $totalPages ?></span>
             <?php if ($page < $totalPages): ?>
-                <a href="?page=news&p=<?= $page + 1 ?><?= $tagQs ?>" class="btn btn-outline">Volgende &raquo;</a>
+                <a href="?page=news&p=<?= $page + 1 ?><?= $tagQs ?>" class="btn btn-outline"><?= trans('news_next') ?> &raquo;</a>
             <?php endif; ?>
         </nav>
         <?php endif; ?>

@@ -1,0 +1,37 @@
+{
+  "source": "manual",
+  "repoUrl": "",
+  "lastSyncAt": null,
+  "items": [
+    {
+      "id": "tags",
+      "title": "Tags",
+      "description": "Many-to-many tags op nieuwsberichten, tag-filter op news-pagina",
+      "status": "done"
+    },
+    {
+      "id": "news-comments",
+      "title": "News comments",
+      "description": "Reacties op nieuwsberichten met moderatie en goedkeuringsflow",
+      "status": "done"
+    },
+    {
+      "id": "activity-logs",
+      "title": "Activity logs",
+      "description": "Alle admin-acties worden bijgehouden met filter en paginering",
+      "status": "done"
+    },
+    {
+      "id": "site-settings",
+      "title": "Site settings",
+      "description": "Dynamische configuratie per groep instelbaar via admin",
+      "status": "done"
+    },
+    {
+      "id": "profiles-auth",
+      "title": "User profiles + auth",
+      "description": "Publiek registreren, inloggen, profielpagina en comment-auth",
+      "status": "done"
+    }
+  ]
+}

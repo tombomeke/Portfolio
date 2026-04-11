@@ -3,6 +3,17 @@
 
 class Auth {
 
+    private static function makeSessionUser(array $user): array {
+        return [
+            'id'                 => $user['id'],
+            'username'           => $user['username'],
+            'email'              => $user['email'],
+            'role'               => $user['role'],
+            'profile_photo_path' => $user['profile_photo_path'] ?? null,
+            'preferred_language' => $user['preferred_language'] ?? 'nl',
+        ];
+    }
+
     public static function check(): bool {
         return isset($_SESSION['auth_user']);
     }
@@ -46,12 +57,7 @@ class Auth {
         }
 
         session_regenerate_id(true);
-        $_SESSION['auth_user'] = [
-            'id'       => $user['id'],
-            'username' => $user['username'],
-            'email'    => $user['email'],
-            'role'     => $user['role'],
-        ];
+        $_SESSION['auth_user'] = self::makeSessionUser($user);
         return true;
     }
 
@@ -67,12 +73,7 @@ class Auth {
         }
 
         session_regenerate_id(true);
-        $_SESSION['auth_user'] = [
-            'id'       => $user['id'],
-            'username' => $user['username'],
-            'email'    => $user['email'],
-            'role'     => $user['role'],
-        ];
+        $_SESSION['auth_user'] = self::makeSessionUser($user);
         return true;
     }
 

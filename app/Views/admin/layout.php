@@ -73,6 +73,9 @@ $isAuth = isset($authUser);
         <a href="?page=admin&section=wip" class="sidebar-link <?= ($currentSection === 'wip') ? 'active' : '' ?>">
             <i class="fas fa-hard-hat fa-fw"></i> WIP Pagina's
         </a>
+        <a href="?page=admin&section=roadmap" class="sidebar-link <?= ($currentSection === 'roadmap') ? 'active' : '' ?>">
+            <i class="fas fa-list-check fa-fw"></i> Roadmap
+        </a>
         <a href="?page=admin&section=activity-logs" class="sidebar-link <?= ($currentSection === 'activity-logs') ? 'active' : '' ?>">
             <i class="fas fa-history fa-fw"></i> Activity Log
         </a>
@@ -97,7 +100,12 @@ $isAuth = isset($authUser);
 
 <div class="admin-main">
     <header class="admin-topbar">
-        <h1><?= htmlspecialchars($pageTitle ?? 'Admin') ?></h1>
+        <div class="topbar-left">
+            <button class="sidebar-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1><?= htmlspecialchars($pageTitle ?? 'Admin') ?></h1>
+        </div>
         <div class="topbar-right">
             <span class="role-badge <?= htmlspecialchars($authUser['role'] ?? 'admin') ?>">
                 <?= htmlspecialchars($authUser['role'] ?? 'admin') ?>
@@ -113,6 +121,10 @@ $isAuth = isset($authUser);
 
 <?php else: ?>
 <?= $content ?>
+<?php endif; ?>
+
+<?php if ($isAuth): ?>
+<div class="admin-backdrop" aria-hidden="true"></div>
 <?php endif; ?>
 
 <script>
@@ -135,6 +147,49 @@ document.querySelectorAll('[data-confirm]').forEach(el => {
         if (!confirm(el.dataset.confirm || 'Are you sure?')) e.preventDefault();
     });
 });
+
+// Mobile sidebar toggle
+const sidebar = document.querySelector('.admin-sidebar');
+const sidebarToggle = document.querySelector('.sidebar-toggle');
+const backdrop = document.querySelector('.admin-backdrop');
+
+if (sidebar && sidebarToggle && backdrop) {
+    const closeSidebar = () => {
+        sidebar.classList.remove('is-open');
+        backdrop.classList.remove('is-visible');
+        sidebarToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    };
+
+    const openSidebar = () => {
+        sidebar.classList.add('is-open');
+        backdrop.classList.add('is-visible');
+        sidebarToggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    };
+
+    sidebarToggle.addEventListener('click', () => {
+        if (sidebar.classList.contains('is-open')) {
+            closeSidebar();
+        } else {
+            openSidebar();
+        }
+    });
+
+    backdrop.addEventListener('click', closeSidebar);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+            closeSidebar();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            closeSidebar();
+        }
+    });
+}
 </script>
 </body>
 </html>

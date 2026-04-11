@@ -154,6 +154,27 @@ class Translations {
             'wip_feedback' => 'Heb je specifieke wensen? Laat het me weten, dan neem ik het mee.',
             'wip_default_page_name' => 'deze pagina',
 
+            // News & FAQ
+            'news_filtered_by' => 'Gefilterd op:',
+            'news_clear_filter' => 'Wis filter',
+            'news_no_items' => 'Nog geen nieuwsberichten gepubliceerd.',
+            'news_prev' => 'Vorige',
+            'news_next' => 'Volgende',
+            'faq_no_items' => 'Nog geen FAQ items beschikbaar.',
+
+            // Profile
+            'profile_edit' => 'Profiel bewerken',
+            'profile_role_owner' => 'Site owner',
+            'profile_role_admin' => 'Beheerder',
+            'profile_role_member' => 'Lid',
+            'profile_about_me' => 'Over mij',
+            'profile_details' => 'Gegevens',
+            'profile_username' => 'Gebruikersnaam',
+            'profile_member_since' => 'Lid sinds',
+            'profile_preferred_language' => 'Voorkeurstaal',
+            'profile_lang_nl' => '🇳🇱 Nederlands',
+            'profile_lang_en' => '🇬🇧 Engels',
+
             // Games Section
             'games_title' => 'Gaming Stats',
             'games_minecraft' => 'Minecraft',
@@ -325,6 +346,27 @@ class Translations {
             'wip_contact' => 'Schedule a chat',
             'wip_feedback' => 'Have requests? Let me know and I\'ll include them.',
             'wip_default_page_name' => 'this page',
+
+            // News & FAQ
+            'news_filtered_by' => 'Filtered by:',
+            'news_clear_filter' => 'Clear filter',
+            'news_no_items' => 'No news posts have been published yet.',
+            'news_prev' => 'Previous',
+            'news_next' => 'Next',
+            'faq_no_items' => 'No FAQ items available yet.',
+
+            // Profile
+            'profile_edit' => 'Edit profile',
+            'profile_role_owner' => 'Site owner',
+            'profile_role_admin' => 'Admin',
+            'profile_role_member' => 'Member',
+            'profile_about_me' => 'About me',
+            'profile_details' => 'Details',
+            'profile_username' => 'Username',
+            'profile_member_since' => 'Member since',
+            'profile_preferred_language' => 'Preferred language',
+            'profile_lang_nl' => '🇳🇱 Dutch',
+            'profile_lang_en' => '🇬🇧 English',
 
             // Games Section
             'games_title' => 'Gaming Stats',

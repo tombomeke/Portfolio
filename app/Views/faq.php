@@ -3,7 +3,7 @@
         <h1>FAQ</h1>
 
         <?php if (empty($categories)): ?>
-            <p class="no-content">Nog geen FAQ items beschikbaar.</p>
+            <p class="no-content"><?= trans('faq_no_items') ?></p>
         <?php endif; ?>
 
         <?php foreach ($categories as $cat): ?>

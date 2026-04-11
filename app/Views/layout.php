@@ -39,10 +39,26 @@ require_once __DIR__ . '/../Config/translations.php';
                     <a href="?page=contact" class="nav-link" data-translate="nav_contact"><?= trans('nav_contact') ?></a>
 
                     <?php if (isset($_SESSION['auth_user'])): ?>
-                    <?php $authUser = $_SESSION['auth_user']; $authRole = $authUser['role'] ?? 'user'; ?>
+                    <?php
+                    $authUser = $_SESSION['auth_user'];
+                    $authRole = $authUser['role'] ?? 'user';
+                    $rawAvatarPath = trim((string) ($authUser['profile_photo_path'] ?? ''));
+                    $avatarPath = '';
+                    if ($rawAvatarPath !== '') {
+                        $avatarPath = preg_match('#^public/images/uploads/#', $rawAvatarPath)
+                            ? $rawAvatarPath
+                            : 'public/images/uploads/avatars/' . ltrim($rawAvatarPath, '/');
+                    }
+                    ?>
                     <div class="nav-user-dropdown">
                         <button class="nav-user-trigger" aria-expanded="false" aria-haspopup="true">
-                            <span class="nav-user-avatar"><?= htmlspecialchars(strtoupper(substr($authUser['username'], 0, 1))) ?></span>
+                            <span class="nav-user-avatar">
+                                <?php if ($avatarPath): ?>
+                                    <img src="<?= htmlspecialchars($avatarPath) ?>" alt="<?= htmlspecialchars($authUser['username']) ?>" class="nav-user-avatar-image">
+                                <?php else: ?>
+                                    <?= htmlspecialchars(strtoupper(substr($authUser['username'], 0, 1))) ?>
+                                <?php endif; ?>
+                            </span>
                             <span class="nav-user-name"><?= htmlspecialchars($authUser['username']) ?></span>
                             <?php if ($authRole === 'owner'): ?>
                                 <span class="nav-user-badge">owner</span>

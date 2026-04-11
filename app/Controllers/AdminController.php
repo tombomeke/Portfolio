@@ -28,6 +28,7 @@ class AdminController {
     private ActivityLogModel    $activityLog;
     private SiteSettingModel    $settings;
     private string              $contactEmail = 'tom1dekoning@gmail.com';
+    private string              $readmeSyncApiUrl = 'https://tombomekestudio.com/api/readmesync/generate';
 
     public function __construct() {
         $this->news        = new NewsModel();
@@ -111,6 +112,10 @@ class AdminController {
             case 'wip':
                 Auth::requireOwner();
                 $this->routeWip($isPost);
+                break;
+            case 'roadmap':
+                Auth::requireOwner();
+                $this->routeRoadmap($isPost);
                 break;
             default:
                 $this->showDashboard();
@@ -207,14 +212,40 @@ class AdminController {
             ];
             $recentNews     = $this->news->getAllForAdmin(5);
             $recentMessages = $this->contact->getAll(5);
+            $roadmapConfig  = $this->loadRoadmapConfig();
+            $roadmapItems   = $roadmapConfig['items'] ?? [];
+            $todoCount      = 0;
+            $doneCount      = 0;
+            foreach ($roadmapItems as $item) {
+                if (($item['status'] ?? 'todo') === 'done') {
+                    $doneCount++;
+                } else {
+                    $todoCount++;
+                }
+            }
+            $roadmapMeta = [
+                'source'      => $roadmapConfig['source'] ?? 'manual',
+                'repoUrl'     => $roadmapConfig['repoUrl'] ?? '',
+                'lastSyncAt'  => $roadmapConfig['lastSyncAt'] ?? null,
+                'todoCount'   => $todoCount,
+                'doneCount'   => $doneCount,
+            ];
         } catch (\Throwable $e) {
             $stats = array_fill_keys(
                 ['news','faq_categories','faq_items','projects','messages','unread_messages','users','skills','education','goals'], 0
             );
             $recentNews = $recentMessages = [];
+            $roadmapItems = $this->getDefaultRoadmapItems();
+            $roadmapMeta = [
+                'source'      => 'manual',
+                'repoUrl'     => '',
+                'lastSyncAt'  => null,
+                'todoCount'   => 0,
+                'doneCount'   => count($roadmapItems),
+            ];
         }
         $flash = $this->popFlash();
-        $this->renderAdmin('dashboard', compact('stats', 'recentNews', 'recentMessages', 'flash'), 'Dashboard');
+        $this->renderAdmin('dashboard', compact('stats', 'recentNews', 'recentMessages', 'flash', 'roadmapItems', 'roadmapMeta'), 'Dashboard');
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1212,6 +1243,20 @@ class AdminController {
             if ($photoPath) {
                 $this->users->updateProfilePhoto($authUser['id'], $photoPath);
             }
+
+            // Keep auth session in sync after profile changes (language/avatar/etc.).
+            $freshUser = $this->users->getById((int) $authUser['id']);
+            if ($freshUser) {
+                $_SESSION['auth_user'] = [
+                    'id'                 => $freshUser['id'],
+                    'username'           => $freshUser['username'],
+                    'email'              => $freshUser['email'],
+                    'role'               => $freshUser['role'],
+                    'profile_photo_path' => $freshUser['profile_photo_path'] ?? null,
+                    'preferred_language' => $freshUser['preferred_language'] ?? 'nl',
+                ];
+            }
+
             ActivityLogModel::log('updated', "Updated own profile");
             $this->flash('success', 'Profiel opgeslagen.');
             header('Location: ?page=admin&section=profile'); exit;
@@ -1315,11 +1360,213 @@ class AdminController {
         $this->renderAdmin('wip/index', compact('knownPages', 'current', 'flash'), 'WIP Pagina\'s');
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // ROADMAP (owner only)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function routeRoadmap(bool $isPost): void {
+        $config = $this->loadRoadmapConfig();
+
+        if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+            $action = $_POST['roadmap_action'] ?? 'save';
+
+            if ($action === 'sync') {
+                $repoUrl = trim($_POST['repo_url'] ?? '');
+                $todosOnly = isset($_POST['todos_only']) && $_POST['todos_only'] === '1';
+
+                // TODO(roadmap): add optional "target section" input so parsing can focus on a single README block (e.g. Roadmap/TODO).
+
+                if ($repoUrl === '' || !preg_match('#^https?://github\.com/[^/]+/[^/]+#i', $repoUrl)) {
+                    $this->flash('error', 'Geef een geldige GitHub repo URL op.');
+                    header('Location: ?page=admin&section=roadmap'); exit;
+                }
+
+                $apiError = null;
+                $content = $this->fetchReadmeSyncContent($repoUrl, $apiError);
+                if ($content === null) {
+                    $this->flash('error', $apiError ?: 'ReadmeSync synchronisatie mislukt.');
+                    header('Location: ?page=admin&section=roadmap'); exit;
+                }
+
+                $items = $this->parseChecklistItems($content, $todosOnly);
+                if (empty($items)) {
+                    $this->flash('error', 'Geen checklist-items gevonden in de ReadmeSync output.');
+                    header('Location: ?page=admin&section=roadmap'); exit;
+                }
+
+                // TODO(roadmap): support merge mode (keep manual items + upsert synced items by normalized title).
+
+                $config['items'] = $items;
+                $config['repoUrl'] = $repoUrl;
+                $config['source'] = 'readmesync';
+                $config['lastSyncAt'] = date('c');
+                $this->saveRoadmapConfig($config);
+
+                ActivityLogModel::log('updated', 'Synced roadmap from ReadmeSync (' . count($items) . ' items)');
+                $this->flash('success', 'Roadmap gesynchroniseerd vanuit ReadmeSync.');
+                header('Location: ?page=admin&section=roadmap'); exit;
+            }
+
+            if ($action === 'reset') {
+                $config = [
+                    'source' => 'manual',
+                    'repoUrl' => '',
+                    'lastSyncAt' => null,
+                    'items' => $this->getDefaultRoadmapItems(),
+                ];
+                $this->saveRoadmapConfig($config);
+                ActivityLogModel::log('updated', 'Reset roadmap to defaults');
+                $this->flash('success', 'Roadmap teruggezet naar standaarditems.');
+                header('Location: ?page=admin&section=roadmap'); exit;
+            }
+
+            // save
+            $doneIds = array_flip((array) ($_POST['done'] ?? []));
+            $updatedItems = [];
+            foreach ($config['items'] as $item) {
+                $id = (string) ($item['id'] ?? '');
+                $item['status'] = isset($doneIds[$id]) ? 'done' : 'todo';
+                $updatedItems[] = $item;
+            }
+            $config['items'] = $updatedItems;
+            $config['source'] = 'manual';
+            $this->saveRoadmapConfig($config);
+
+            ActivityLogModel::log('updated', 'Updated roadmap statuses manually');
+            $this->flash('success', 'Roadmap status opgeslagen.');
+            header('Location: ?page=admin&section=roadmap'); exit;
+        }
+
+        $flash = $this->popFlash();
+        $this->renderAdmin('roadmap/index', compact('config', 'flash'), 'Roadmap Beheer');
+    }
+
+    private function roadmapConfigPath(): string {
+        return __DIR__ . '/../../app/Config/roadmap_items.json';
+    }
+
+    private function getDefaultRoadmapItems(): array {
+        return [
+            ['id' => 'tags', 'title' => 'Tags', 'description' => 'Many-to-many tags op nieuwsberichten, tag-filter op news-pagina', 'status' => 'done'],
+            ['id' => 'news-comments', 'title' => 'News comments', 'description' => 'Reacties op nieuwsberichten met moderatie en goedkeuringsflow', 'status' => 'done'],
+            ['id' => 'activity-logs', 'title' => 'Activity logs', 'description' => 'Alle admin-acties worden bijgehouden met filter en paginering', 'status' => 'done'],
+            ['id' => 'site-settings', 'title' => 'Site settings', 'description' => 'Dynamische configuratie per groep instelbaar via admin', 'status' => 'done'],
+            ['id' => 'profiles-auth', 'title' => 'User profiles + auth', 'description' => 'Publiek registreren, inloggen, profielpagina en comment-auth', 'status' => 'done'],
+        ];
+    }
+
+    private function loadRoadmapConfig(): array {
+        $path = $this->roadmapConfigPath();
+        $defaults = [
+            'source' => 'manual',
+            'repoUrl' => '',
+            'lastSyncAt' => null,
+            'items' => $this->getDefaultRoadmapItems(),
+        ];
+
+        if (!file_exists($path)) {
+            $this->saveRoadmapConfig($defaults);
+            return $defaults;
+        }
+
+        $decoded = json_decode((string) file_get_contents($path), true);
+        if (!is_array($decoded)) {
+            return $defaults;
+        }
+
+        $decoded['items'] = is_array($decoded['items'] ?? null) ? $decoded['items'] : $defaults['items'];
+        $decoded['source'] = $decoded['source'] ?? 'manual';
+        $decoded['repoUrl'] = $decoded['repoUrl'] ?? '';
+        $decoded['lastSyncAt'] = $decoded['lastSyncAt'] ?? null;
+
+        return $decoded;
+    }
+
+    private function saveRoadmapConfig(array $config): void {
+        $path = $this->roadmapConfigPath();
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        file_put_contents($path, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    }
+
+    private function fetchReadmeSyncContent(string $repoUrl, ?string &$error): ?string {
+        $error = null;
+        if (!function_exists('curl_init')) {
+            $error = 'cURL niet beschikbaar op server.';
+            return null;
+        }
+
+        $payload = json_encode(['githubRepoUrl' => $repoUrl]);
+        // Uses the real ReadmeSync API that powers the public ReadmeSync page.
+        $ch = curl_init($this->readmeSyncApiUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 35,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+
+        $raw = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlErr) {
+            $error = 'ReadmeSync niet bereikbaar: ' . $curlErr;
+            return null;
+        }
+        if ($httpCode !== 200) {
+            $error = 'ReadmeSync gaf HTTP ' . $httpCode . '.';
+            return null;
+        }
+
+        $decoded = json_decode((string) $raw, true);
+        $content = trim((string) ($decoded['content'] ?? ''));
+        if ($content === '') {
+            $error = 'ReadmeSync response bevat geen content.';
+            return null;
+        }
+        return $content;
+    }
+
+    private function parseChecklistItems(string $markdown, bool $todosOnly): array {
+        preg_match_all('/^\s*[-*]\s*\[( |x|X)\]\s+(.+)$/m', $markdown, $matches, PREG_SET_ORDER);
+        $items = [];
+
+        // TODO(roadmap): enrich parsing with priority labels and owner tags (e.g. [P1], @owner).
+        // TODO(roadmap): keep source line numbers to improve traceability in roadmap UI.
+
+        foreach ($matches as $index => $match) {
+            $status = strtolower(trim($match[1])) === 'x' ? 'done' : 'todo';
+            if ($todosOnly && $status === 'done') {
+                continue;
+            }
+            $title = trim(strip_tags($match[2]));
+            if ($title === '') {
+                continue;
+            }
+            $items[] = [
+                'id' => 'synced-' . ($index + 1) . '-' . substr(md5($title), 0, 8),
+                'title' => $title,
+                'description' => '',
+                'status' => $status,
+            ];
+        }
+
+        return $items;
+    }
+
     private function flash(string $type, string $message): void {
         $_SESSION['admin_flash'] = ['type' => $type, 'message' => $message];
     }
 
-    private function popFlash(string $type = null): ?array {
+    private function popFlash(?string $type = null): ?array {
         $flash = $_SESSION['admin_flash'] ?? null;
         unset($_SESSION['admin_flash']);
         if ($type && $flash && $flash['type'] !== $type) return null;
