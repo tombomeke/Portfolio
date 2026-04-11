@@ -45,10 +45,26 @@ class AdminController {
         $this->activityLog = new ActivityLogModel();
         $this->settings    = new SiteSettingModel();
 
-        $this->readmeSyncApiUrl = getenv('READMESYNC_API_URL') ?: $this->readmeSyncApiUrl;
-        $this->readmeSyncTelemetryApiUrl = getenv('READMESYNC_ADMIN_TELEMETRY_URL') ?: $this->readmeSyncTelemetryApiUrl;
-        $this->readmeSyncTelemetryExportUrl = getenv('READMESYNC_ADMIN_TELEMETRY_EXPORT_URL') ?: $this->readmeSyncTelemetryExportUrl;
-        $this->readmeSyncAdminApiKey = getenv('READMESYNC_ADMIN_API_KEY') ?: '';
+        $readmeSyncApiUrl = function_exists('portfolioEnv')
+            ? portfolioEnv('READMESYNC_API_URL', $this->readmeSyncApiUrl)
+            : (getenv('READMESYNC_API_URL') ?: $this->readmeSyncApiUrl);
+
+        $readmeSyncTelemetryApiUrl = function_exists('portfolioEnv')
+            ? portfolioEnv('READMESYNC_ADMIN_TELEMETRY_URL', $this->readmeSyncTelemetryApiUrl)
+            : (getenv('READMESYNC_ADMIN_TELEMETRY_URL') ?: $this->readmeSyncTelemetryApiUrl);
+
+        $readmeSyncTelemetryExportUrl = function_exists('portfolioEnv')
+            ? portfolioEnv('READMESYNC_ADMIN_TELEMETRY_EXPORT_URL', $this->readmeSyncTelemetryExportUrl)
+            : (getenv('READMESYNC_ADMIN_TELEMETRY_EXPORT_URL') ?: $this->readmeSyncTelemetryExportUrl);
+
+        $readmeSyncAdminApiKey = function_exists('portfolioEnv')
+            ? portfolioEnv('READMESYNC_ADMIN_API_KEY', '')
+            : (getenv('READMESYNC_ADMIN_API_KEY') ?: '');
+
+        $this->readmeSyncApiUrl = $readmeSyncApiUrl;
+        $this->readmeSyncTelemetryApiUrl = $readmeSyncTelemetryApiUrl;
+        $this->readmeSyncTelemetryExportUrl = $readmeSyncTelemetryExportUrl;
+        $this->readmeSyncAdminApiKey = $readmeSyncAdminApiKey;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
