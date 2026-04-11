@@ -43,6 +43,9 @@ switch ($page) {
         $controller->showNews();
         break;
     case 'news-item':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'comment') {
+            $controller->handleComment((int) ($_GET['id'] ?? 0));
+        }
         $controller->showNewsItem((int) ($_GET['id'] ?? 0));
         break;
     case 'faq':
@@ -59,6 +62,24 @@ switch ($page) {
         break;
     case 'download-cv':
         $controller->downloadCV();
+        break;
+    case 'login':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->handleLogin();
+        }
+        $controller->showLogin();
+        break;
+    case 'register':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->handleRegister();
+        }
+        $controller->showRegister();
+        break;
+    case 'logout':
+        $controller->handleLogout();
+        break;
+    case 'profile':
+        $controller->showProfile($_GET['u'] ?? '');
         break;
     default:
         $controller->show404();
