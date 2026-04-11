@@ -68,6 +68,27 @@
             </div>
         </div>
     </a>
+    <a href="?page=admin&section=tags" class="stat-card stat-card--link">
+        <div class="stat-icon" style="--icon-color:#06b6d4"><i class="fas fa-tags"></i></div>
+        <div class="stat-body">
+            <div class="stat-value"><?= $stats['tags'] ?? 0 ?></div>
+            <div class="stat-label">Tags</div>
+        </div>
+    </a>
+    <a href="?page=admin&section=comments" class="stat-card stat-card--link <?= ($stats['pending_comments'] ?? 0) > 0 ? 'stat-card--alert' : '' ?>">
+        <div class="stat-icon" style="--icon-color:<?= ($stats['pending_comments'] ?? 0) > 0 ? '#f59e0b' : '#6b7280' ?>">
+            <i class="fas fa-comments"></i>
+        </div>
+        <div class="stat-body">
+            <div class="stat-value">
+                <?= $stats['pending_comments'] ?? 0 ?>
+                <?php if (($stats['pending_comments'] ?? 0) > 0): ?>
+                    <span class="badge badge--warning">wachtend</span>
+                <?php endif; ?>
+            </div>
+            <div class="stat-label">Reacties</div>
+        </div>
+    </a>
     <?php if (($authUser['role'] ?? '') === 'owner'): ?>
     <a href="?page=admin&section=users" class="stat-card stat-card--link">
         <div class="stat-icon" style="--icon-color:#f59e0b"><i class="fas fa-users"></i></div>
@@ -149,45 +170,46 @@
 
 </div>
 
-<!-- Migratestatus / roadmap -->
+<!-- Migratiestatus -->
 <div class="card" style="margin-top:1.5rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-road"></i> Roadmap – nog te migreren</span>
+        <span class="card-title"><i class="fas fa-check-circle" style="color:var(--success)"></i> Migratie voltooid</span>
+        <span class="badge badge--success">Laravel → PHP MVC</span>
     </div>
     <div class="roadmap-grid">
-        <div class="roadmap-item roadmap-item--todo">
-            <i class="fas fa-tags"></i>
+        <div class="roadmap-item roadmap-item--done">
+            <i class="fas fa-check"></i>
             <div>
                 <strong>Tags</strong>
                 <span>Many-to-many tags op nieuwsberichten, tag-filter op news-pagina</span>
             </div>
         </div>
-        <div class="roadmap-item roadmap-item--todo">
-            <i class="fas fa-comments"></i>
+        <div class="roadmap-item roadmap-item--done">
+            <i class="fas fa-check"></i>
             <div>
                 <strong>News comments</strong>
-                <span>Reacties op nieuwsberichten met moderatie in admin</span>
+                <span>Reacties op nieuwsberichten met moderatie en goedkeuringsflow</span>
             </div>
         </div>
-        <div class="roadmap-item roadmap-item--todo">
-            <i class="fas fa-clipboard-list"></i>
+        <div class="roadmap-item roadmap-item--done">
+            <i class="fas fa-check"></i>
             <div>
                 <strong>Activity logs</strong>
-                <span>Bijhouden wie wat heeft aangepast/gemaakt/verwijderd</span>
+                <span>Alle admin-acties worden bijgehouden met filter en paginering</span>
             </div>
         </div>
-        <div class="roadmap-item roadmap-item--todo">
-            <i class="fas fa-sliders"></i>
+        <div class="roadmap-item roadmap-item--done">
+            <i class="fas fa-check"></i>
             <div>
                 <strong>Site settings</strong>
-                <span>Dynamische configuratie (naam, bio, socials) via admin</span>
+                <span>Dynamische configuratie per groep instelbaar via admin</span>
             </div>
         </div>
-        <div class="roadmap-item roadmap-item--todo">
-            <i class="fas fa-user-circle"></i>
+        <div class="roadmap-item roadmap-item--done">
+            <i class="fas fa-check"></i>
             <div>
-                <strong>User profiles</strong>
-                <span>Profielfoto, bio, verjaardag, publiek profiel voor admins</span>
+                <strong>User profiles + auth</strong>
+                <span>Publiek registreren, inloggen, profielpagina en comment-auth</span>
             </div>
         </div>
     </div>

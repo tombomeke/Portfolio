@@ -13,22 +13,33 @@ class UserModel {
     }
 
     public function getById(int $id): ?array {
-        $db   = Database::getConnection();
-        $stmt = $db->prepare(
-            "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
-             FROM users WHERE id = :id LIMIT 1"
-        );
-        $stmt->execute([':id' => $id]);
+        $db = Database::getConnection();
+        try {
+            $stmt = $db->prepare(
+                "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
+                 FROM users WHERE id = :id LIMIT 1"
+            );
+            $stmt->execute([':id' => $id]);
+        } catch (\PDOException $e) {
+            $stmt = $db->prepare("SELECT id, username, email, role, created_at FROM users WHERE id = :id LIMIT 1");
+            $stmt->execute([':id' => $id]);
+        }
         return $stmt->fetch() ?: null;
     }
 
     public function getByUsername(string $username): ?array {
-        $db   = Database::getConnection();
-        $stmt = $db->prepare(
-            "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
-             FROM users WHERE username = :u LIMIT 1"
-        );
-        $stmt->execute([':u' => $username]);
+        $db = Database::getConnection();
+        try {
+            $stmt = $db->prepare(
+                "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
+                 FROM users WHERE username = :u LIMIT 1"
+            );
+            $stmt->execute([':u' => $username]);
+        } catch (\PDOException $e) {
+            // Fallback: profile columns don't exist yet (migrate_v2.sql not run)
+            $stmt = $db->prepare("SELECT id, username, email, role, created_at FROM users WHERE username = :u LIMIT 1");
+            $stmt->execute([':u' => $username]);
+        }
         return $stmt->fetch() ?: null;
     }
 

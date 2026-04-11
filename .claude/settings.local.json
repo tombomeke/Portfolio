@@ -1,14 +1,16 @@
 {
   "permissions": {
-    "additionalDirectories": [
-      "C:\\Users\\sinkh\\source\\repos\\tombomeke-ehb\\backend-web-portfolio"
-    ],
     "allow": [
       "Bash(mkdir -p \"/c/Users/sinkh/source/repos/tombomeke/Portfolio/app/Auth\")",
       "Bash(mkdir -p \"/c/Users/sinkh/source/repos/tombomeke/Portfolio/app/Views/admin/news\")",
       "Bash(mkdir -p \"/c/Users/sinkh/source/repos/tombomeke/Portfolio/app/Views/admin/faq\")",
       "Bash(mkdir -p \"/c/Users/sinkh/source/repos/tombomeke/Portfolio/app/Views/admin/projects\")",
       "Bash(mkdir -p \"/c/Users/sinkh/source/repos/tombomeke/Portfolio/app/Views/admin/contact\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\sinkh\\source\\repos\\tombomeke-ehb\\backend-web-portfolio",
+      "C:\\Users\\sinkh\\source\\repos\\tombomeke-ehb\\ReadmeSync",
+      "C:\\Users\\sinkh\\source\\repos\\tombomeke-ehb\\ReadmeSync.API"
     ]
   }
 }
