@@ -123,11 +123,14 @@
 - [ ] [P1] Voeg item 1 toe
 - [ ] [low] Voeg item 2 toe
 - [x] Reeds afgewerkt item
+- [ ] TODO: extra sync test in checkbox-vorm
 
 ## TODO
 
 - Extra taak zonder checkbox (fallback naar todo)
 # TODO: Nog een taak als compacte TODO-regel
+- [TODO] Nog een testregel met bracket-syntax
+- Fix navbar op mobiel TODO: toevoegen aan roadmap
 - Nog een task
 </textarea>
     <div class="form-actions" style="margin-top:.75rem">
