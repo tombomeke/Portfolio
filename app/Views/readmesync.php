@@ -10,6 +10,15 @@
             </p>
         </div>
 
+        <?php if (!isset($_SESSION['auth_user'])): ?>
+        <div class="alert alert-info">
+            <i class="fas fa-lock"></i>
+            Om een readme te genereren moet je
+            <a href="?page=login&redirect=<?= urlencode('?page=readmesync') ?>">inloggen</a>
+            of <a href="?page=register">registreren</a> — het bekijken van de pagina is gratis.
+        </div>
+        <?php endif; ?>
+
         <?php if (!$repoUrl): ?>
         <div class="readmesync-quicklinks">
             <h2>Mijn projecten</h2>
@@ -49,6 +58,9 @@
         <div class="alert alert-error">
             <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
         </div>
+        <?php if (!empty($debugCurlErr)): ?>
+        <!-- [ReadmeSync debug] curl_error: <?= $debugCurlErr ?> | http_code: <?= (int)($debugHttpCode ?? 0) ?> -->
+        <?php endif; ?>
         <?php endif; ?>
 
         <?php if ($result): ?>
@@ -87,6 +99,8 @@
 }
 .alert { padding: .85rem 1.2rem; border-radius: 6px; margin-bottom: 1.5rem; }
 .alert-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.alert-info  { background: rgba(59,130,246,.06); color: var(--primary-color,#1d4ed8); border: 1px solid rgba(59,130,246,.25); }
+.alert-info a { color: inherit; font-weight: 600; }
 .readmesync-result { margin-top: 1.5rem; }
 .result-meta {
     display: flex; align-items: center; gap: .5rem; font-size: .9rem;
