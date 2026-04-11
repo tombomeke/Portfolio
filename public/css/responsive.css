@@ -2,7 +2,47 @@
    RESPONSIVE DESIGN - Media queries and breakpoints
    =========================================== */
 
-/* Extra small devices (phones, 320px and up) */
+/* Extra small devices (phones, 320px and up) */@media (max-width: 575px) {
+    .nav-container {
+        height: auto;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem var(--spacing-md);
+    }
+    
+    .nav-menu {
+        display: none !important;
+        flex-direction: column;
+        width: 100%;
+        gap: var(--spacing-md);
+        margin-top: 0.5rem;
+    }
+    
+    .nav-menu.is-open {
+        display: flex !important;
+    }
+    
+    .nav-toggle {
+        display: flex !important;
+        border: none;
+        background: none;
+    }
+    
+    .nav-user-name,
+    .nav-user-badge,
+    .nav-user-chevron {
+        display: none;
+    }
+    
+    .nav-link {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .nav-logo a {
+        font-size: 1.2rem;
+    }
+}
 @media (min-width: 320px) {
     .container {
         padding: 0 var(--spacing-sm);
@@ -64,11 +104,25 @@
     }
     
     .nav-menu {
-        display: flex;
+        display: flex !important;
+        flex-direction: row;
+        margin-top: 0;
     }
     
     .nav-toggle {
         display: none;
+    }
+    
+    .nav-user-name,
+    .nav-user-badge,
+    .nav-user-chevron {
+        display: inline;
+    }
+    
+    .nav-container {
+        flex-direction: row;
+        height: 70px;
+        padding: 0 var(--spacing-md);
     }
 }
 

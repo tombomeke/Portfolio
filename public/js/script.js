@@ -482,6 +482,35 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // ── Admin Sidebar Toggle (Mobile) ──────────────────────────────────────
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    const adminSidebar = document.querySelector('.admin-sidebar');
+    
+    if (sidebarToggle && adminSidebar) {
+        sidebarToggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            adminSidebar.classList.toggle('is-open');
+            sidebarToggle.setAttribute('aria-expanded', adminSidebar.classList.contains('is-open') ? 'true' : 'false');
+        });
+        
+        // Close sidebar when clicking on a sidebar link
+        const sidebarLinks = adminSidebar.querySelectorAll('.sidebar-link');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function () {
+                adminSidebar.classList.remove('is-open');
+                sidebarToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+        
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!sidebarToggle.contains(e.target) && !adminSidebar.contains(e.target)) {
+                adminSidebar.classList.remove('is-open');
+                sidebarToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
 
     // Better mobile navigation behavior (using existing navToggle and navMenu variables)
     if (navToggle && navMenu) {
