@@ -6,12 +6,15 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../Config/translations.php';
 require_once __DIR__ . '/../Models/ContactMessageModel.php';
-
 require_once __DIR__ . '/../Models/ProjectModels.php';
 require_once __DIR__ . '/../Models/SkillModel.php';
 require_once __DIR__ . '/../Models/GameStatsModel.php';
 require_once __DIR__ . '/../Models/NewsModel.php';
 require_once __DIR__ . '/../Models/FaqModel.php';
+require_once __DIR__ . '/../Models/NewsCommentModel.php';
+require_once __DIR__ . '/../Models/SiteSettingModel.php';
+require_once __DIR__ . '/../Models/UserModel.php';
+require_once __DIR__ . '/../Auth/Auth.php';
 
 class PortfolioController {
     private $projectModel;
@@ -20,6 +23,8 @@ class PortfolioController {
     private $skillModel;
     private $gameStatsModel;
     private $contactModel;
+    private $commentModel;
+    private $userModel;
     private $contactRecipient = 'tom1dekoning@gmail.com';
 
     public function __construct() {
@@ -29,6 +34,8 @@ class PortfolioController {
         $this->newsModel      = new NewsModel();
         $this->faqModel       = new FaqModel();
         $this->contactModel   = new ContactMessageModel();
+        $this->commentModel   = new NewsCommentModel();
+        $this->userModel      = new UserModel();
     }
 
     public function showAbout() {
@@ -190,22 +197,24 @@ class PortfolioController {
     }
 
     public function showNews() {
-        $lang    = Translations::getCurrentLang();
-        $perPage = 9;
-        $page    = max(1, (int) ($_GET['p'] ?? 1));
-        $offset  = ($page - 1) * $perPage;
-        $total   = $this->newsModel->count($lang);
-        $items   = $this->newsModel->getAll($lang, $perPage, $offset);
+        $lang      = Translations::getCurrentLang();
+        $perPage   = 9;
+        $page      = max(1, (int) ($_GET['p'] ?? 1));
+        $offset    = ($page - 1) * $perPage;
+        $activeTag = trim($_GET['tag'] ?? '');
+        $total     = $this->newsModel->count($lang, $activeTag ?: null);
+        $items     = $this->newsModel->getAll($lang, $perPage, $offset, $activeTag ?: null);
 
         $this->render('news', [
             'title'      => 'News',
             'items'      => $items,
             'page'       => $page,
             'totalPages' => (int) ceil($total / $perPage),
+            'activeTag'  => $activeTag,
         ]);
     }
 
-    public function showNewsItem($id) {
+    public function showNewsItem(int $id) {
         $lang = Translations::getCurrentLang();
         $item = $this->newsModel->getById($id, $lang);
 
@@ -214,10 +223,219 @@ class PortfolioController {
             return;
         }
 
+        try {
+            $comments        = $this->commentModel->getForNewsItem($id, true);
+            $commentsEnabled = SiteSettingModel::get('comments_enabled', true);
+        } catch (\Throwable $e) {
+            $comments        = [];
+            $commentsEnabled = false;
+        }
+
         $this->render('news-item', [
-            'title' => htmlspecialchars($item['title'], ENT_QUOTES, 'UTF-8'),
-            'item'  => $item,
+            'title'           => htmlspecialchars($item['title']),
+            'item'            => $item,
+            'comments'        => $comments,
+            'commentsEnabled' => $commentsEnabled,
         ]);
+    }
+
+    public function handleComment(int $newsItemId): void {
+        $authUser = $_SESSION['auth_user'] ?? null;
+        if (!$authUser) {
+            header('Location: ?page=login&redirect=' . urlencode('?page=news-item&id=' . $newsItemId));
+            exit;
+        }
+
+        if (!Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+            $_SESSION['comment_error'] = 'Ongeldig beveiligingstoken.';
+            header('Location: ?page=news-item&id=' . $newsItemId);
+            exit;
+        }
+
+        $body = trim($_POST['body'] ?? '');
+        if (strlen($body) < 2 || strlen($body) > 2000) {
+            $_SESSION['comment_error'] = 'Reactie moet tussen 2 en 2000 tekens zijn.';
+            header('Location: ?page=news-item&id=' . $newsItemId);
+            exit;
+        }
+
+        try {
+            $requireApproval = SiteSettingModel::get('comments_require_approval', true);
+            $isApproved      = !$requireApproval;
+            $this->commentModel->create($newsItemId, (int) $authUser['id'], $body, $isApproved);
+            $_SESSION['comment_success'] = $isApproved
+                ? 'Reactie geplaatst.'
+                : 'Reactie ingediend en wacht op goedkeuring.';
+        } catch (\Throwable $e) {
+            $_SESSION['comment_error'] = 'Reactie kon niet worden opgeslagen.';
+        }
+
+        header('Location: ?page=news-item&id=' . $newsItemId);
+        exit;
+    }
+
+    public function showProfile(string $username): void {
+        try {
+            $user = $this->userModel->getByUsername($username);
+        } catch (\Throwable $e) {
+            $user = null;
+        }
+
+        if (!$user || !($user['public_profile'] ?? 1)) {
+            $this->show404();
+            return;
+        }
+
+        $this->render('profile', [
+            'title'       => htmlspecialchars($user['username']) . '\'s profiel',
+            'profileUser' => $user,
+        ]);
+    }
+
+    public function showLogin(): void {
+        if (Auth::check()) {
+            header('Location: ?page=home');
+            exit;
+        }
+        $redirect = $_GET['redirect'] ?? '';
+        $this->render('login', [
+            'title'    => 'Inloggen',
+            'redirect' => $redirect,
+            'error'    => $_SESSION['login_error'] ?? null,
+        ]);
+        unset($_SESSION['login_error']);
+    }
+
+    public function handleLogin(): void {
+        if (!Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+            $_SESSION['login_error'] = 'Ongeldig beveiligingstoken.';
+            header('Location: ?page=login');
+            exit;
+        }
+
+        $email    = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $redirect = $_POST['redirect'] ?? '';
+
+        if (Auth::loginByEmail($email, $password)) {
+            $user = Auth::user();
+            // Admins/owners go to admin panel, regular users go back or home
+            if (in_array($user['role'], ['owner', 'admin'], true)) {
+                header('Location: ?page=admin');
+            } elseif ($redirect && strpos($redirect, 'page=') !== false) {
+                header('Location: ' . $redirect);
+            } else {
+                header('Location: ?page=home');
+            }
+            exit;
+        }
+
+        $_SESSION['login_error'] = 'Ongeldig e-mailadres of wachtwoord.';
+        $qs = $redirect ? '&redirect=' . urlencode($redirect) : '';
+        header('Location: ?page=login' . $qs);
+        exit;
+    }
+
+    public function handleLogout(): void {
+        Auth::logout();
+        header('Location: ?page=home');
+        exit;
+    }
+
+    public function showRegister(): void {
+        if (Auth::check()) {
+            header('Location: ?page=home');
+            exit;
+        }
+
+        // Check if registration is enabled via site settings
+        $enabled = true;
+        try {
+            $enabled = (bool) SiteSettingModel::get('registration_enabled', true);
+        } catch (\Throwable $e) {}
+
+        if (!$enabled) {
+            $this->render('register-disabled', ['title' => 'Registratie uitgeschakeld']);
+            return;
+        }
+
+        $this->render('register', [
+            'title' => 'Registreren',
+            'error' => $_SESSION['register_error'] ?? null,
+            'old'   => $_SESSION['register_old'] ?? [],
+        ]);
+        unset($_SESSION['register_error'], $_SESSION['register_old']);
+    }
+
+    public function handleRegister(): void {
+        // Check if registration is enabled
+        $enabled = true;
+        try {
+            $enabled = (bool) SiteSettingModel::get('registration_enabled', true);
+        } catch (\Throwable $e) {}
+
+        if (!$enabled) {
+            header('Location: ?page=register');
+            exit;
+        }
+
+        if (!Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+            $_SESSION['register_error'] = 'Ongeldig beveiligingstoken.';
+            header('Location: ?page=register');
+            exit;
+        }
+
+        $name     = trim($_POST['name'] ?? '');
+        $email    = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $confirm  = $_POST['password_confirmation'] ?? '';
+
+        $_SESSION['register_old'] = ['name' => $name, 'email' => $email];
+
+        if (strlen($name) < 2) {
+            $_SESSION['register_error'] = 'Naam moet minimaal 2 tekens bevatten.';
+            header('Location: ?page=register');
+            exit;
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['register_error'] = 'Ongeldig e-mailadres.';
+            header('Location: ?page=register');
+            exit;
+        }
+        if ($this->userModel->emailExists($email)) {
+            $_SESSION['register_error'] = 'Dit e-mailadres is al in gebruik.';
+            header('Location: ?page=register');
+            exit;
+        }
+        if (strlen($password) < 8) {
+            $_SESSION['register_error'] = 'Wachtwoord moet minimaal 8 tekens bevatten.';
+            header('Location: ?page=register');
+            exit;
+        }
+        if ($password !== $confirm) {
+            $_SESSION['register_error'] = 'Wachtwoorden komen niet overeen.';
+            header('Location: ?page=register');
+            exit;
+        }
+
+        try {
+            $id = $this->userModel->createPublicUser($name, $email, $password);
+            $user = $this->userModel->getById($id);
+            session_regenerate_id(true);
+            $_SESSION['auth_user'] = [
+                'id'       => $user['id'],
+                'username' => $user['username'],
+                'email'    => $user['email'],
+                'role'     => $user['role'],
+            ];
+            unset($_SESSION['register_old']);
+            header('Location: ?page=home');
+            exit;
+        } catch (\Throwable $e) {
+            $_SESSION['register_error'] = 'Registratie mislukt. Probeer het opnieuw.';
+            header('Location: ?page=register');
+            exit;
+        }
     }
 
     public function showFaq() {
@@ -236,29 +454,66 @@ class PortfolioController {
         $error    = null;
         $language = null;
 
+        $debugCurlErr  = null;
+        $debugHttpCode = null;
+
         if ($repoUrl !== '') {
+            if (!Auth::check()) {
+                $redirectTarget = '?page=readmesync&repo=' . urlencode($repoUrl);
+                header('Location: ?page=login&redirect=' . urlencode($redirectTarget));
+                exit;
+            }
+
             if (!$this->isValidGitHubUrl($repoUrl)) {
                 $error = 'Ongeldige GitHub URL. Verwacht: https://github.com/owner/repo';
+            } elseif (!function_exists('curl_init')) {
+                $error = 'cURL is niet beschikbaar op deze server.';
             } else {
                 $payload = json_encode(['githubRepoUrl' => $repoUrl]);
-
-                $ch = curl_init($apiUrl);
-                curl_setopt_array($ch, [
+                $curlOpts = [
                     CURLOPT_POST           => true,
                     CURLOPT_POSTFIELDS     => $payload,
                     CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_CONNECTTIMEOUT => 10,
                     CURLOPT_TIMEOUT        => 35,
+                    CURLOPT_FOLLOWLOCATION => true,
                     CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Accept: application/json'],
                     CURLOPT_SSL_VERIFYPEER => true,
-                ]);
+                ];
+
+                $ch = curl_init($apiUrl);
+                curl_setopt_array($ch, $curlOpts);
 
                 $raw      = curl_exec($ch);
                 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $curlErr  = curl_error($ch);
                 curl_close($ch);
 
+                // SSL fallback: Combell shared hosting may have outdated CA bundle
                 if ($curlErr) {
-                    $error = 'De ReadmeSync API is momenteel niet bereikbaar.';
+                    $curlErrLower = strtolower($curlErr);
+                    if (strpos($curlErrLower, 'ssl') !== false || strpos($curlErrLower, 'certificate') !== false) {
+                        $fallbackOpts = $curlOpts;
+                        $fallbackOpts[CURLOPT_SSL_VERIFYPEER] = false;
+                        $fallbackOpts[CURLOPT_SSL_VERIFYHOST] = 0;
+                        $ch2 = curl_init($apiUrl);
+                        curl_setopt_array($ch2, $fallbackOpts);
+                        $raw2      = curl_exec($ch2);
+                        $httpCode2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+                        $curlErr2  = curl_error($ch2);
+                        curl_close($ch2);
+                        if (!$curlErr2) {
+                            $raw      = $raw2;
+                            $httpCode = $httpCode2;
+                            $curlErr  = '';
+                        }
+                    }
+                }
+
+                if ($curlErr) {
+                    $error         = 'De ReadmeSync API is momenteel niet bereikbaar.';
+                    $debugCurlErr  = htmlspecialchars($curlErr, ENT_QUOTES, 'UTF-8');
+                    $debugHttpCode = (int) $httpCode;
                 } elseif ($httpCode === 200) {
                     $data     = json_decode($raw, true);
                     $result   = $data['content']  ?? null;
@@ -273,11 +528,13 @@ class PortfolioController {
         }
 
         $this->render('readmesync', [
-            'title'    => 'ReadmeSync – Live Code Overview',
-            'repoUrl'  => htmlspecialchars($repoUrl, ENT_QUOTES, 'UTF-8'),
-            'result'   => $result,
-            'language' => $language,
-            'error'    => $error,
+            'title'        => 'ReadmeSync – Live Code Overview',
+            'repoUrl'      => htmlspecialchars($repoUrl, ENT_QUOTES, 'UTF-8'),
+            'result'       => $result,
+            'language'     => $language,
+            'error'        => $error,
+            'debugCurlErr' => $debugCurlErr,
+            'debugHttpCode'=> $debugHttpCode,
         ]);
     }
 
