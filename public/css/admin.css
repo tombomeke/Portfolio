@@ -214,13 +214,16 @@ body {
     width: 44px;
     height: 44px;
     border-radius: 10px;
-    background: color-mix(in srgb, var(--icon-color) 15%, transparent);
+    background: rgba(59, 130, 246, 0.12); /* safe static fallback */
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
     color: var(--icon-color);
     flex-shrink: 0;
+}
+@supports (background: color-mix(in srgb, red 15%, transparent)) {
+    .stat-icon { background: color-mix(in srgb, var(--icon-color) 15%, transparent); }
 }
 .stat-body { min-width: 0; }
 .stat-value {
@@ -477,4 +480,21 @@ textarea.tall { min-height: 240px; }
     .form-grid-2 { grid-template-columns: 1fr; }
     .admin-sidebar { transform: translateX(-100%); }
     .admin-main { margin-left: 0; }
+
+    /* Stack 2-column dashboard layout */
+    .dashboard-columns { grid-template-columns: 1fr; }
+
+    /* Shrink stat cards on small screens */
+    .stats-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+    /* Shrink roadmap items on small screens */
+    .roadmap-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+
+    /* Stack welcome banner vertically */
+    .dashboard-welcome { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .dashboard-welcome-actions { width: 100%; display: flex; flex-wrap: wrap; gap: .5rem; }
+    .dashboard-welcome-actions .btn { flex: 1; min-width: 120px; justify-content: center; }
+
+    /* Reduce admin content padding on mobile */
+    .admin-content { padding: 1rem; }
 }
