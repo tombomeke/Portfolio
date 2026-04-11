@@ -7,15 +7,55 @@ class UserModel {
     public function getAll(): array {
         $db = Database::getConnection();
         return $db->query(
-            "SELECT id, username, email, role, created_at FROM users ORDER BY FIELD(role,'owner','admin'), created_at ASC"
+            "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
+             FROM users ORDER BY FIELD(role,'owner','admin'), created_at ASC"
         )->fetchAll();
     }
 
     public function getById(int $id): ?array {
         $db   = Database::getConnection();
-        $stmt = $db->prepare("SELECT id, username, email, role, created_at FROM users WHERE id = :id LIMIT 1");
+        $stmt = $db->prepare(
+            "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
+             FROM users WHERE id = :id LIMIT 1"
+        );
         $stmt->execute([':id' => $id]);
         return $stmt->fetch() ?: null;
+    }
+
+    public function getByUsername(string $username): ?array {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
+             FROM users WHERE username = :u LIMIT 1"
+        );
+        $stmt->execute([':u' => $username]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function updateProfile(int $id, array $data): void {
+        $db = Database::getConnection();
+        $db->prepare(
+            "UPDATE users SET about=:about, birthday=:birthday, public_profile=:public_profile,
+             preferred_language=:preferred_language, updated_at=NOW() WHERE id=:id"
+        )->execute([
+            ':about'              => $data['about']              ?? null,
+            ':birthday'           => $data['birthday']           ?: null,
+            ':public_profile'     => (int) ($data['public_profile'] ?? 1),
+            ':preferred_language' => $data['preferred_language'] ?? 'nl',
+            ':id'                 => $id,
+        ]);
+    }
+
+    public function updateProfilePhoto(int $id, string $path): void {
+        Database::getConnection()->prepare(
+            "UPDATE users SET profile_photo_path=:path, updated_at=NOW() WHERE id=:id"
+        )->execute([':path' => $path, ':id' => $id]);
+    }
+
+    public function updatePassword(int $id, string $password): void {
+        Database::getConnection()->prepare(
+            "UPDATE users SET password=:pass, updated_at=NOW() WHERE id=:id"
+        )->execute([':pass' => password_hash($password, PASSWORD_DEFAULT), ':id' => $id]);
     }
 
     public function create(string $username, string $email, string $password, string $role = 'admin'): int {
@@ -27,9 +67,31 @@ class UserModel {
             ':username' => $username,
             ':email'    => $email,
             ':password' => password_hash($password, PASSWORD_DEFAULT),
-            ':role'     => in_array($role, ['owner', 'admin'], true) ? $role : 'admin',
+            ':role'     => in_array($role, ['owner', 'admin', 'user'], true) ? $role : 'admin',
         ]);
         return (int) $db->lastInsertId();
+    }
+
+    public function createPublicUser(string $name, string $email, string $password): int {
+        $username = $this->generateUsername($name);
+        return $this->create($username, $email, $password, 'user');
+    }
+
+    public function generateUsername(string $name): string {
+        // Lowercase, keep alphanumerics, replace spaces/special chars with nothing
+        $base = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $name));
+        if (empty($base)) {
+            $base = 'user';
+        }
+        $base = substr($base, 0, 20);
+
+        $username = $base;
+        $counter  = 1;
+        while ($this->usernameExists($username)) {
+            $username = $base . $counter;
+            $counter++;
+        }
+        return $username;
     }
 
     public function delete(int $id): void {

@@ -6,49 +6,90 @@ class NewsModel {
 
     // ── Public ───────────────────────────────────────────────────────────────
 
-    public function getAll($lang = 'nl', $limit = 20, $offset = 0) {
-        $db  = Database::getConnection();
-        $sql = "SELECT n.id, n.image_path, n.published_at,
-                       t.title, t.content
-                FROM   news_items n
-                JOIN   news_item_translations t
-                       ON t.news_item_id = n.id AND t.lang = :lang
-                WHERE  n.published_at IS NOT NULL AND n.published_at <= NOW()
-                ORDER  BY n.published_at DESC
-                LIMIT  :limit OFFSET :offset";
+    public function getAll($lang = 'nl', $limit = 20, $offset = 0, ?string $tagSlug = null) {
+        $db     = Database::getConnection();
+        $params = [':lang' => $lang];
+        $join   = '';
+        $where  = "n.published_at IS NOT NULL AND n.published_at <= NOW()";
 
-        $stmt = $db->prepare($sql);
-        $stmt->bindValue(':lang',   $lang,   PDO::PARAM_STR);
+        if ($tagSlug) {
+            $join   = "JOIN news_item_tag nit ON nit.news_item_id = n.id
+                       JOIN tags tg ON tg.id = nit.tag_id AND tg.slug = :tag_slug";
+            $params[':tag_slug'] = $tagSlug;
+        }
+
+        $stmt = $db->prepare(
+            "SELECT n.id, n.image_path, n.published_at, t.title, t.content
+             FROM news_items n
+             JOIN news_item_translations t ON t.news_item_id = n.id AND t.lang = :lang
+             {$join}
+             WHERE {$where}
+             ORDER BY n.published_at DESC
+             LIMIT :limit OFFSET :offset"
+        );
+        foreach ($params as $k => $v) $stmt->bindValue($k, $v);
         $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+
+        // Attach tags to each item
+        foreach ($rows as &$row) {
+            $row['tags'] = $this->getTagsForItem($row['id']);
+        }
+        return $rows;
     }
 
     public function getById($id, $lang = 'nl') {
         $db   = Database::getConnection();
         $stmt = $db->prepare(
-            "SELECT n.id, n.image_path, n.published_at,
-                    t.title, t.content
-             FROM   news_items n
-             JOIN   news_item_translations t
-                    ON t.news_item_id = n.id AND t.lang = :lang
-             WHERE  n.id = :id LIMIT 1"
+            "SELECT n.id, n.image_path, n.published_at, t.title, t.content
+             FROM news_items n
+             JOIN news_item_translations t ON t.news_item_id = n.id AND t.lang = :lang
+             WHERE n.id = :id LIMIT 1"
         );
         $stmt->execute([':id' => $id, ':lang' => $lang]);
         $row = $stmt->fetch();
+        if ($row) {
+            $row['tags'] = $this->getTagsForItem($row['id']);
+        }
         return $row ?: null;
     }
 
-    public function count($lang = 'nl') {
-        $db   = Database::getConnection();
+    public function count($lang = 'nl', ?string $tagSlug = null) {
+        $db     = Database::getConnection();
+        $join   = '';
+        $params = [':lang' => $lang];
+
+        if ($tagSlug) {
+            $join = "JOIN news_item_tag nit ON nit.news_item_id = n.id
+                     JOIN tags tg ON tg.id = nit.tag_id AND tg.slug = :tag_slug";
+            $params[':tag_slug'] = $tagSlug;
+        }
+
         $stmt = $db->prepare(
             "SELECT COUNT(*) FROM news_items n
              JOIN news_item_translations t ON t.news_item_id = n.id AND t.lang = :lang
+             {$join}
              WHERE n.published_at IS NOT NULL AND n.published_at <= NOW()"
         );
-        $stmt->execute([':lang' => $lang]);
+        $stmt->execute($params);
         return (int) $stmt->fetchColumn();
+    }
+
+    private function getTagsForItem(int $newsItemId): array {
+        try {
+            $db   = Database::getConnection();
+            $stmt = $db->prepare(
+                "SELECT t.* FROM tags t
+                 JOIN news_item_tag nit ON nit.tag_id = t.id
+                 WHERE nit.news_item_id = :id ORDER BY t.name ASC"
+            );
+            $stmt->execute([':id' => $newsItemId]);
+            return $stmt->fetchAll();
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     // ── Admin ────────────────────────────────────────────────────────────────
