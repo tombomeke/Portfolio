@@ -55,6 +55,27 @@ class Auth {
         return true;
     }
 
+    public static function loginByEmail(string $email, string $password): bool {
+        require_once __DIR__ . '/../Config/Database.php';
+        $db   = Database::getConnection();
+        $stmt = $db->prepare("SELECT * FROM users WHERE email = :e LIMIT 1");
+        $stmt->execute([':e' => $email]);
+        $user = $stmt->fetch();
+
+        if (!$user || !password_verify($password, $user['password'])) {
+            return false;
+        }
+
+        session_regenerate_id(true);
+        $_SESSION['auth_user'] = [
+            'id'       => $user['id'],
+            'username' => $user['username'],
+            'email'    => $user['email'],
+            'role'     => $user['role'],
+        ];
+        return true;
+    }
+
     public static function logout(): void {
         unset($_SESSION['auth_user']);
         session_regenerate_id(true);

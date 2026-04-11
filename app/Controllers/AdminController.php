@@ -9,6 +9,10 @@ require_once __DIR__ . '/../Models/ProjectModels.php';
 require_once __DIR__ . '/../Models/ContactMessageModel.php';
 require_once __DIR__ . '/../Models/UserModel.php';
 require_once __DIR__ . '/../Models/SkillModel.php';
+require_once __DIR__ . '/../Models/TagModel.php';
+require_once __DIR__ . '/../Models/NewsCommentModel.php';
+require_once __DIR__ . '/../Models/ActivityLogModel.php';
+require_once __DIR__ . '/../Models/SiteSettingModel.php';
 require_once __DIR__ . '/../Config/translations.php';
 
 class AdminController {
@@ -19,15 +23,23 @@ class AdminController {
     private ContactMessageModel $contact;
     private UserModel           $users;
     private SkillModel          $skills;
+    private TagModel            $tags;
+    private NewsCommentModel    $comments;
+    private ActivityLogModel    $activityLog;
+    private SiteSettingModel    $settings;
     private string              $contactEmail = 'tom1dekoning@gmail.com';
 
     public function __construct() {
-        $this->news     = new NewsModel();
-        $this->faq      = new FaqModel();
-        $this->projects = new ProjectModel();
-        $this->contact  = new ContactMessageModel();
-        $this->users    = new UserModel();
-        $this->skills   = new SkillModel();
+        $this->news        = new NewsModel();
+        $this->faq         = new FaqModel();
+        $this->projects    = new ProjectModel();
+        $this->contact     = new ContactMessageModel();
+        $this->users       = new UserModel();
+        $this->skills      = new SkillModel();
+        $this->tags        = new TagModel();
+        $this->comments    = new NewsCommentModel();
+        $this->activityLog = new ActivityLogModel();
+        $this->settings    = new SiteSettingModel();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -78,6 +90,23 @@ class AdminController {
                 break;
             case 'dev-life':
                 $this->routeDevLife($action, $id, $isPost);
+                break;
+            case 'tags':
+                $this->routeTags($action, $id, $isPost);
+                break;
+            case 'comments':
+                $this->routeComments($action, $id, $isPost);
+                break;
+            case 'activity-logs':
+                Auth::requireOwner();
+                $this->routeActivityLogs($action, $id, $isPost);
+                break;
+            case 'settings':
+                Auth::requireOwner();
+                $this->routeSettings($action, $isPost);
+                break;
+            case 'profile':
+                $this->routeProfile($action, $isPost);
                 break;
             default:
                 $this->showDashboard();
@@ -142,6 +171,7 @@ class AdminController {
         $password = $post['password']      ?? '';
 
         if (Auth::login($username, $password)) {
+            ActivityLogModel::log('login', "User '{$username}' logged in");
             header('Location: ?page=admin');
             exit;
         }
@@ -158,16 +188,18 @@ class AdminController {
     private function showDashboard(): void {
         try {
             $stats = [
-                'news'            => $this->news->countAll(),
-                'faq_categories'  => $this->faq->countCategories(),
-                'faq_items'       => $this->faq->countItems(),
-                'projects'        => $this->projects->count(),
-                'messages'        => $this->contact->count(),
-                'unread_messages' => $this->contact->countUnread(),
-                'users'           => $this->users->count(),
-                'skills'          => $this->skills->countSkills(),
-                'education'       => $this->skills->countEducation(),
-                'goals'           => $this->skills->countGoals(),
+                'news'             => $this->news->countAll(),
+                'faq_categories'   => $this->faq->countCategories(),
+                'faq_items'        => $this->faq->countItems(),
+                'projects'         => $this->projects->count(),
+                'messages'         => $this->contact->count(),
+                'unread_messages'  => $this->contact->countUnread(),
+                'users'            => $this->users->count(),
+                'skills'           => $this->skills->countSkills(),
+                'education'        => $this->skills->countEducation(),
+                'goals'            => $this->skills->countGoals(),
+                'tags'             => $this->tags->count(),
+                'pending_comments' => $this->comments->countPending(),
             ];
             $recentNews     = $this->news->getAllForAdmin(5);
             $recentMessages = $this->contact->getAll(5);
@@ -212,8 +244,9 @@ class AdminController {
     }
 
     private function createNews(): void {
-        $flash = $this->popFlash();
-        $this->renderAdmin('news/create', compact('flash'), 'Nieuwsbericht toevoegen');
+        $flash   = $this->popFlash();
+        $allTags = $this->tags->getAll();
+        $this->renderAdmin('news/create', compact('flash', 'allTags'), 'Nieuwsbericht toevoegen');
     }
 
     private function storeNews(array $post, array $files): void {
@@ -232,7 +265,7 @@ class AdminController {
 
         $imagePath = $this->handleImageUpload($files['image'] ?? null, 'news');
 
-        $this->news->create([
+        $id = $this->news->create([
             'image_path'   => $imagePath,
             'published_at' => $post['published_at'] ?? null,
             'title_nl'     => trim($post['title_nl']),
@@ -241,6 +274,10 @@ class AdminController {
             'content_en'   => trim($post['content_en']),
         ]);
 
+        $tagIds = array_filter(array_map('intval', (array)($post['tags'] ?? [])));
+        $this->tags->syncForNewsItem($id, $tagIds);
+
+        ActivityLogModel::log('created', "Created news: " . trim($post['title_nl']), 'news_items', $id);
         $this->flash('success', 'Nieuwsbericht aangemaakt.');
         header('Location: ?page=admin&section=news');
         exit;
@@ -249,8 +286,11 @@ class AdminController {
     private function editNews(?int $id): void {
         $item = $id ? $this->news->getByIdForAdmin($id) : null;
         if (!$item) { $this->notFound(); return; }
-        $flash = $this->popFlash();
-        $this->renderAdmin('news/edit', compact('item', 'flash'), 'Nieuwsbericht bewerken');
+        $flash       = $this->popFlash();
+        $allTags     = $this->tags->getAll();
+        $currentTags = $this->tags->getForNewsItem($id);
+        $currentTagIds = array_column($currentTags, 'id');
+        $this->renderAdmin('news/edit', compact('item', 'flash', 'allTags', 'currentTagIds'), 'Nieuwsbericht bewerken');
     }
 
     private function updateNews(?int $id, array $post, array $files): void {
@@ -289,13 +329,21 @@ class AdminController {
             'content_en'   => trim($post['content_en']),
         ]);
 
+        $tagIds = array_filter(array_map('intval', (array)($post['tags'] ?? [])));
+        $this->tags->syncForNewsItem($id, $tagIds);
+
+        ActivityLogModel::log('updated', "Updated news: " . trim($post['title_nl']), 'news_items', $id);
         $this->flash('success', 'Nieuwsbericht bijgewerkt.');
         header('Location: ?page=admin&section=news');
         exit;
     }
 
     private function deleteNews(?int $id): void {
-        if ($id) $this->news->delete($id);
+        if ($id) {
+            $item = $this->news->getByIdForAdmin($id);
+            $this->news->delete($id);
+            ActivityLogModel::log('deleted', "Deleted news: " . ($item['title_nl'] ?? $id), 'news_items', $id);
+        }
         $this->flash('success', 'Nieuwsbericht verwijderd.');
         header('Location: ?page=admin&section=news');
         exit;
@@ -939,6 +987,238 @@ class AdminController {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    // TAGS
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function routeTags(string $action, ?int $id, bool $isPost): void {
+        switch ($action) {
+            case 'create':
+                $isPost ? $this->storeTag($_POST) : $this->showTagCreate();
+                break;
+            case 'edit':
+                $isPost ? $this->updateTag($id, $_POST) : $this->showTagEdit($id);
+                break;
+            case 'delete':
+                if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) $this->deleteTag($id);
+                else { header('Location: ?page=admin&section=tags'); exit; }
+                break;
+            default:
+                $this->listTags();
+        }
+    }
+
+    private function listTags(): void {
+        $tags  = $this->tags->getAll();
+        $flash = $this->popFlash();
+        $this->renderAdmin('tags/index', compact('tags', 'flash'), 'Tags');
+    }
+
+    private function showTagCreate(): void {
+        $flash = $this->popFlash();
+        $this->renderAdmin('tags/create', compact('flash'), 'Tag toevoegen');
+    }
+
+    private function storeTag(array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) { $this->csrfFail('?page=admin&section=tags&action=create'); return; }
+        $name = trim($post['name'] ?? '');
+        $slug = trim($post['slug'] ?? '') ?: TagModel::slugify($name);
+        $errors = [];
+        if (!$name) $errors[] = 'Naam is verplicht.';
+        if ($this->tags->nameExists($name)) $errors[] = 'Naam al in gebruik.';
+        if ($this->tags->slugExists($slug)) $errors[] = 'Slug al in gebruik.';
+        if ($errors) { $this->flash('error', implode(' ', $errors)); header('Location: ?page=admin&section=tags&action=create'); exit; }
+        $id = $this->tags->create($name, $slug);
+        ActivityLogModel::log('created', "Created tag: {$name}", 'tags', $id);
+        $this->flash('success', "Tag '{$name}' aangemaakt.");
+        header('Location: ?page=admin&section=tags'); exit;
+    }
+
+    private function showTagEdit(?int $id): void {
+        $tag = $id ? $this->tags->getById($id) : null;
+        if (!$tag) { $this->notFound(); return; }
+        $flash = $this->popFlash();
+        $this->renderAdmin('tags/edit', compact('tag', 'flash'), 'Tag bewerken');
+    }
+
+    private function updateTag(?int $id, array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) { $this->csrfFail("?page=admin&section=tags&action=edit&id={$id}"); return; }
+        $tag  = $id ? $this->tags->getById($id) : null;
+        if (!$tag) { $this->notFound(); return; }
+        $name = trim($post['name'] ?? '');
+        $slug = trim($post['slug'] ?? '') ?: TagModel::slugify($name);
+        $errors = [];
+        if (!$name) $errors[] = 'Naam is verplicht.';
+        if ($this->tags->nameExists($name, $id)) $errors[] = 'Naam al in gebruik.';
+        if ($this->tags->slugExists($slug, $id)) $errors[] = 'Slug al in gebruik.';
+        if ($errors) { $this->flash('error', implode(' ', $errors)); header("Location: ?page=admin&section=tags&action=edit&id={$id}"); exit; }
+        $this->tags->update($id, $name, $slug);
+        ActivityLogModel::log('updated', "Updated tag: {$name}", 'tags', $id);
+        $this->flash('success', 'Tag bijgewerkt.');
+        header('Location: ?page=admin&section=tags'); exit;
+    }
+
+    private function deleteTag(?int $id): void {
+        if ($id) {
+            $tag = $this->tags->getById($id);
+            $this->tags->delete($id);
+            ActivityLogModel::log('deleted', "Deleted tag: " . ($tag['name'] ?? $id), 'tags', $id);
+        }
+        $this->flash('success', 'Tag verwijderd.');
+        header('Location: ?page=admin&section=tags'); exit;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // NEWS COMMENTS
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function routeComments(string $action, ?int $id, bool $isPost): void {
+        switch ($action) {
+            case 'approve':
+                if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) $this->approveComment($id);
+                else { header('Location: ?page=admin&section=comments'); exit; }
+                break;
+            case 'delete':
+                if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) $this->deleteComment($id);
+                else { header('Location: ?page=admin&section=comments'); exit; }
+                break;
+            default:
+                $this->listComments();
+        }
+    }
+
+    private function listComments(): void {
+        $comments = $this->comments->getAllForAdmin();
+        $flash    = $this->popFlash();
+        $this->renderAdmin('comments/index', compact('comments', 'flash'), 'Reacties');
+    }
+
+    private function approveComment(?int $id): void {
+        if ($id) {
+            $c = $this->comments->getById($id);
+            $this->comments->approve($id);
+            ActivityLogModel::log('approved', "Approved comment by " . ($c['username'] ?? '?'), 'news_comments', $id);
+        }
+        $this->flash('success', 'Reactie goedgekeurd.');
+        header('Location: ?page=admin&section=comments'); exit;
+    }
+
+    private function deleteComment(?int $id): void {
+        if ($id) {
+            $c = $this->comments->getById($id);
+            $this->comments->delete($id);
+            ActivityLogModel::log('deleted', "Deleted comment by " . ($c['username'] ?? '?'), 'news_comments', $id);
+        }
+        $this->flash('success', 'Reactie verwijderd.');
+        header('Location: ?page=admin&section=comments'); exit;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ACTIVITY LOGS
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function routeActivityLogs(string $action, ?int $id, bool $isPost): void {
+        if ($action === 'delete' && $isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+            if ($id) $this->activityLog->delete($id);
+            $this->flash('success', 'Log verwijderd.');
+            header('Location: ?page=admin&section=activity-logs'); exit;
+        }
+        if ($action === 'clear' && $isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+            $days    = max(1, (int)($_POST['older_than'] ?? 30));
+            $deleted = $this->activityLog->clearOlderThan($days);
+            ActivityLogModel::log('deleted', "Cleared {$deleted} activity logs older than {$days} days");
+            $this->flash('success', "{$deleted} logs ouder dan {$days} dagen verwijderd.");
+            header('Location: ?page=admin&section=activity-logs'); exit;
+        }
+        $filters = [
+            'action' => $_GET['action_filter'] ?? '',
+            'search' => $_GET['search'] ?? '',
+        ];
+        $perPage = 25;
+        $page    = max(1, (int)($_GET['p'] ?? 1));
+        $offset  = ($page - 1) * $perPage;
+        $logs    = $this->activityLog->getAll($perPage, $offset, $filters);
+        $total   = $this->activityLog->countAll($filters);
+        $actions = $this->activityLog->getDistinctActions();
+        $flash   = $this->popFlash();
+        $this->renderAdmin('activity-logs/index', compact('logs', 'total', 'page', 'perPage', 'filters', 'actions', 'flash'), 'Activity Log');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SITE SETTINGS
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function routeSettings(string $action, bool $isPost): void {
+        if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+            $allSettings = $this->settings->getAll();
+            $this->settings->updateAll($_POST, $allSettings);
+            ActivityLogModel::log('updated', "Updated site settings");
+            $this->flash('success', 'Instellingen opgeslagen.');
+            header('Location: ?page=admin&section=settings'); exit;
+        }
+        $settings = $this->settings->getAllGrouped();
+        $flash    = $this->popFlash();
+        $this->renderAdmin('settings/index', compact('settings', 'flash'), 'Site Instellingen');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PROFILE (own account)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function routeProfile(string $action, bool $isPost): void {
+        $authUser = Auth::user();
+        if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+            $post = $_POST;
+
+            // Change password
+            if (!empty($post['current_password'])) {
+                $db   = Database::getConnection();
+                $stmt = $db->prepare("SELECT password FROM users WHERE id = :id");
+                $stmt->execute([':id' => $authUser['id']]);
+                $hash = $stmt->fetchColumn();
+                if (!password_verify($post['current_password'], $hash)) {
+                    $this->flash('error', 'Huidig wachtwoord klopt niet.');
+                    header('Location: ?page=admin&section=profile'); exit;
+                }
+                if (strlen($post['new_password'] ?? '') < 8) {
+                    $this->flash('error', 'Nieuw wachtwoord minimaal 8 tekens.');
+                    header('Location: ?page=admin&section=profile'); exit;
+                }
+                if ($post['new_password'] !== $post['confirm_password']) {
+                    $this->flash('error', 'Wachtwoorden komen niet overeen.');
+                    header('Location: ?page=admin&section=profile'); exit;
+                }
+                $this->users->updatePassword($authUser['id'], $post['new_password']);
+                ActivityLogModel::log('updated', "Changed own password");
+                $this->flash('success', 'Wachtwoord gewijzigd.');
+                header('Location: ?page=admin&section=profile'); exit;
+            }
+
+            // Profile photo
+            $photoPath = null;
+            if (!empty($_FILES['profile_photo']['name'])) {
+                $photoPath = $this->handleImageUpload($_FILES['profile_photo'], 'avatars');
+            }
+
+            $this->users->updateProfile($authUser['id'], [
+                'about'              => trim($post['about'] ?? ''),
+                'birthday'           => $post['birthday'] ?? '',
+                'public_profile'     => isset($post['public_profile']) ? 1 : 0,
+                'preferred_language' => $post['preferred_language'] ?? 'nl',
+            ]);
+            if ($photoPath) {
+                $this->users->updateProfilePhoto($authUser['id'], $photoPath);
+            }
+            ActivityLogModel::log('updated', "Updated own profile");
+            $this->flash('success', 'Profiel opgeslagen.');
+            header('Location: ?page=admin&section=profile'); exit;
+        }
+
+        $user  = $this->users->getById($authUser['id']);
+        $flash = $this->popFlash();
+        $this->renderAdmin('profile/edit', compact('user', 'flash'), 'Mijn profiel');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // HELPERS
     // ═══════════════════════════════════════════════════════════════════════
 
@@ -946,9 +1226,11 @@ class AdminController {
         $data['pageTitle'] = $title;
         $data['authUser']  = Auth::user();
         try {
-            $data['unreadMessages'] = $this->contact->countUnread();
+            $data['unreadMessages']   = $this->contact->countUnread();
+            $data['pendingComments']  = $this->comments->countPending();
         } catch (\Throwable $e) {
-            $data['unreadMessages'] = 0;
+            $data['unreadMessages']  = 0;
+            $data['pendingComments'] = 0;
         }
         extract($data);
 
