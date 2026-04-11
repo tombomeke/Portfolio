@@ -37,6 +37,9 @@ $isAuth = isset($authUser);
         <a href="?page=admin&section=projects" class="sidebar-link <?= ($currentSection === 'projects') ? 'active' : '' ?>">
             <i class="fas fa-folder-open fa-fw"></i> Projects
         </a>
+        <a href="?page=admin&section=dev-life" class="sidebar-link <?= ($currentSection === 'dev-life') ? 'active' : '' ?>">
+            <i class="fas fa-laptop-code fa-fw"></i> Dev Life
+        </a>
 
         <div class="nav-section-label" style="margin-top:.75rem">Inbox</div>
         <a href="?page=admin&section=contact" class="sidebar-link <?= ($currentSection === 'contact') ? 'active' : '' ?>">

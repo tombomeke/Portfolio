@@ -1,239 +1,69 @@
 <?php
-// ============================================
-// FILE: /app/Models/SkillModel.php (UPDATED)
-// ============================================
-/**
- * SKILL MODEL - Easy Content Management
- *
- * HOW TO ADD A NEW SKILL:
- * 1. Copy an existing skill array below
- * 2. Change the values:
- *    - 'name': Name of the technology (e.g., 'React')
- *    - 'level': 1 = Learning, 2 = Intermediate, 3 = Advanced
- *    - 'category': 'languages', 'frameworks', 'database', or 'tools'
- *    - 'notes': Short description
- *    - 'projects': (Optional) Array of project names using this skill
- * 3. Save the file - that's it!
- *
- * EXAMPLE:
- * [
- *     'name' => 'TypeScript',
- *     'level' => 2,
- *     'category' => 'languages',
- *     'notes' => 'Type-safe JavaScript for large applications',
- *     'projects' => ['E-commerce Dashboard', 'Task Manager API']
- * ]
- *
- * EDUCATION / LEARNING GOALS:
- * - Fill the $education and $learningGoals arrays below (per language).
- * - Leave them empty to hide the sections for now.
- * - Use the same structure for NL/EN so it stays consistent.
- *
- * EDUCATION ITEM TEMPLATE (uncomment & copy):
- * [
- *     'title_key' => 'education_hbo_title',       // of direct 'title' => '...'
- *     'institution_key' => 'education_hbo_inst',  // of 'institution' => '...'
- *     'period_key' => 'education_hbo_period',     // of 'period' => '...'
- *     'description_key' => 'education_hbo_desc',  // of 'description' => '...'
- *     'skills' => [
- *         ['label_key' => 'education_hbo_skill_arch'],
- *         'Team Collaboration' // strings blijven ook werken
- *     ],
- *     'certificate_url' => 'https://example.com/certificate.pdf' // optional
- * ]
- *
- * LEARNING GOAL TEMPLATE:
- * [
- *     'title_key' => 'learning_laravel_title',    // of direct 'title' => '...'
- *     'description_key' => 'learning_laravel_desc',
- *     'progress' => 40, // 0-100
- *     'resources' => [
- *         ['name_key' => 'learning_resource_docs', 'url' => 'https://laravel.com/docs'],
- *         'Udemy Course' // strings blijven ook werken
- *     ],
- *     'timeline_key' => 'learning_laravel_timeline'
- * ]
- */
+// app/Models/SkillModel.php — DB-driven (migrated from static array)
+require_once __DIR__ . '/../Config/Database.php';
 
 class SkillModel {
-    /**
-     * Education items per language. Keep empty to hide for now.
-     */
-    private $education = [
-        'nl' => [
-            // [
-            //     'title_key' => 'education_hbo_title',
-            //     'institution_key' => 'education_hbo_inst',
-            //     'period_key' => 'education_hbo_period',
-            //     'description_key' => 'education_hbo_desc',
-            //     'skills' => [
-            //         ['label_key' => 'education_hbo_skill_arch'],
-            //         'Team Collaboration'
-            //     ]
-            // ]
-        ],
-        'en' => [
-            // [
-            //     'title_key' => 'education_hbo_title',
-            //     'institution_key' => 'education_hbo_inst',
-            //     'period_key' => 'education_hbo_period',
-            //     'description_key' => 'education_hbo_desc',
-            //     'skills' => [
-            //         ['label_key' => 'education_hbo_skill_arch'],
-            //         'Team Collaboration'
-            //     ]
-            // ]
-        ]
-    ];
 
-    /**
-     * Learning goals per language. Keep empty to hide for now.
-     */
-    private $learningGoals = [
-        'nl' => [
-            // [
-            //     'title_key' => 'learning_laravel_title',
-            //     'description_key' => 'learning_laravel_desc',
-            //     'progress' => 40,
-            //     'resources' => [
-            //         ['name_key' => 'learning_resource_docs', 'url' => 'https://laravel.com/docs'],
-            //         'YouTube Tutorials'
-            //     ],
-            //     'timeline_key' => 'learning_laravel_timeline'
-            // ]
-        ],
-        'en' => [
-            // [
-            //     'title_key' => 'learning_laravel_title',
-            //     'description_key' => 'learning_laravel_desc',
-            //     'progress' => 40,
-            //     'resources' => [
-            //         ['name_key' => 'learning_resource_docs', 'url' => 'https://laravel.com/docs'],
-            //         'YouTube Tutorials'
-            //     ],
-            //     'timeline_key' => 'learning_laravel_timeline'
-            // ]
-        ]
-    ];
+    // ── Public-facing ────────────────────────────────────────────────────────
 
-    /**
-     * Get all skills with modal data
-     * @return array All skills
-     */
-    public function getAllSkills() {
-        return [
-            // Programming Languages
-            [
-                'name' => 'PHP',
-                'level' => 1,
-                'category' => 'languages',
-                'notes' => 'Object-oriented, Laravel, API development',
-                'projects' => ['Portfolio Website', 'Laravel Project']
-            ],
-            [
-                'name' => 'Java',
-                'level' => 1,
-                'category' => 'languages',
-                'notes' => 'Minecraft plugins, Spring basics, Basic Projects',
-                'projects' => []
-            ],
-            [
-                'name' => 'JavaScript',
-                'level' => 1,
-                'category' => 'languages',
-                'notes' => 'ES6+, DOM manipulation, AJAX',
-                'projects' => ['Portfolio Website', 'Contract Companion', 'Lyrics Finder']
-            ],
-            [
-                'name' => 'Python',
-                'level' => 1,
-                'category' => 'languages',
-                'notes' => 'Learning fundamentals, automation scripts, Business Analytics',
-                'projects' => []
-            ],
-
-            [
-                'name' => 'SQL',
-                'level' => 2,
-                'category' => 'languages',
-                'notes' => 'Oracle, Database',
-                'projects' => ['Contract Companion']
-            ],
-            [
-                'name' => 'HTML/CSS',
-                'level' => 3,
-                'category' => 'languages',
-                'notes' => 'Semantic HTML, CSS Grid, Flexbox',
-                'projects' => ['Portfolio Website', 'Contract Companion']
-            ],
-
-            // Frameworks & Tools
-            [
-                'name' => 'Laravel',
-                'level' => 1,
-                'category' => 'frameworks',
-                'notes' => 'Currently learning MVC patterns',
-                'projects' => []
-            ],
-            [
-                'name' => 'Vue.js',
-                'level' => 1,
-                'category' => 'frameworks',
-                'notes' => 'Learning reactive programming',
-                'projects' => ['Contract Companion']
-            ],
-            [
-                'name' => 'Spigot/Bukkit',
-                'level' => 1,
-                'category' => 'frameworks',
-                'notes' => 'Advanced plugin development',
-                'projects' => []
-            ],
-
-            // Tools
-            [
-                'name' => 'Git',
-                'level' => 3,
-                'category' => 'tools',
-                'notes' => 'Version control, branching, collaboration',
-                'projects' => ['All projects']
-            ],
-            [
-                'name' => 'Linux',
-                'level' => 1,
-                'category' => 'tools',
-                'notes' => 'Server management, bash scripting',
-                'projects' => []
-            ],
-            [
-                'name' => 'VS Code',
-                'level' => 3,
-                'category' => 'tools',
-                'notes' => 'Extensions, debugging, Git integration',
-                'projects' => ['All projects']
-            ],
-        ];
+    public function getAllSkills(): array {
+        $db   = Database::getConnection();
+        $stmt = $db->query(
+            "SELECT id, name, category, level, notes, projects
+             FROM skills ORDER BY sort_order ASC, id ASC"
+        );
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['projects'] = json_decode($row['projects'] ?? '[]', true) ?? [];
+        }
+        return $rows;
     }
 
-    /**
-     * Get skills by category
-     * @param string $category Category name
-     * @return array Filtered skills
-     */
-    public function getSkillsByCategory($category) {
-        $skills = $this->getAllSkills();
-        return array_filter($skills, function($skill) use ($category) {
-            return $skill['category'] === $category;
-        });
+    public function getSkillsByCategory(string $category): array {
+        return array_values(
+            array_filter($this->getAllSkills(), fn($s) => $s['category'] === $category)
+        );
     }
 
-    /**
-     * Get level text (for display)
-     * @param int $level Skill level (1-3)
-     * @return string Level text
-     */
-    public function getLevelText($level) {
-        switch($level) {
+    public function getEducation(string $lang = 'nl'): array {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "SELECT e.id, e.sort_order, e.certificate_url,
+                    t.title, t.institution, t.period, t.description, t.skills_list
+             FROM   education_items e
+             JOIN   education_item_translations t ON t.education_item_id = e.id AND t.lang = :lang
+             ORDER  BY e.sort_order ASC, e.id ASC"
+        );
+        $stmt->execute([':lang' => $lang]);
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['skills_list'] = json_decode($row['skills_list'] ?? '[]', true) ?? [];
+            // Normalize to modal-ready structure
+            $row = $this->normalizeEducationRow($row);
+        }
+        return $rows;
+    }
+
+    public function getLearningGoals(string $lang = 'nl'): array {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "SELECT g.id, g.progress, g.sort_order,
+                    t.title, t.description, t.timeline, t.resources
+             FROM   learning_goals g
+             JOIN   learning_goal_translations t ON t.learning_goal_id = g.id AND t.lang = :lang
+             ORDER  BY g.sort_order ASC, g.id ASC"
+        );
+        $stmt->execute([':lang' => $lang]);
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['resources'] = json_decode($row['resources'] ?? '[]', true) ?? [];
+            $row = $this->normalizeLearningRow($row);
+        }
+        return $rows;
+    }
+
+    public function getLevelText(int $level): string {
+        switch ($level) {
             case 1: return trans('skills_level_beginner');
             case 2: return trans('skills_level_intermediate');
             case 3: return trans('skills_level_advanced');
@@ -241,160 +71,311 @@ class SkillModel {
         }
     }
 
-    /**
-     * Get level percentage (for progress bar)
-     * @param int $level Skill level (1-3)
-     * @return float Percentage
-     */
-    public function getLevelPercentage($level) {
+    public function getLevelPercentage(int $level): float {
         return ($level / 3) * 100;
     }
 
-    /**
-     * Get modal data for a skill (JSON encoded)
-     * @param array $skill Skill array
-     * @return string JSON string for data-modal attribute
-     */
-    public function getModalData($skill) {
+    public function getModalData(array $skill): string {
         return htmlspecialchars(json_encode($skill), ENT_QUOTES, 'UTF-8');
     }
 
-    /**
-     * Get education list for the current language.
-     * Leave arrays empty to hide the section.
-     *
-     * @param string $lang Language key (e.g., 'nl' or 'en')
-     * @return array
-     */
-    public function getEducation($lang = 'nl') {
-        return $this->getLocalized($this->education, $lang);
+    public function buildEducationModalData(array $item, int $index): string {
+        return htmlspecialchars(json_encode($item), ENT_QUOTES, 'UTF-8');
     }
 
-    /**
-     * Get learning goals for the current language.
-     * Leave arrays empty to hide the section.
-     *
-     * @param string $lang Language key (e.g., 'nl' or 'en')
-     * @return array
-     */
-    public function getLearningGoals($lang = 'nl') {
-        return $this->getLocalized($this->learningGoals, $lang);
+    public function buildLearningModalData(array $item, int $index): string {
+        return htmlspecialchars(json_encode($item), ENT_QUOTES, 'UTF-8');
     }
 
-    /**
-     * Build encoded modal payload for education items.
-     * Accepts either a string title or an array (template above).
-     */
-    public function buildEducationModalData($item, $index) {
-        $data = $this->normalizeEducationItem($item, $index);
-        return htmlspecialchars(json_encode($data), ENT_QUOTES, 'UTF-8');
-    }
+    // ── Admin: Skills ─────────────────────────────────────────────────────────
 
-    /**
-     * Build encoded modal payload for learning goals.
-     * Accepts either a string title or an array (template above).
-     */
-    public function buildLearningModalData($item, $index) {
-        $data = $this->normalizeLearningItem($item, $index);
-        return htmlspecialchars(json_encode($data), ENT_QUOTES, 'UTF-8');
-    }
-
-    /**
-     * Return localized content with a graceful fallback.
-     */
-    private function getLocalized(array $items, $lang) {
-        if (array_key_exists($lang, $items)) {
-            return $items[$lang];
+    public function getAllSkillsForAdmin(): array {
+        $db   = Database::getConnection();
+        $stmt = $db->query(
+            "SELECT * FROM skills ORDER BY sort_order ASC, id ASC"
+        );
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['projects'] = json_decode($row['projects'] ?? '[]', true) ?? [];
         }
-
-        return $items['en'] ?? reset($items) ?? [];
+        return $rows;
     }
 
-    /**
-     * Normalize education item to full modal-ready structure.
-     */
-    private function normalizeEducationItem($item, $index) {
-        if (!is_array($item)) {
-            $item = ['title' => $item];
+    public function getSkillByIdForAdmin(int $id): ?array {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare("SELECT * FROM skills WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        if (!$row) return null;
+        $row['projects'] = json_decode($row['projects'] ?? '[]', true) ?? [];
+        return $row;
+    }
+
+    public function createSkill(array $data): int {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "INSERT INTO skills (name, category, level, notes, projects, sort_order)
+             VALUES (:name, :category, :level, :notes, :projects, :sort_order)"
+        );
+        $stmt->execute([
+            ':name'       => $data['name'],
+            ':category'   => $data['category'],
+            ':level'      => (int) $data['level'],
+            ':notes'      => $data['notes'] ?? null,
+            ':projects'   => json_encode($data['projects'] ?? []),
+            ':sort_order' => (int) ($data['sort_order'] ?? 0),
+        ]);
+        return (int) $db->lastInsertId();
+    }
+
+    public function updateSkill(int $id, array $data): void {
+        $db = Database::getConnection();
+        $db->prepare(
+            "UPDATE skills SET name=:name, category=:category, level=:level,
+             notes=:notes, projects=:projects, sort_order=:sort_order, updated_at=NOW()
+             WHERE id=:id"
+        )->execute([
+            ':name'       => $data['name'],
+            ':category'   => $data['category'],
+            ':level'      => (int) $data['level'],
+            ':notes'      => $data['notes'] ?? null,
+            ':projects'   => json_encode($data['projects'] ?? []),
+            ':sort_order' => (int) ($data['sort_order'] ?? 0),
+            ':id'         => $id,
+        ]);
+    }
+
+    public function deleteSkill(int $id): void {
+        Database::getConnection()->prepare("DELETE FROM skills WHERE id = :id")->execute([':id' => $id]);
+    }
+
+    public function countSkills(): int {
+        return (int) Database::getConnection()->query("SELECT COUNT(*) FROM skills")->fetchColumn();
+    }
+
+    // ── Admin: Education ──────────────────────────────────────────────────────
+
+    public function getAllEducationForAdmin(): array {
+        $db   = Database::getConnection();
+        $stmt = $db->query(
+            "SELECT e.*,
+                    nl.title AS title_nl, nl.institution AS institution_nl, nl.period AS period_nl,
+                    nl.description AS description_nl, nl.skills_list AS skills_nl,
+                    en.title AS title_en, en.institution AS institution_en, en.period AS period_en,
+                    en.description AS description_en, en.skills_list AS skills_en
+             FROM education_items e
+             LEFT JOIN education_item_translations nl ON nl.education_item_id = e.id AND nl.lang = 'nl'
+             LEFT JOIN education_item_translations en ON en.education_item_id = e.id AND en.lang = 'en'
+             ORDER BY e.sort_order ASC, e.id ASC"
+        );
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['skills_nl'] = json_decode($row['skills_nl'] ?? '[]', true) ?? [];
+            $row['skills_en'] = json_decode($row['skills_en'] ?? '[]', true) ?? [];
         }
+        return $rows;
+    }
 
-        $skills = $item['skills'] ?? [];
+    public function getEducationByIdForAdmin(int $id): ?array {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "SELECT e.*,
+                    nl.title AS title_nl, nl.institution AS institution_nl, nl.period AS period_nl,
+                    nl.description AS description_nl, nl.skills_list AS skills_nl,
+                    en.title AS title_en, en.institution AS institution_en, en.period AS period_en,
+                    en.description AS description_en, en.skills_list AS skills_en
+             FROM education_items e
+             LEFT JOIN education_item_translations nl ON nl.education_item_id = e.id AND nl.lang = 'nl'
+             LEFT JOIN education_item_translations en ON en.education_item_id = e.id AND en.lang = 'en'
+             WHERE e.id = :id LIMIT 1"
+        );
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        if (!$row) return null;
+        $row['skills_nl'] = json_decode($row['skills_nl'] ?? '[]', true) ?? [];
+        $row['skills_en'] = json_decode($row['skills_en'] ?? '[]', true) ?? [];
+        return $row;
+    }
 
+    public function createEducation(array $data): int {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "INSERT INTO education_items (sort_order, certificate_url) VALUES (:sort_order, :cert)"
+        );
+        $stmt->execute([':sort_order' => (int)($data['sort_order']??0), ':cert' => $data['certificate_url']??null]);
+        $id = (int) $db->lastInsertId();
+        foreach (['nl', 'en'] as $lang) {
+            $db->prepare(
+                "INSERT INTO education_item_translations (education_item_id, lang, title, institution, period, description, skills_list)
+                 VALUES (:id, :lang, :title, :institution, :period, :description, :skills)"
+            )->execute([
+                ':id'          => $id,
+                ':lang'        => $lang,
+                ':title'       => $data["title_{$lang}"] ?? '',
+                ':institution' => $data["institution_{$lang}"] ?? null,
+                ':period'      => $data["period_{$lang}"] ?? null,
+                ':description' => $data["description_{$lang}"] ?? null,
+                ':skills'      => json_encode(array_values(array_filter(array_map('trim', explode("\n", $data["skills_{$lang}"] ?? ''))))),
+            ]);
+        }
+        return $id;
+    }
+
+    public function updateEducation(int $id, array $data): void {
+        $db = Database::getConnection();
+        $db->prepare("UPDATE education_items SET sort_order=:s, certificate_url=:c, updated_at=NOW() WHERE id=:id")
+           ->execute([':s' => (int)($data['sort_order']??0), ':c' => $data['certificate_url']??null, ':id' => $id]);
+        foreach (['nl', 'en'] as $lang) {
+            $db->prepare(
+                "INSERT INTO education_item_translations (education_item_id, lang, title, institution, period, description, skills_list)
+                 VALUES (:id, :lang, :title, :institution, :period, :description, :skills)
+                 ON DUPLICATE KEY UPDATE title=VALUES(title), institution=VALUES(institution),
+                   period=VALUES(period), description=VALUES(description), skills_list=VALUES(skills_list)"
+            )->execute([
+                ':id'          => $id,
+                ':lang'        => $lang,
+                ':title'       => $data["title_{$lang}"] ?? '',
+                ':institution' => $data["institution_{$lang}"] ?? null,
+                ':period'      => $data["period_{$lang}"] ?? null,
+                ':description' => $data["description_{$lang}"] ?? null,
+                ':skills'      => json_encode(array_values(array_filter(array_map('trim', explode("\n", $data["skills_{$lang}"] ?? ''))))),
+            ]);
+        }
+    }
+
+    public function deleteEducation(int $id): void {
+        Database::getConnection()->prepare("DELETE FROM education_items WHERE id = :id")->execute([':id' => $id]);
+    }
+
+    // ── Admin: Learning goals ─────────────────────────────────────────────────
+
+    public function getAllGoalsForAdmin(): array {
+        $db   = Database::getConnection();
+        $stmt = $db->query(
+            "SELECT g.*,
+                    nl.title AS title_nl, nl.description AS description_nl, nl.timeline AS timeline_nl, nl.resources AS resources_nl,
+                    en.title AS title_en, en.description AS description_en, en.timeline AS timeline_en, en.resources AS resources_en
+             FROM learning_goals g
+             LEFT JOIN learning_goal_translations nl ON nl.learning_goal_id = g.id AND nl.lang = 'nl'
+             LEFT JOIN learning_goal_translations en ON en.learning_goal_id = g.id AND en.lang = 'en'
+             ORDER BY g.sort_order ASC, g.id ASC"
+        );
+        return $stmt->fetchAll();
+    }
+
+    public function getGoalByIdForAdmin(int $id): ?array {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "SELECT g.*,
+                    nl.title AS title_nl, nl.description AS description_nl, nl.timeline AS timeline_nl, nl.resources AS resources_nl,
+                    en.title AS title_en, en.description AS description_en, en.timeline AS timeline_en, en.resources AS resources_en
+             FROM learning_goals g
+             LEFT JOIN learning_goal_translations nl ON nl.learning_goal_id = g.id AND nl.lang = 'nl'
+             LEFT JOIN learning_goal_translations en ON en.learning_goal_id = g.id AND en.lang = 'en'
+             WHERE g.id = :id LIMIT 1"
+        );
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function createGoal(array $data): int {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "INSERT INTO learning_goals (progress, sort_order) VALUES (:progress, :sort_order)"
+        );
+        $stmt->execute([':progress' => (int)($data['progress']??0), ':sort_order' => (int)($data['sort_order']??0)]);
+        $id = (int) $db->lastInsertId();
+        foreach (['nl', 'en'] as $lang) {
+            $resources = $this->parseResources($data["resources_{$lang}"] ?? '');
+            $db->prepare(
+                "INSERT INTO learning_goal_translations (learning_goal_id, lang, title, description, timeline, resources)
+                 VALUES (:id, :lang, :title, :description, :timeline, :resources)"
+            )->execute([
+                ':id'          => $id,
+                ':lang'        => $lang,
+                ':title'       => $data["title_{$lang}"] ?? '',
+                ':description' => $data["description_{$lang}"] ?? null,
+                ':timeline'    => $data["timeline_{$lang}"] ?? null,
+                ':resources'   => json_encode($resources),
+            ]);
+        }
+        return $id;
+    }
+
+    public function updateGoal(int $id, array $data): void {
+        $db = Database::getConnection();
+        $db->prepare("UPDATE learning_goals SET progress=:p, sort_order=:s, updated_at=NOW() WHERE id=:id")
+           ->execute([':p' => (int)($data['progress']??0), ':s' => (int)($data['sort_order']??0), ':id' => $id]);
+        foreach (['nl', 'en'] as $lang) {
+            $resources = $this->parseResources($data["resources_{$lang}"] ?? '');
+            $db->prepare(
+                "INSERT INTO learning_goal_translations (learning_goal_id, lang, title, description, timeline, resources)
+                 VALUES (:id, :lang, :title, :description, :timeline, :resources)
+                 ON DUPLICATE KEY UPDATE title=VALUES(title), description=VALUES(description),
+                   timeline=VALUES(timeline), resources=VALUES(resources)"
+            )->execute([
+                ':id'          => $id,
+                ':lang'        => $lang,
+                ':title'       => $data["title_{$lang}"] ?? '',
+                ':description' => $data["description_{$lang}"] ?? null,
+                ':timeline'    => $data["timeline_{$lang}"] ?? null,
+                ':resources'   => json_encode($resources),
+            ]);
+        }
+    }
+
+    public function deleteGoal(int $id): void {
+        Database::getConnection()->prepare("DELETE FROM learning_goals WHERE id = :id")->execute([':id' => $id]);
+    }
+
+    public function countGoals(): int {
+        return (int) Database::getConnection()->query("SELECT COUNT(*) FROM learning_goals")->fetchColumn();
+    }
+
+    public function countEducation(): int {
+        return (int) Database::getConnection()->query("SELECT COUNT(*) FROM education_items")->fetchColumn();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function normalizeEducationRow(array $row): array {
         return [
-            'id' => $index,
-            'title' => $this->resolveText($item, 'title'),
-            'institution' => $this->resolveText($item, 'institution') ?: $this->resolveText($item, 'title'),
-            'period' => $this->resolveText($item, 'period'),
-            'description' => $this->resolveText($item, 'description'),
-            'skills' => $this->resolveList($skills),
-            'certificate_url' => $item['certificate_url'] ?? ''
+            'id'              => $row['id'],
+            'title'           => $row['title'],
+            'institution'     => $row['institution'] ?? $row['title'],
+            'period'          => $row['period'] ?? '',
+            'description'     => $row['description'] ?? '',
+            'skills'          => $row['skills_list'] ?? [],
+            'certificate_url' => $row['certificate_url'] ?? '',
+            'sort_order'      => $row['sort_order'],
+        ];
+    }
+
+    private function normalizeLearningRow(array $row): array {
+        return [
+            'id'          => $row['id'],
+            'title'       => $row['title'],
+            'description' => $row['description'] ?? '',
+            'progress'    => $row['progress'],
+            'resources'   => $row['resources'] ?? [],
+            'timeline'    => $row['timeline'] ?? '',
         ];
     }
 
     /**
-     * Normalize learning goal item to full modal-ready structure.
+     * Parse resources from textarea: "Name | https://url" per line
      */
-    private function normalizeLearningItem($item, $index) {
-        if (!is_array($item)) {
-            $item = ['title' => $item];
-        }
-
-        return [
-            'id' => $index,
-            'title' => $this->resolveText($item, 'title'),
-            'description' => $this->resolveText($item, 'description'),
-            'progress' => $item['progress'] ?? null,
-            'resources' => $this->resolveResources($item['resources'] ?? []),
-            'timeline' => $this->resolveText($item, 'timeline')
-        ];
-    }
-
-    /**
-     * Resolve a text field, preferring direct value, falling back to translation key.
-     */
-    private function resolveText(array $item, $field) {
-        if (!empty($item[$field])) {
-            return $item[$field];
-        }
-
-        if (!empty($item["{$field}_key"])) {
-            return trans($item["{$field}_key"]);
-        }
-
-        return '';
-    }
-
-    /**
-     * Resolve a list of skills/strings with optional translation keys.
-     */
-    private function resolveList(array $items) {
-        return array_map(function($entry) {
-            if (is_array($entry)) {
-                if (!empty($entry['label'])) {
-                    return $entry['label'];
-                }
-                if (!empty($entry['label_key'])) {
-                    return trans($entry['label_key']);
-                }
+    private function parseResources(string $raw): array {
+        $lines     = array_filter(array_map('trim', explode("\n", $raw)));
+        $resources = [];
+        foreach ($lines as $line) {
+            if (str_contains($line, '|')) {
+                [$name, $url] = array_map('trim', explode('|', $line, 2));
+                $resources[]  = ['name' => $name, 'url' => $url];
+            } else {
+                $resources[] = ['name' => $line, 'url' => ''];
             }
-            return $entry;
-        }, $items);
-    }
-
-    /**
-     * Resolve resources with optional translated names.
-     */
-    private function resolveResources(array $resources) {
-        return array_map(function($resource) {
-            if (is_array($resource)) {
-                $name = $resource['name'] ?? (!empty($resource['name_key']) ? trans($resource['name_key']) : '');
-                return [
-                    'name' => $name,
-                    'url' => $resource['url'] ?? ''
-                ];
-            }
-            return $resource;
-        }, $resources);
+        }
+        return $resources;
     }
 }
-?>

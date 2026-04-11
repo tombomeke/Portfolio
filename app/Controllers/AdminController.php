@@ -8,6 +8,7 @@ require_once __DIR__ . '/../Models/FaqModel.php';
 require_once __DIR__ . '/../Models/ProjectModels.php';
 require_once __DIR__ . '/../Models/ContactMessageModel.php';
 require_once __DIR__ . '/../Models/UserModel.php';
+require_once __DIR__ . '/../Models/SkillModel.php';
 require_once __DIR__ . '/../Config/translations.php';
 
 class AdminController {
@@ -17,6 +18,7 @@ class AdminController {
     private ProjectModel        $projects;
     private ContactMessageModel $contact;
     private UserModel           $users;
+    private SkillModel          $skills;
     private string              $contactEmail = 'tom1dekoning@gmail.com';
 
     public function __construct() {
@@ -25,6 +27,7 @@ class AdminController {
         $this->projects = new ProjectModel();
         $this->contact  = new ContactMessageModel();
         $this->users    = new UserModel();
+        $this->skills   = new SkillModel();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -72,6 +75,9 @@ class AdminController {
             case 'users':
                 Auth::requireOwner();
                 $this->routeUsers($action, $id, $isPost);
+                break;
+            case 'dev-life':
+                $this->routeDevLife($action, $id, $isPost);
                 break;
             default:
                 $this->showDashboard();
@@ -158,6 +164,9 @@ class AdminController {
             'messages'        => $this->contact->count(),
             'unread_messages' => $this->contact->countUnread(),
             'users'           => $this->users->count(),
+            'skills'          => $this->skills->countSkills(),
+            'education'       => $this->skills->countEducation(),
+            'goals'           => $this->skills->countGoals(),
         ];
         $flash = $this->popFlash();
         $this->renderAdmin('dashboard', compact('stats', 'flash'), 'Dashboard');
@@ -744,6 +753,180 @@ class AdminController {
         $this->flash('success', 'Gebruiker verwijderd.');
         header('Location: ?page=admin&section=users');
         exit;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // DEV LIFE (skills, education, learning goals)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function routeDevLife(string $action, ?int $id, bool $isPost): void {
+        switch ($action) {
+            // Skills
+            case 'skill-create':
+                $isPost ? $this->storeSkill($_POST) : $this->createSkill();
+                break;
+            case 'skill-edit':
+                $isPost ? $this->updateSkill($id, $_POST) : $this->editSkill($id);
+                break;
+            case 'skill-delete':
+                if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+                    $this->deleteSkill($id);
+                } else { header('Location: ?page=admin&section=dev-life'); exit; }
+                break;
+            // Education
+            case 'edu-create':
+                $isPost ? $this->storeEducation($_POST) : $this->createEducation();
+                break;
+            case 'edu-edit':
+                $isPost ? $this->updateEducation($id, $_POST) : $this->editEducation($id);
+                break;
+            case 'edu-delete':
+                if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+                    $this->deleteEducation($id);
+                } else { header('Location: ?page=admin&section=dev-life'); exit; }
+                break;
+            // Learning goals
+            case 'goal-create':
+                $isPost ? $this->storeGoal($_POST) : $this->createGoal();
+                break;
+            case 'goal-edit':
+                $isPost ? $this->updateGoal($id, $_POST) : $this->editGoal($id);
+                break;
+            case 'goal-delete':
+                if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+                    $this->deleteGoal($id);
+                } else { header('Location: ?page=admin&section=dev-life'); exit; }
+                break;
+            default:
+                $this->listDevLife();
+        }
+    }
+
+    private function listDevLife(): void {
+        $skillList  = $this->skills->getAllSkillsForAdmin();
+        $education  = $this->skills->getAllEducationForAdmin();
+        $goals      = $this->skills->getAllGoalsForAdmin();
+        $flash      = $this->popFlash();
+        $this->renderAdmin('dev-life/index', compact('skillList', 'education', 'goals', 'flash'), 'Dev Life beheren');
+    }
+
+    private function createSkill(): void {
+        $flash = $this->popFlash();
+        $this->renderAdmin('dev-life/skill-create', compact('flash'), 'Skill toevoegen');
+    }
+
+    private function storeSkill(array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) { $this->csrfFail('?page=admin&section=dev-life&action=skill-create'); return; }
+        $errors = [];
+        if (empty(trim($post['name']     ?? ''))) $errors[] = 'Naam is verplicht.';
+        if (empty(trim($post['category'] ?? ''))) $errors[] = 'Categorie is verplicht.';
+        if ($errors) { $this->flash('error', implode(' ', $errors)); header('Location: ?page=admin&section=dev-life&action=skill-create'); exit; }
+
+        $projects = array_values(array_filter(array_map('trim', explode("\n", $post['projects'] ?? ''))));
+        $this->skills->createSkill([
+            'name'       => trim($post['name']),
+            'category'   => trim($post['category']),
+            'level'      => (int) ($post['level'] ?? 1),
+            'notes'      => trim($post['notes'] ?? ''),
+            'projects'   => $projects,
+            'sort_order' => (int) ($post['sort_order'] ?? 0),
+        ]);
+        $this->flash('success', 'Skill aangemaakt.');
+        header('Location: ?page=admin&section=dev-life'); exit;
+    }
+
+    private function editSkill(?int $id): void {
+        $skill = $id ? $this->skills->getSkillByIdForAdmin($id) : null;
+        if (!$skill) { $this->notFound(); return; }
+        $flash = $this->popFlash();
+        $this->renderAdmin('dev-life/skill-edit', compact('skill', 'flash'), 'Skill bewerken');
+    }
+
+    private function updateSkill(?int $id, array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) { $this->csrfFail("?page=admin&section=dev-life&action=skill-edit&id={$id}"); return; }
+        $projects = array_values(array_filter(array_map('trim', explode("\n", $post['projects'] ?? ''))));
+        $this->skills->updateSkill($id, [
+            'name'       => trim($post['name']),
+            'category'   => trim($post['category']),
+            'level'      => (int) ($post['level'] ?? 1),
+            'notes'      => trim($post['notes'] ?? ''),
+            'projects'   => $projects,
+            'sort_order' => (int) ($post['sort_order'] ?? 0),
+        ]);
+        $this->flash('success', 'Skill bijgewerkt.');
+        header('Location: ?page=admin&section=dev-life'); exit;
+    }
+
+    private function deleteSkill(?int $id): void {
+        if ($id) $this->skills->deleteSkill($id);
+        $this->flash('success', 'Skill verwijderd.');
+        header('Location: ?page=admin&section=dev-life'); exit;
+    }
+
+    private function createEducation(): void {
+        $flash = $this->popFlash();
+        $this->renderAdmin('dev-life/edu-create', compact('flash'), 'Opleiding toevoegen');
+    }
+
+    private function storeEducation(array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) { $this->csrfFail('?page=admin&section=dev-life&action=edu-create'); return; }
+        if (empty(trim($post['title_nl'] ?? ''))) { $this->flash('error', 'Titel (NL) is verplicht.'); header('Location: ?page=admin&section=dev-life&action=edu-create'); exit; }
+        $this->skills->createEducation($post);
+        $this->flash('success', 'Opleiding aangemaakt.');
+        header('Location: ?page=admin&section=dev-life'); exit;
+    }
+
+    private function editEducation(?int $id): void {
+        $item = $id ? $this->skills->getEducationByIdForAdmin($id) : null;
+        if (!$item) { $this->notFound(); return; }
+        $flash = $this->popFlash();
+        $this->renderAdmin('dev-life/edu-edit', compact('item', 'flash'), 'Opleiding bewerken');
+    }
+
+    private function updateEducation(?int $id, array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) { $this->csrfFail("?page=admin&section=dev-life&action=edu-edit&id={$id}"); return; }
+        $this->skills->updateEducation($id, $post);
+        $this->flash('success', 'Opleiding bijgewerkt.');
+        header('Location: ?page=admin&section=dev-life'); exit;
+    }
+
+    private function deleteEducation(?int $id): void {
+        if ($id) $this->skills->deleteEducation($id);
+        $this->flash('success', 'Opleiding verwijderd.');
+        header('Location: ?page=admin&section=dev-life'); exit;
+    }
+
+    private function createGoal(): void {
+        $flash = $this->popFlash();
+        $this->renderAdmin('dev-life/goal-create', compact('flash'), 'Leerdoel toevoegen');
+    }
+
+    private function storeGoal(array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) { $this->csrfFail('?page=admin&section=dev-life&action=goal-create'); return; }
+        if (empty(trim($post['title_nl'] ?? ''))) { $this->flash('error', 'Titel (NL) is verplicht.'); header('Location: ?page=admin&section=dev-life&action=goal-create'); exit; }
+        $this->skills->createGoal($post);
+        $this->flash('success', 'Leerdoel aangemaakt.');
+        header('Location: ?page=admin&section=dev-life'); exit;
+    }
+
+    private function editGoal(?int $id): void {
+        $goal = $id ? $this->skills->getGoalByIdForAdmin($id) : null;
+        if (!$goal) { $this->notFound(); return; }
+        $flash = $this->popFlash();
+        $this->renderAdmin('dev-life/goal-edit', compact('goal', 'flash'), 'Leerdoel bewerken');
+    }
+
+    private function updateGoal(?int $id, array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) { $this->csrfFail("?page=admin&section=dev-life&action=goal-edit&id={$id}"); return; }
+        $this->skills->updateGoal($id, $post);
+        $this->flash('success', 'Leerdoel bijgewerkt.');
+        header('Location: ?page=admin&section=dev-life'); exit;
+    }
+
+    private function deleteGoal(?int $id): void {
+        if ($id) $this->skills->deleteGoal($id);
+        $this->flash('success', 'Leerdoel verwijderd.');
+        header('Location: ?page=admin&section=dev-life'); exit;
     }
 
     // ═══════════════════════════════════════════════════════════════════════

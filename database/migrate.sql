@@ -124,3 +124,67 @@ CREATE TABLE IF NOT EXISTS contact_messages (
     INDEX idx_read    (read_at),
     INDEX idx_replied (replied_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ═══════════════════════════════════════════════════
+-- Skills (Dev Life pagina)
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS skills (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL,
+    category   VARCHAR(50)  NOT NULL,   -- languages, frameworks, database, tools
+    level      TINYINT UNSIGNED NOT NULL DEFAULT 1,  -- 1=beginner, 2=intermediate, 3=advanced
+    notes      TEXT         NULL,
+    projects   JSON         NULL,       -- array van projectnamen
+    sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category (category),
+    INDEX idx_sort     (sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ═══════════════════════════════════════════════════
+-- Opleidingen & certificaten (Dev Life pagina)
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS education_items (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    sort_order      INT UNSIGNED NOT NULL DEFAULT 0,
+    certificate_url VARCHAR(255) NULL,
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS education_item_translations (
+    id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    education_item_id INT UNSIGNED NOT NULL,
+    lang              VARCHAR(5)   NOT NULL,
+    title             VARCHAR(255) NOT NULL,
+    institution       VARCHAR(255) NULL,
+    period            VARCHAR(100) NULL,
+    description       TEXT         NULL,
+    skills_list       JSON         NULL,   -- array van skillnamen
+    UNIQUE KEY uq_edu_lang (education_item_id, lang),
+    FOREIGN KEY (education_item_id) REFERENCES education_items(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ═══════════════════════════════════════════════════
+-- Leerdoelen (Dev Life pagina)
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS learning_goals (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    progress   TINYINT UNSIGNED NOT NULL DEFAULT 0,   -- 0-100
+    sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS learning_goal_translations (
+    id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    learning_goal_id INT UNSIGNED NOT NULL,
+    lang             VARCHAR(5)   NOT NULL,
+    title            VARCHAR(255) NOT NULL,
+    description      TEXT         NULL,
+    timeline         VARCHAR(100) NULL,
+    resources        JSON         NULL,   -- array van {name, url} objecten
+    UNIQUE KEY uq_goal_lang (learning_goal_id, lang),
+    FOREIGN KEY (learning_goal_id) REFERENCES learning_goals(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
