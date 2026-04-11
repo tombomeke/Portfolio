@@ -510,14 +510,18 @@ class PortfolioController {
                     }
                 }
 
+                // Capture debug info for ALL outcomes
+                $debugCurlErr  = $curlErr ? htmlspecialchars($curlErr, ENT_QUOTES, 'UTF-8') : null;
+                $debugHttpCode = (int) $httpCode;
+                $debugRawBody  = $raw ? htmlspecialchars(substr($raw, 0, 800), ENT_QUOTES, 'UTF-8') : null;
+
                 if ($curlErr) {
-                    $error         = 'De ReadmeSync API is momenteel niet bereikbaar.';
-                    $debugCurlErr  = htmlspecialchars($curlErr, ENT_QUOTES, 'UTF-8');
-                    $debugHttpCode = (int) $httpCode;
+                    $error = 'De ReadmeSync API is momenteel niet bereikbaar.';
                 } elseif ($httpCode === 200) {
                     $data     = json_decode($raw, true);
                     $result   = $data['content']  ?? null;
                     $language = $data['language'] ?? null;
+                    $debugHttpCode = null; // no debug needed on success
                 } elseif ($httpCode === 404) {
                     $error = 'Repository niet gevonden of is privé.';
                 } else {
@@ -533,8 +537,9 @@ class PortfolioController {
             'result'       => $result,
             'language'     => $language,
             'error'        => $error,
-            'debugCurlErr' => $debugCurlErr,
-            'debugHttpCode'=> $debugHttpCode,
+            'debugCurlErr'  => $debugCurlErr,
+            'debugHttpCode' => $debugHttpCode,
+            'debugRawBody'  => $debugRawBody ?? null,
         ]);
     }
 

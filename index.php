@@ -18,8 +18,12 @@ if ($page === 'admin' || $page === 'setup') {
 require_once 'app/Controllers/PortfolioController.php';
 $controller = new PortfolioController();
 
-// Pages temporarily showing WIP
-$wipPages = []; // Add page slugs here to redirect to WIP view
+// Pages temporarily showing WIP — configured via admin panel (?page=admin&section=wip)
+$wipPages = [];
+$wipConfig = __DIR__ . '/app/Config/wip_pages.json';
+if (file_exists($wipConfig)) {
+    $wipPages = json_decode(file_get_contents($wipConfig), true) ?? [];
+}
 if (in_array($page, $wipPages, true)) {
     $controller->showWIP($page);
     exit;

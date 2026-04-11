@@ -65,13 +65,13 @@ CREATE TABLE IF NOT EXISTS site_settings (
     INDEX idx_group (`group`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- User profile fields
-ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS birthday           DATE         NULL AFTER email,
-    ADD COLUMN IF NOT EXISTS profile_photo_path VARCHAR(255) NULL AFTER birthday,
-    ADD COLUMN IF NOT EXISTS about              TEXT         NULL AFTER profile_photo_path,
-    ADD COLUMN IF NOT EXISTS public_profile     TINYINT(1)   NOT NULL DEFAULT 1 AFTER about,
-    ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(2)   NOT NULL DEFAULT 'nl' AFTER public_profile;
+-- User profile fields (split into separate statements for MySQL 5.7 compatibility)
+-- Run each statement individually; skip any that fail with "Duplicate column name"
+ALTER TABLE users ADD COLUMN birthday           DATE         NULL          AFTER email;
+ALTER TABLE users ADD COLUMN profile_photo_path VARCHAR(255) NULL          AFTER birthday;
+ALTER TABLE users ADD COLUMN about              TEXT         NULL          AFTER profile_photo_path;
+ALTER TABLE users ADD COLUMN public_profile     TINYINT(1)   NOT NULL DEFAULT 1 AFTER about;
+ALTER TABLE users ADD COLUMN preferred_language VARCHAR(2)   NOT NULL DEFAULT 'nl' AFTER public_profile;
 
 -- Add 'user' role for public registrations (owner/admin unchanged)
 ALTER TABLE users MODIFY COLUMN role ENUM('owner','admin','user') NOT NULL DEFAULT 'admin';

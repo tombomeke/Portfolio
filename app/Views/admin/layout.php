@@ -70,6 +70,9 @@ $isAuth = isset($authUser);
         <a href="?page=admin&section=settings" class="sidebar-link <?= ($currentSection === 'settings') ? 'active' : '' ?>">
             <i class="fas fa-sliders-h fa-fw"></i> Instellingen
         </a>
+        <a href="?page=admin&section=wip" class="sidebar-link <?= ($currentSection === 'wip') ? 'active' : '' ?>">
+            <i class="fas fa-hard-hat fa-fw"></i> WIP Pagina's
+        </a>
         <a href="?page=admin&section=activity-logs" class="sidebar-link <?= ($currentSection === 'activity-logs') ? 'active' : '' ?>">
             <i class="fas fa-history fa-fw"></i> Activity Log
         </a>

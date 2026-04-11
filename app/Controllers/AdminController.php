@@ -108,6 +108,10 @@ class AdminController {
             case 'profile':
                 $this->routeProfile($action, $isPost);
                 break;
+            case 'wip':
+                Auth::requireOwner();
+                $this->routeWip($isPost);
+                break;
             default:
                 $this->showDashboard();
         }
@@ -1274,6 +1278,41 @@ class AdminController {
 
     private function parseFeatures(string $raw): array {
         return array_values(array_filter(array_map('trim', explode("\n", $raw))));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // WIP PAGES (owner only)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function routeWip(bool $isPost): void {
+        $configFile = __DIR__ . '/../../app/Config/wip_pages.json';
+        $knownPages = [
+            'home'       => 'Home / About',
+            'dev-life'   => 'Dev Life',
+            'games'      => 'Games',
+            'projects'   => 'Projects',
+            'news'       => 'News',
+            'faq'        => 'FAQ',
+            'readmesync' => 'ReadmeSync',
+            'contact'    => 'Contact',
+        ];
+
+        if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+            $selected = array_keys(array_filter($_POST['wip'] ?? [], fn($v) => $v === '1'));
+            $selected = array_values(array_intersect($selected, array_keys($knownPages)));
+            file_put_contents($configFile, json_encode($selected, JSON_PRETTY_PRINT));
+            ActivityLogModel::log('updated', 'Updated WIP pages: ' . (implode(', ', $selected) ?: 'none'));
+            $this->flash('success', 'WIP-pagina\'s opgeslagen.');
+            header('Location: ?page=admin&section=wip'); exit;
+        }
+
+        $current = [];
+        if (file_exists($configFile)) {
+            $current = json_decode(file_get_contents($configFile), true) ?? [];
+        }
+
+        $flash = $this->popFlash();
+        $this->renderAdmin('wip/index', compact('knownPages', 'current', 'flash'), 'WIP Pagina\'s');
     }
 
     private function flash(string $type, string $message): void {

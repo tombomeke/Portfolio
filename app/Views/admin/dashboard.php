@@ -20,82 +20,70 @@
 
 <!-- Stats grid -->
 <div class="stats-grid">
-    <a href="?page=admin&section=news" class="stat-card stat-card--link">
-        <div class="stat-icon" style="--icon-color:#3b82f6"><i class="fas fa-newspaper"></i></div>
-        <div class="stat-body">
-            <div class="stat-value"><?= $stats['news'] ?? 0 ?></div>
+    <a href="?page=admin&section=news" class="stat-card stat-card--link" style="--icon-color:#3b82f6">
+        <div class="stat-card-top">
             <div class="stat-label">Nieuwsberichten</div>
+            <div class="stat-icon"><i class="fas fa-newspaper"></i></div>
         </div>
+        <div class="stat-value"><?= $stats['news'] ?? 0 ?></div>
     </a>
-    <a href="?page=admin&section=projects" class="stat-card stat-card--link">
-        <div class="stat-icon" style="--icon-color:#8b5cf6"><i class="fas fa-folder-open"></i></div>
-        <div class="stat-body">
-            <div class="stat-value"><?= $stats['projects'] ?? 0 ?></div>
+    <a href="?page=admin&section=projects" class="stat-card stat-card--link" style="--icon-color:#8b5cf6">
+        <div class="stat-card-top">
             <div class="stat-label">Projecten</div>
+            <div class="stat-icon"><i class="fas fa-folder-open"></i></div>
+        </div>
+        <div class="stat-value"><?= $stats['projects'] ?? 0 ?></div>
+    </a>
+    <a href="?page=admin&section=faq" class="stat-card stat-card--link" style="--icon-color:#10b981">
+        <div class="stat-card-top">
+            <div class="stat-label">FAQ-items<small><?= $stats['faq_categories'] ?? 0 ?> categorieën</small></div>
+            <div class="stat-icon"><i class="fas fa-circle-question"></i></div>
+        </div>
+        <div class="stat-value"><?= $stats['faq_items'] ?? 0 ?></div>
+    </a>
+    <?php $hasUnread = ($stats['unread_messages'] ?? 0) > 0; ?>
+    <a href="?page=admin&section=contact" class="stat-card stat-card--link <?= $hasUnread ? 'stat-card--alert' : '' ?>" style="--icon-color:<?= $hasUnread ? '#f59e0b' : '#6b7280' ?>">
+        <div class="stat-card-top">
+            <div class="stat-label">Berichten<small><?= $stats['messages'] ?? 0 ?> totaal</small></div>
+            <div class="stat-icon"><i class="fas fa-envelope<?= $hasUnread ? '' : '-open' ?>"></i></div>
+        </div>
+        <div class="stat-value">
+            <?= $stats['unread_messages'] ?? 0 ?>
+            <?php if ($hasUnread): ?><span class="badge badge--warning">ongelezen</span><?php endif; ?>
         </div>
     </a>
-    <a href="?page=admin&section=faq" class="stat-card stat-card--link">
-        <div class="stat-icon" style="--icon-color:#10b981"><i class="fas fa-circle-question"></i></div>
-        <div class="stat-body">
-            <div class="stat-value"><?= $stats['faq_items'] ?? 0 ?></div>
-            <div class="stat-label">FAQ-items
-                <small><?= $stats['faq_categories'] ?? 0 ?> categorie<?= ($stats['faq_categories'] ?? 0) !== 1 ? 'ën' : '' ?></small>
-            </div>
+    <a href="?page=admin&section=dev-life" class="stat-card stat-card--link" style="--icon-color:#06b6d4">
+        <div class="stat-card-top">
+            <div class="stat-label">Skills<small><?= $stats['education'] ?? 0 ?> opl. · <?= $stats['goals'] ?? 0 ?> doelen</small></div>
+            <div class="stat-icon"><i class="fas fa-laptop-code"></i></div>
         </div>
+        <div class="stat-value"><?= $stats['skills'] ?? 0 ?></div>
     </a>
-    <a href="?page=admin&section=contact" class="stat-card stat-card--link <?= ($stats['unread_messages'] ?? 0) > 0 ? 'stat-card--alert' : '' ?>">
-        <div class="stat-icon" style="--icon-color:<?= ($stats['unread_messages'] ?? 0) > 0 ? '#f59e0b' : '#6b7280' ?>">
-            <i class="fas fa-envelope<?= ($stats['unread_messages'] ?? 0) > 0 ? '' : '-open' ?>"></i>
-        </div>
-        <div class="stat-body">
-            <div class="stat-value">
-                <?= $stats['unread_messages'] ?? 0 ?>
-                <?php if (($stats['unread_messages'] ?? 0) > 0): ?>
-                    <span class="badge badge--warning">ongelezen</span>
-                <?php endif; ?>
-            </div>
-            <div class="stat-label">Berichten
-                <small><?= $stats['messages'] ?? 0 ?> totaal</small>
-            </div>
-        </div>
-    </a>
-    <a href="?page=admin&section=dev-life" class="stat-card stat-card--link">
-        <div class="stat-icon" style="--icon-color:#06b6d4"><i class="fas fa-laptop-code"></i></div>
-        <div class="stat-body">
-            <div class="stat-value"><?= $stats['skills'] ?? 0 ?></div>
-            <div class="stat-label">Skills
-                <small><?= $stats['education'] ?? 0 ?> opleidingen · <?= $stats['goals'] ?? 0 ?> doelen</small>
-            </div>
-        </div>
-    </a>
-    <a href="?page=admin&section=tags" class="stat-card stat-card--link">
-        <div class="stat-icon" style="--icon-color:#06b6d4"><i class="fas fa-tags"></i></div>
-        <div class="stat-body">
-            <div class="stat-value"><?= $stats['tags'] ?? 0 ?></div>
+    <a href="?page=admin&section=tags" class="stat-card stat-card--link" style="--icon-color:#f97316">
+        <div class="stat-card-top">
             <div class="stat-label">Tags</div>
+            <div class="stat-icon"><i class="fas fa-tags"></i></div>
         </div>
+        <div class="stat-value"><?= $stats['tags'] ?? 0 ?></div>
     </a>
-    <a href="?page=admin&section=comments" class="stat-card stat-card--link <?= ($stats['pending_comments'] ?? 0) > 0 ? 'stat-card--alert' : '' ?>">
-        <div class="stat-icon" style="--icon-color:<?= ($stats['pending_comments'] ?? 0) > 0 ? '#f59e0b' : '#6b7280' ?>">
-            <i class="fas fa-comments"></i>
-        </div>
-        <div class="stat-body">
-            <div class="stat-value">
-                <?= $stats['pending_comments'] ?? 0 ?>
-                <?php if (($stats['pending_comments'] ?? 0) > 0): ?>
-                    <span class="badge badge--warning">wachtend</span>
-                <?php endif; ?>
-            </div>
+    <?php $hasPending = ($stats['pending_comments'] ?? 0) > 0; ?>
+    <a href="?page=admin&section=comments" class="stat-card stat-card--link <?= $hasPending ? 'stat-card--alert' : '' ?>" style="--icon-color:<?= $hasPending ? '#f59e0b' : '#6b7280' ?>">
+        <div class="stat-card-top">
             <div class="stat-label">Reacties</div>
+            <div class="stat-icon"><i class="fas fa-comments"></i></div>
+        </div>
+        <div class="stat-value">
+            <?= $stats['pending_comments'] ?? 0 ?>
+            <?php if ($hasPending): ?><span class="badge badge--warning">wachtend</span><?php endif; ?>
         </div>
     </a>
     <?php if (($authUser['role'] ?? '') === 'owner'): ?>
-    <a href="?page=admin&section=users" class="stat-card stat-card--link">
-        <div class="stat-icon" style="--icon-color:#f59e0b"><i class="fas fa-users"></i></div>
-        <div class="stat-body">
-            <div class="stat-value"><?= $stats['users'] ?? 0 ?></div>
+    <a href="?page=admin&section=users" class="stat-card stat-card--link" style="--icon-color:#f59e0b">
+        <div class="stat-card-top">
             <div class="stat-label">Admin-gebruikers</div>
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
         </div>
+        <div class="stat-value"><?= $stats['users'] ?? 0 ?></div>
     </a>
     <?php endif; ?>
 </div>

@@ -58,8 +58,8 @@
         <div class="alert alert-error">
             <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
         </div>
-        <?php if (!empty($debugCurlErr)): ?>
-        <!-- [ReadmeSync debug] curl_error: <?= $debugCurlErr ?> | http_code: <?= (int)($debugHttpCode ?? 0) ?> -->
+        <?php if ($debugHttpCode): ?>
+        <!-- [ReadmeSync debug] http_code: <?= $debugHttpCode ?> | curl_error: <?= $debugCurlErr ?? 'none' ?> | body: <?= $debugRawBody ?? 'empty' ?> -->
         <?php endif; ?>
         <?php endif; ?>
 
