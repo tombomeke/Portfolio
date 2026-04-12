@@ -1914,6 +1914,11 @@ class AdminController {
         $decoded['lastSyncAt'] = $decoded['lastSyncAt'] ?? null;
         $decoded['markdownSource'] = is_string($decoded['markdownSource'] ?? null) ? $decoded['markdownSource'] : '';
 
+        // Migrate previously seeded wrong owner for this repository URL.
+        if (is_string($decoded['repoUrl']) && preg_match('#^https?://github\.com/tombomeke-ehb/Portfolio(?:$|[/?#])#i', $decoded['repoUrl'])) {
+            $decoded['repoUrl'] = 'https://github.com/tombomeke/Portfolio';
+        }
+
         return $decoded;
     }
 

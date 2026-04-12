@@ -2,7 +2,7 @@
     <div class="flash <?= htmlspecialchars($flash['type']) ?>"><?= htmlspecialchars($flash['message']) ?></div>
 <?php endif; ?>
 
-<?php $defaultRepoUrl = !empty($config['repoUrl']) ? (string) $config['repoUrl'] : 'https://github.com/tombomeke-ehb/Portfolio'; ?>
+<?php $defaultRepoUrl = !empty($config['repoUrl']) ? (string) $config['repoUrl'] : 'https://github.com/tombomeke/Portfolio'; ?>
 
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header">
