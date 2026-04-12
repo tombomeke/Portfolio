@@ -60,6 +60,7 @@ require_once __DIR__ . '/../Models/TagModel.php';
 require_once __DIR__ . '/../Models/NewsCommentModel.php';
 require_once __DIR__ . '/../Models/ActivityLogModel.php';
 require_once __DIR__ . '/../Models/SiteSettingModel.php';
+require_once __DIR__ . '/../Services/ProjectRoadmapService.php';
 require_once __DIR__ . '/../Config/translations.php';
 
 class AdminController {
@@ -74,6 +75,7 @@ class AdminController {
     private NewsCommentModel    $comments;
     private ActivityLogModel    $activityLog;
     private SiteSettingModel    $settings;
+    private ProjectRoadmapService $projectRoadmapService;
     private string              $contactEmail = 'tom1dekoning@gmail.com';
     private string              $readmeSyncApiUrl = 'https://tombomekestudio.com/api/readmesync/generate';
     private string              $readmeSyncTelemetryApiUrl = 'https://tombomekestudio.com/api/v1/admin/telemetry';
@@ -91,6 +93,7 @@ class AdminController {
         $this->comments    = new NewsCommentModel();
         $this->activityLog = new ActivityLogModel();
         $this->settings    = new SiteSettingModel();
+        $this->projectRoadmapService = new ProjectRoadmapService();
 
         $readmeSyncApiUrl = portfolioEnv('READMESYNC_API_URL', $this->readmeSyncApiUrl);
         $readmeSyncTelemetryApiUrl = portfolioEnv('READMESYNC_ADMIN_TELEMETRY_URL', $this->readmeSyncTelemetryApiUrl);
@@ -635,9 +638,49 @@ class AdminController {
                     header('Location: ?page=admin&section=projects'); exit;
                 }
                 break;
+            case 'sync-all':
+                if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+                    $this->syncAllProjectRoadmaps();
+                } else {
+                    header('Location: ?page=admin&section=projects'); exit;
+                }
+                break;
             default:
                 $this->listProjects();
         }
+    }
+
+    private function syncAllProjectRoadmaps(): void {
+        // Simple rate limit: check last sync-all via session
+        $lastSyncAll = (int) ($_SESSION['last_sync_all'] ?? 0);
+        if (time() - $lastSyncAll < 300) {
+            $this->flash('error', 'Sync all is al minder dan 5 minuten geleden uitgevoerd. Wacht even.');
+            header('Location: ?page=admin&section=projects'); exit;
+        }
+
+        $projects = $this->projects->getAllForAdmin();
+        $synced = 0; $failed = 0; $skipped = 0;
+        $authUser = Auth::user();
+
+        @set_time_limit(120);
+
+        foreach ($projects as $project) {
+            $repoUrl = trim((string) ($project['repo_url'] ?? ''));
+            if ($repoUrl === '') { $skipped++; continue; }
+
+            $result = $this->projectRoadmapService->syncProjectRoadmap([
+                'id'       => (int) $project['id'],
+                'slug'     => (string) $project['slug'],
+                'title'    => (string) ($project['title_nl'] ?? ''),
+                'repo_url' => $repoUrl,
+            ], $authUser);
+
+            if ($result['ok'] ?? false) { $synced++; } else { $failed++; }
+        }
+
+        $_SESSION['last_sync_all'] = time();
+        $this->flash('success', "Sync all klaar: {$synced} geslaagd, {$failed} mislukt, {$skipped} overgeslagen (geen repo URL).");
+        header('Location: ?page=admin&section=projects'); exit;
     }
 
     private function listProjects(): void {
@@ -660,7 +703,7 @@ class AdminController {
         $imagePath = $this->handleImageUpload($files['image'] ?? null, 'projects');
         $tech = $this->parseTech($post['tech'] ?? '');
 
-        $this->projects->create([
+        $projectId = $this->projects->create([
             'slug'               => trim($post['slug']),
             'category'           => trim($post['category']),
             'status'             => trim($post['status'] ?? ''),
@@ -679,7 +722,23 @@ class AdminController {
             'features_en'        => $this->parseFeatures($post['features_en'] ?? ''),
         ]);
 
-        $this->flash('success', 'Project aangemaakt.');
+        // Handle additional gallery images
+        if (!empty($files['gallery_images']['name'][0])) {
+            $galleryPaths = $this->handleMultiImageUpload($files['gallery_images'], 'projects');
+            foreach ($galleryPaths as $i => $path) {
+                $this->projects->addImage($projectId, $path, $i);
+            }
+        }
+
+        $projectForSync = [
+            'id' => $projectId,
+            'slug' => trim($post['slug']),
+            'title' => trim($post['title_nl'] ?? ''),
+            'repo_url' => trim($post['repo_url'] ?? ''),
+        ];
+        $syncNotice = $this->syncProjectRoadmapIfPossible($projectForSync);
+
+        $this->flash('success', 'Project aangemaakt.' . ($syncNotice ? ' ' . $syncNotice : ''));
         header('Location: ?page=admin&section=projects');
         exit;
     }
@@ -687,8 +746,9 @@ class AdminController {
     private function editProject(?int $id): void {
         $project = $id ? $this->projects->getByIdForAdmin($id) : null;
         if (!$project) { $this->notFound(); return; }
+        $galleryImages = $id ? $this->projects->getImagesByProjectId($id) : [];
         $flash = $this->popFlash();
-        $this->renderAdmin('projects/edit', compact('project', 'flash'), 'Project bewerken');
+        $this->renderAdmin('projects/edit', compact('project', 'galleryImages', 'flash'), 'Project bewerken');
     }
 
     private function updateProject(?int $id, array $post, array $files): void {
@@ -728,7 +788,29 @@ class AdminController {
             'features_en'        => $this->parseFeatures($post['features_en'] ?? ''),
         ]);
 
-        $this->flash('success', 'Project bijgewerkt.');
+        // Delete selected gallery images
+        $deleteImageIds = array_map('intval', (array) ($post['delete_images'] ?? []));
+        foreach ($deleteImageIds as $imageId) {
+            if ($imageId > 0) $this->projects->deleteImage($imageId);
+        }
+
+        // Handle new gallery images
+        if (!empty($files['gallery_images']['name'][0])) {
+            $galleryPaths = $this->handleMultiImageUpload($files['gallery_images'], 'projects');
+            foreach ($galleryPaths as $i => $path) {
+                $this->projects->addImage((int) $id, $path, $i);
+            }
+        }
+
+        $projectForSync = [
+            'id' => (int) $id,
+            'slug' => trim($post['slug']),
+            'title' => trim($post['title_nl'] ?? ''),
+            'repo_url' => trim($post['repo_url'] ?? ''),
+        ];
+        $syncNotice = $this->syncProjectRoadmapIfPossible($projectForSync);
+
+        $this->flash('success', 'Project bijgewerkt.' . ($syncNotice ? ' ' . $syncNotice : ''));
         header('Location: ?page=admin&section=projects');
         exit;
     }
@@ -1358,6 +1440,27 @@ class AdminController {
         include __DIR__ . '/../Views/admin/layout.php';
     }
 
+    private function handleMultiImageUpload(array $filesInput, string $subfolder): array {
+        $paths = [];
+        // $_FILES['gallery_images'] comes as parallel arrays; normalize to list of single-file arrays
+        $count = count($filesInput['name'] ?? []);
+        for ($i = 0; $i < $count; $i++) {
+            if (($filesInput['error'][$i] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) continue;
+            $single = [
+                'name'     => $filesInput['name'][$i],
+                'type'     => $filesInput['type'][$i],
+                'tmp_name' => $filesInput['tmp_name'][$i],
+                'error'    => $filesInput['error'][$i],
+                'size'     => $filesInput['size'][$i],
+            ];
+            $path = $this->handleImageUpload($single, $subfolder);
+            if ($path !== null) {
+                $paths[] = $path;
+            }
+        }
+        return $paths;
+    }
+
     private function handleImageUpload(?array $file, string $subfolder): ?string {
         if (!$file || $file['error'] !== UPLOAD_ERR_OK || $file['size'] === 0) {
             return null;
@@ -1387,6 +1490,23 @@ class AdminController {
 
     private function parseFeatures(string $raw): array {
         return array_values(array_filter(array_map('trim', explode("\n", $raw))));
+    }
+
+    private function syncProjectRoadmapIfPossible(array $project): ?string {
+        $repoUrl = trim((string) ($project['repo_url'] ?? ''));
+        if ($repoUrl === '') {
+            return null;
+        }
+
+        try {
+            $result = $this->projectRoadmapService->syncProjectRoadmap($project, Auth::user());
+            if (($result['ok'] ?? false) === true) {
+                return 'Roadmap-sync OK (' . (int) ($result['itemCount'] ?? 0) . ' TODOs).';
+            }
+            return 'Roadmap-sync mislukt: ' . (string) ($result['error'] ?? 'onbekende fout') . '.';
+        } catch (\Throwable $e) {
+            return 'Roadmap-sync exception: ' . $e->getMessage() . '.';
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════

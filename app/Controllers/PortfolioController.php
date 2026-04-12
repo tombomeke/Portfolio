@@ -15,6 +15,7 @@ require_once __DIR__ . '/../Models/NewsCommentModel.php';
 require_once __DIR__ . '/../Models/SiteSettingModel.php';
 require_once __DIR__ . '/../Models/UserModel.php';
 require_once __DIR__ . '/../Models/ReadmeSyncScanLogModel.php';
+require_once __DIR__ . '/../Services/ProjectRoadmapService.php';
 require_once __DIR__ . '/../Auth/Auth.php';
 
 class PortfolioController {
@@ -27,6 +28,7 @@ class PortfolioController {
     private $commentModel;
     private $userModel;
     private $readmeSyncScanLogModel;
+    private $projectRoadmapService;
     private $contactRecipient = 'tom1dekoning@gmail.com';
 
     public function __construct() {
@@ -39,6 +41,7 @@ class PortfolioController {
         $this->commentModel   = new NewsCommentModel();
         $this->userModel      = new UserModel();
         $this->readmeSyncScanLogModel = new ReadmeSyncScanLogModel();
+        $this->projectRoadmapService = new ProjectRoadmapService();
     }
 
     public function showAbout() {
@@ -102,6 +105,71 @@ class PortfolioController {
             'projectModel' => $this->projectModel
         ];
         $this->render('projects', $data);
+    }
+
+    public function showProjectDetail(): void {
+        $slug = trim((string) ($_GET['slug'] ?? ''));
+        $id = (int) ($_GET['id'] ?? 0);
+        $project = null;
+
+        if ($slug !== '') {
+            $project = $this->projectModel->getProjectBySlug($slug);
+        } elseif ($id > 0) {
+            $project = $this->projectModel->getProjectById($id);
+        }
+
+        if (!$project) {
+            $this->show404();
+            return;
+        }
+
+        $authUser = Auth::user();
+        $role = (string) ($authUser['role'] ?? 'user');
+        $canSyncRoadmap = in_array($role, ['owner', 'admin'], true);
+        $syncMessage = null;
+
+        if ($canSyncRoadmap && isset($_GET['sync']) && (int) $_GET['sync'] === 1) {
+            $syncResult = $this->projectRoadmapService->syncProjectRoadmap($project, $authUser);
+            if (($syncResult['ok'] ?? false) === true) {
+                $syncMessage = 'Roadmap gesynchroniseerd: ' . (int) ($syncResult['itemCount'] ?? 0) . ' TODO items gevonden.';
+            } else {
+                $syncMessage = 'Roadmap sync mislukt: ' . (string) ($syncResult['error'] ?? 'onbekende fout');
+            }
+        }
+
+        // Roadmap filter from query string
+        $roadmapFilter   = trim((string) ($_GET['filter'] ?? ''));
+        $filterStatus    = null;
+        $filterPriority  = null;
+        if ($roadmapFilter === 'open')  $filterStatus   = 'open';
+        if ($roadmapFilter === 'done')  $filterStatus   = 'done';
+        if ($roadmapFilter === 'high')  $filterPriority = 'high';
+
+        $projectRoadmap = $this->projectRoadmapService->getProjectRoadmap($project, $filterStatus, $filterPriority);
+
+        $this->render('project-detail', [
+            'title'          => (string) ($project['title'] ?? 'Project detail'),
+            'project'        => $project,
+            'projectRoadmap' => $projectRoadmap,
+            'tab'            => (string) ($_GET['tab'] ?? 'overview'),
+            'canSyncRoadmap' => $canSyncRoadmap,
+            'syncMessage'    => $syncMessage,
+            'roadmapFilter'  => $roadmapFilter,
+        ]);
+    }
+
+    public function showProjectRoadmaps(): void {
+        $projects      = $this->projectModel->getAllProjects();
+        $roadmapsByKey = $this->projectRoadmapService->getAllProjectRoadmaps();
+        $projectIds    = array_column($projects, 'id');
+        $syncSummary   = $this->projectRoadmapService->getSyncSummary($projectIds);
+
+        $this->render('project-roadmaps', [
+            'title'         => 'Project Roadmaps',
+            'projects'      => $projects,
+            'roadmapsByKey' => $roadmapsByKey,
+            'syncSummary'   => $syncSummary,
+        ]);
     }
 
     public function showContact() {
@@ -727,6 +795,53 @@ class PortfolioController {
         }
 
         return trans('wip_default_page_name');
+    }
+
+    /**
+     * Token-protected cron endpoint for periodic roadmap sync.
+     * Call via: GET ?page=cron-sync-roadmaps&token=SECRET
+     * Set CRON_SYNC_TOKEN as an environment variable on the server.
+     * Returns JSON — not meant for browser viewing.
+     */
+    public function cronSyncRoadmaps(): void {
+        header('Content-Type: application/json');
+
+        $token   = trim((string) ($_GET['token'] ?? ''));
+        $envToken = trim((string) (getenv('CRON_SYNC_TOKEN') ?: ''));
+
+        if ($envToken === '' || $token !== $envToken) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Unauthorized']);
+            exit;
+        }
+
+        @set_time_limit(120);
+
+        $projects = $this->projectModel->getAllProjects();
+        $synced = 0; $failed = 0; $skipped = 0; $results = [];
+
+        foreach ($projects as $project) {
+            $repoUrl = trim((string) ($project['repo_url'] ?? ''));
+            if ($repoUrl === '') { $skipped++; continue; }
+
+            $result = $this->projectRoadmapService->syncProjectRoadmap($project);
+            if ($result['ok'] ?? false) {
+                $synced++;
+                $results[] = ['slug' => $project['slug'], 'ok' => true, 'items' => $result['itemCount'] ?? 0];
+            } else {
+                $failed++;
+                $results[] = ['slug' => $project['slug'], 'ok' => false, 'error' => $result['error'] ?? ''];
+            }
+        }
+
+        echo json_encode([
+            'ok'      => true,
+            'synced'  => $synced,
+            'failed'  => $failed,
+            'skipped' => $skipped,
+            'results' => $results,
+        ]);
+        exit;
     }
 }
 ?>

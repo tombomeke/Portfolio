@@ -36,7 +36,23 @@ class ProjectModel {
         );
         $stmt->execute([':lang' => $lang, ':id' => $id]);
         $row = $stmt->fetch();
-        return $row ? $this->decodeRow($row) : null;
+        return $row ? $this->decodeRow($row, true) : null;
+    }
+
+    public function getProjectBySlug(string $slug): ?array {
+        $lang = Translations::getCurrentLang();
+        $db   = Database::getConnection();
+
+        $stmt = $db->prepare(
+            "SELECT p.id, p.slug, p.category, p.status, p.image_path, p.repo_url, p.demo_url, p.tech,
+                    t.title, t.description, t.long_description, t.features
+             FROM   projects p
+             JOIN   project_translations t ON t.project_id = p.id AND t.lang = :lang
+             WHERE  p.slug = :slug LIMIT 1"
+        );
+        $stmt->execute([':lang' => $lang, ':slug' => $slug]);
+        $row = $stmt->fetch();
+        return $row ? $this->decodeRow($row, true) : null;
     }
 
     public function getProjectsByCategory(string $category): array {
@@ -189,11 +205,72 @@ class ProjectModel {
         return (int) Database::getConnection()->query("SELECT COUNT(*) FROM projects")->fetchColumn();
     }
 
+    // ── Gallery ──────────────────────────────────────────────────────────────
+
+    public function getImagesByProjectId(int $projectId): array {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "SELECT id, image_path, caption, sort_order
+             FROM   project_images
+             WHERE  project_id = :project_id
+             ORDER  BY sort_order ASC, id ASC"
+        );
+        $stmt->execute([':project_id' => $projectId]);
+        return $stmt->fetchAll();
+    }
+
+    public function addImage(int $projectId, string $imagePath, int $sortOrder = 0): int {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "INSERT INTO project_images (project_id, image_path, sort_order)
+             VALUES (:project_id, :image_path, :sort_order)"
+        );
+        $stmt->execute([
+            ':project_id' => $projectId,
+            ':image_path' => $imagePath,
+            ':sort_order' => $sortOrder,
+        ]);
+        return (int) $db->lastInsertId();
+    }
+
+    public function deleteImage(int $imageId): void {
+        $db   = Database::getConnection();
+        $stmt = $db->prepare("SELECT image_path FROM project_images WHERE id = :id");
+        $stmt->execute([':id' => $imageId]);
+        $row = $stmt->fetch();
+
+        if ($row && $row['image_path']) {
+            $fullPath = __DIR__ . '/../../' . $row['image_path'];
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+        }
+
+        $db->prepare("DELETE FROM project_images WHERE id = :id")->execute([':id' => $imageId]);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function decodeRow(array $row): array {
+    private function decodeRow(array $row, bool $withGallery = false): array {
         $row['tech']     = json_decode($row['tech']     ?? '[]', true) ?? [];
         $row['features'] = json_decode($row['features'] ?? '[]', true) ?? [];
+        $imagePath = (string) ($row['image_path'] ?? '');
+        $row['image'] = $imagePath;
+
+        $images = $imagePath !== '' ? [$imagePath] : [];
+
+        // Merge gallery images for detail pages (avoids N+1 on list pages)
+        if ($withGallery && isset($row['id'])) {
+            $galleryRows = $this->getImagesByProjectId((int) $row['id']);
+            foreach ($galleryRows as $galleryRow) {
+                $path = (string) $galleryRow['image_path'];
+                if ($path !== '' && !in_array($path, $images, true)) {
+                    $images[] = $path;
+                }
+            }
+        }
+
+        $row['images'] = $images;
         return $row;
     }
 }
