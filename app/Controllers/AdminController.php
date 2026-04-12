@@ -1472,14 +1472,26 @@ class AdminController {
 
                 // TODO(roadmap): add optional "target section" input so parsing can focus on a single README block (e.g. Roadmap/TODO).
 
-                if ($repoUrl === '' || !preg_match('#^https?://github\.com/[^/]+/[^/]+#i', $repoUrl)) {
+                $normalizedRepoUrl = $this->normalizeGitHubRepoUrl($repoUrl);
+                if ($normalizedRepoUrl === null) {
                     $this->flash('error', 'Geef een geldige GitHub repo URL op.');
                     header('Location: ?page=admin&section=roadmap'); exit;
                 }
 
                 $apiError = null;
-                $readmeSyncData = $this->fetchReadmeSyncData($repoUrl, $apiError);
+                $readmeSyncData = $this->fetchReadmeSyncData($normalizedRepoUrl, $apiError);
                 if ($readmeSyncData === null) {
+                    if ($apiError !== null && stripos($apiError, 'Repository niet gevonden') !== false) {
+                        $config['items'] = $this->appendRoadmapTodoIfMissing(
+                            (array) ($config['items'] ?? []),
+                            'Fix ReadmeSync API/GitHub connectiviteit voor ' . $normalizedRepoUrl,
+                            'Controleer ReadmeSync.API GitHub token/configuratie en netwerktoegang; sync faalde met repo/API-bereikbaarheid.',
+                            'ops',
+                            'high'
+                        );
+                        $this->saveRoadmapConfig($config);
+                    }
+
                     $this->flash('error', $apiError ?: 'ReadmeSync synchronisatie mislukt.');
                     header('Location: ?page=admin&section=roadmap'); exit;
                 }
@@ -1504,7 +1516,7 @@ class AdminController {
                 }
 
                 $config['items'] = $items;
-                $config['repoUrl'] = $repoUrl;
+                $config['repoUrl'] = $normalizedRepoUrl;
                 $config['source'] = 'readmesync-todos';
                 $config['lastSyncAt'] = date('c');
                 $config['markdownSource'] = trim((string) ($readmeSyncData['content'] ?? ''));
@@ -1989,8 +2001,10 @@ class AdminController {
                 $repoPublic = $this->isGitHubRepoPublic($repoUrl);
                 if ($repoPublic === true) {
                     $error = 'Repository is publiek bereikbaar, maar ReadmeSync API kan GitHub niet ophalen (controleer API GitHub token/certificaat).';
+                } elseif ($repoPublic === false) {
+                    $error = 'Repository niet gevonden of privé. Controleer owner/repo URL en GitHub-toegang van de API.';
                 } else {
-                    $error = 'Repository niet gevonden of API kan GitHub niet bereiken.';
+                    $error = 'Repository niet gevonden of API kan GitHub niet bereiken. Controleer URL, API GitHub token en serverconnectiviteit.';
                 }
             } else {
                 $error = 'ReadmeSync gaf HTTP ' . $httpCode . '.';
@@ -2481,6 +2495,50 @@ class AdminController {
             'owner' => $parts[0],
             'repo'  => preg_replace('/\.git$/i', '', $parts[1]),
         ];
+    }
+
+    private function normalizeGitHubRepoUrl(string $url): ?string {
+        $parsed = $this->parseGitHubOwnerRepo($url);
+        if (!$parsed) {
+            return null;
+        }
+
+        $owner = trim((string) ($parsed['owner'] ?? ''));
+        $repo = trim((string) ($parsed['repo'] ?? ''));
+        if ($owner === '' || $repo === '') {
+            return null;
+        }
+
+        return 'https://github.com/' . rawurlencode($owner) . '/' . rawurlencode($repo);
+    }
+
+    private function appendRoadmapTodoIfMissing(array $items, string $title, string $description = '', string $sourceSection = 'ops', string $priority = 'normal'): array {
+        $key = $this->normalizeRoadmapTitle($title) . '|' . strtolower(trim($sourceSection));
+        if ($key === '|') {
+            return $items;
+        }
+
+        foreach ($items as $item) {
+            $existingTitle = trim((string) ($item['title'] ?? ''));
+            $existingSection = strtolower(trim((string) ($item['sourceSection'] ?? '')));
+            $existingKey = $this->normalizeRoadmapTitle($existingTitle) . '|' . $existingSection;
+            if ($existingKey === $key) {
+                return $items;
+            }
+        }
+
+        $items[] = [
+            'id' => 'manual-todo-' . substr(md5($title . '|' . $sourceSection), 0, 10),
+            'title' => $title,
+            'description' => $description,
+            'status' => 'todo',
+            'priority' => in_array($priority, ['high', 'medium', 'low', 'normal'], true) ? $priority : 'normal',
+            'sourceLine' => null,
+            'sourceSection' => $sourceSection,
+            'syncSource' => 'manual',
+        ];
+
+        return $items;
     }
 
     private function isGitHubRepoPublic(string $url): ?bool {
