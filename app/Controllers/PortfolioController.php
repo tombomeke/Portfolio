@@ -469,7 +469,13 @@ class PortfolioController {
             } elseif (!function_exists('curl_init')) {
                 $error = 'cURL is niet beschikbaar op deze server.';
             } else {
-                $payload = json_encode(['githubRepoUrl' => $repoUrl]);
+                $authUser = Auth::user();
+                $payload = json_encode([
+                    'githubRepoUrl' => $repoUrl,
+                    'clientApp' => 'portfolio',
+                    'userId' => isset($authUser['id']) ? (string) $authUser['id'] : null,
+                    'userName' => isset($authUser['username']) ? (string) $authUser['username'] : null,
+                ]);
                 $curlOpts = [
                     CURLOPT_POST           => true,
                     CURLOPT_POSTFIELDS     => $payload,

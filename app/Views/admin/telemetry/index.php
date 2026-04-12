@@ -14,6 +14,8 @@ $baseFilters = $filters ?? [];
 unset($baseFilters['telemetry_page']);
 $activeFilters = array_filter($baseFilters, static fn($value) => $value !== null && $value !== '');
 $hasFilters = !empty($activeFilters);
+$groupBy = in_array((string) ($groupBy ?? 'none'), ['none', 'repo', 'actor'], true) ? (string) $groupBy : 'none';
+$groupedItems = is_array($groupedItems ?? null) ? $groupedItems : [];
 $prevPage = max(1, $currentPage - 1);
 $nextPage = min($totalPages, $currentPage + 1);
 
@@ -96,6 +98,11 @@ if ($flash): ?>
         </div>
 
         <div class="form-group">
+            <label>Client / user</label>
+            <input type="text" name="actor" value="<?= htmlspecialchars((string) ($filters['actor'] ?? '')) ?>" placeholder="portfolio / user id / username">
+        </div>
+
+        <div class="form-group">
             <label>Language</label>
             <input type="text" name="language" value="<?= htmlspecialchars((string) ($filters['language'] ?? '')) ?>" placeholder="csharp">
         </div>
@@ -118,6 +125,45 @@ if ($flash): ?>
         <div class="form-actions">
             <button type="submit" class="btn btn-primary"><i class="fas fa-magnifying-glass"></i> Filteren</button>
         </div>
+
+        <div class="form-group">
+            <label>Weergave</label>
+            <select name="groupBy">
+                <option value="none" <?= $groupBy === 'none' ? 'selected' : '' ?>>Ruwe events</option>
+                <option value="repo" <?= $groupBy === 'repo' ? 'selected' : '' ?>>Gegroepeerd per repo + type</option>
+                <option value="actor" <?= $groupBy === 'actor' ? 'selected' : '' ?>>Gegroepeerd per client/user + type</option>
+            </select>
+        </div>
+    </form>
+
+    <form method="POST" action="?page=admin&section=telemetry" style="margin-top:1rem" onsubmit="return confirm('Weet je zeker dat je gefilterde telemetry wilt verwijderen? Dit kan niet ongedaan worden gemaakt.');">
+        <?= \Auth::csrfField() ?>
+        <input type="hidden" name="telemetry_action" value="delete_filtered">
+        <input type="hidden" name="eventType" value="<?= htmlspecialchars((string) ($filters['eventType'] ?? '')) ?>">
+        <input type="hidden" name="repo" value="<?= htmlspecialchars((string) ($filters['repo'] ?? '')) ?>">
+        <input type="hidden" name="actor" value="<?= htmlspecialchars((string) ($filters['actor'] ?? '')) ?>">
+        <input type="hidden" name="language" value="<?= htmlspecialchars((string) ($filters['language'] ?? '')) ?>">
+        <input type="hidden" name="os" value="<?= htmlspecialchars((string) ($filters['os'] ?? '')) ?>">
+        <input type="hidden" name="fromUtc" value="<?= htmlspecialchars((string) ($filters['fromUtc'] ?? '')) ?>">
+        <input type="hidden" name="toUtc" value="<?= htmlspecialchars((string) ($filters['toUtc'] ?? '')) ?>">
+        <input type="hidden" name="groupBy" value="<?= htmlspecialchars($groupBy) ?>">
+
+        <div class="form-grid" style="gap:1rem">
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+                    <input type="checkbox" name="onlyFailures" value="1">
+                    <span>Verwijder alleen fout-events (extra filter)</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label>Max te verwijderen (veiligheidslimiet)</label>
+                <input type="number" min="1" max="20000" step="1" name="take" value="500">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Verwijder gefilterde logs</button>
+            </div>
+            <p class="text-muted text-sm" style="margin:0">Tip: eerst filters zetten, dan verwijderen. Verwijderen zonder filters is geblokkeerd.</p>
+        </div>
     </form>
 </div>
 
@@ -127,11 +173,36 @@ if ($flash): ?>
 
 <div class="card" style="margin-top:1.5rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-list"></i> Recente events</span>
-        <span class="badge">Pagina <?= $currentPage ?> / <?= $totalPages ?></span>
+        <span class="card-title"><i class="fas fa-list"></i> <?= $groupBy === 'none' ? 'Recente events' : 'Gegroepeerde events' ?></span>
+        <span class="badge"><?= $groupBy === 'none' ? ('Pagina ' . $currentPage . ' / ' . $totalPages) : (count($groupedItems) . ' groepen') ?></span>
     </div>
 
-    <?php if (empty($items)): ?>
+    <?php if ($groupBy !== 'none' && !empty($groupedItems)): ?>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th><?= $groupBy === 'actor' ? 'Client / user' : 'Repo' ?></th>
+                        <th>Type</th>
+                        <th>Aantal</th>
+                        <th>Succes / fout</th>
+                        <th>Laatste event</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($groupedItems as $group): ?>
+                        <tr>
+                            <td><?= htmlspecialchars((string) ($group['groupLabel'] ?? 'onbekend')) ?></td>
+                            <td><span class="badge"><?= htmlspecialchars((string) ($group['eventType'] ?? 'unknown')) ?></span></td>
+                            <td><?= (int) ($group['count'] ?? 0) ?></td>
+                            <td><?= (int) ($group['successCount'] ?? 0) ?> / <?= (int) ($group['failureCount'] ?? 0) ?></td>
+                            <td class="text-sm text-muted"><?= !empty($group['lastCreatedAt']) ? date('d/m/Y H:i', strtotime((string) $group['lastCreatedAt'])) : '—' ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php elseif (empty($items)): ?>
         <p class="empty-state"><i class="fas fa-inbox"></i> Geen telemetry items gevonden.</p>
     <?php else: ?>
         <div class="table-wrapper">
@@ -141,6 +212,7 @@ if ($flash): ?>
                         <th>Datum</th>
                         <th>Type</th>
                         <th>Repo</th>
+                        <th>Client / user</th>
                         <th>Language</th>
                         <th>Status</th>
                         <th>Details</th>
@@ -153,6 +225,12 @@ if ($flash): ?>
                         $repoUrl = (string) ($item['repoUrl'] ?? '');
                         $repoOwner = (string) ($item['repoOwner'] ?? '');
                         $repoName = (string) ($item['repoName'] ?? '');
+                        $sourceClient = trim((string) ($item['sourceClient'] ?? 'portfolio'));
+                        $sourceUserId = trim((string) ($item['sourceUserId'] ?? ''));
+                        $sourceUserName = trim((string) ($item['sourceUserName'] ?? ''));
+                        $actorLabel = $sourceUserName !== ''
+                            ? $sourceUserName . ($sourceUserId !== '' ? (' (#' . $sourceUserId . ')') : '')
+                            : ($sourceUserId !== '' ? ('user #' . $sourceUserId) : $sourceClient);
                         $isSuccess = (bool) ($item['success'] ?? false);
                         $statusCode = $item['statusCode'] ?? null;
                         $detail = trim((string) ($item['detail'] ?? ''));
@@ -169,6 +247,7 @@ if ($flash): ?>
                                     <span class="text-muted">—</span>
                                 <?php endif; ?>
                             </td>
+                            <td class="text-sm text-muted"><?= htmlspecialchars($actorLabel) ?></td>
                             <td><?= htmlspecialchars((string) ($item['languageScanned'] ?? '—')) ?></td>
                             <td>
                                 <span class="badge <?= $isSuccess ? 'badge--success' : 'badge--warning' ?>">
@@ -185,12 +264,14 @@ if ($flash): ?>
         </div>
     <?php endif; ?>
 
-    <div class="form-actions" style="margin-top:1rem;justify-content:space-between;flex-wrap:wrap">
-        <a class="btn btn-ghost btn-sm <?= $currentPage <= 1 ? 'disabled' : '' ?>" href="?page=admin&section=telemetry&telemetry_page=<?= $prevPage ?><?= $hasFilters ? '&' . http_build_query($activeFilters) : '' ?>">
-            <i class="fas fa-chevron-left"></i> Vorige
-        </a>
-        <a class="btn btn-ghost btn-sm <?= $currentPage >= $totalPages ? 'disabled' : '' ?>" href="?page=admin&section=telemetry&telemetry_page=<?= $nextPage ?><?= $hasFilters ? '&' . http_build_query($activeFilters) : '' ?>">
-            Volgende <i class="fas fa-chevron-right"></i>
-        </a>
-    </div>
+    <?php if ($groupBy === 'none'): ?>
+        <div class="form-actions" style="margin-top:1rem;justify-content:space-between;flex-wrap:wrap">
+            <a class="btn btn-ghost btn-sm <?= $currentPage <= 1 ? 'disabled' : '' ?>" href="?page=admin&section=telemetry&telemetry_page=<?= $prevPage ?><?= $hasFilters ? '&' . http_build_query($activeFilters) : '' ?>">
+                <i class="fas fa-chevron-left"></i> Vorige
+            </a>
+            <a class="btn btn-ghost btn-sm <?= $currentPage >= $totalPages ? 'disabled' : '' ?>" href="?page=admin&section=telemetry&telemetry_page=<?= $nextPage ?><?= $hasFilters ? '&' . http_build_query($activeFilters) : '' ?>">
+                Volgende <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+    <?php endif; ?>
 </div>

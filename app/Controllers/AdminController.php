@@ -1478,15 +1478,24 @@ class AdminController {
                 }
 
                 $apiError = null;
-                $content = $this->fetchReadmeSyncContent($repoUrl, $apiError);
-                if ($content === null) {
+                $readmeSyncData = $this->fetchReadmeSyncData($repoUrl, $apiError);
+                if ($readmeSyncData === null) {
                     $this->flash('error', $apiError ?: 'ReadmeSync synchronisatie mislukt.');
                     header('Location: ?page=admin&section=roadmap'); exit;
                 }
 
-                $items = $this->parseChecklistItems($content, $todosOnly);
+                $items = $this->extractRoadmapItemsFromApiTodos($readmeSyncData, $todosOnly);
+
+                // Backward compatibility: older API versions may only return markdown content.
                 if (empty($items)) {
-                    $this->flash('error', 'Geen roadmap-, checklist- of TODO-items gevonden in de ReadmeSync output.');
+                    $content = trim((string) ($readmeSyncData['content'] ?? ''));
+                    if ($content !== '') {
+                        $items = $this->parseChecklistItems($content, $todosOnly);
+                    }
+                }
+
+                if (empty($items)) {
+                    $this->flash('error', 'Geen TODO-items per file gevonden in de ReadmeSync API output.');
                     header('Location: ?page=admin&section=roadmap'); exit;
                 }
 
@@ -1496,15 +1505,15 @@ class AdminController {
 
                 $config['items'] = $items;
                 $config['repoUrl'] = $repoUrl;
-                $config['source'] = 'readmesync';
+                $config['source'] = 'readmesync-todos';
                 $config['lastSyncAt'] = date('c');
-                $config['markdownSource'] = $content;
+                $config['markdownSource'] = trim((string) ($readmeSyncData['content'] ?? ''));
                 $this->saveRoadmapConfig($config);
 
-                ActivityLogModel::log('updated', 'Synced roadmap from ReadmeSync (' . count($items) . ' items, merge=' . ($mergeMode ? 'yes' : 'no') . ')');
+                ActivityLogModel::log('updated', 'Synced roadmap from ReadmeSync API TODOs (' . count($items) . ' items, merge=' . ($mergeMode ? 'yes' : 'no') . ')');
                 $this->flash('success', $mergeMode
-                    ? 'Roadmap gemerged en gesynchroniseerd vanuit ReadmeSync.'
-                    : 'Roadmap gesynchroniseerd vanuit ReadmeSync.');
+                    ? 'Roadmap gemerged en gesynchroniseerd vanuit API TODO-items.'
+                    : 'Roadmap gesynchroniseerd vanuit API TODO-items.');
                 header('Location: ?page=admin&section=roadmap'); exit;
             }
 
@@ -1544,26 +1553,87 @@ class AdminController {
     }
 
     private function routeTelemetry(): void {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+                $this->flash('error', 'Ongeldige CSRF token. Probeer opnieuw.');
+                header('Location: ?page=admin&section=telemetry');
+                exit;
+            }
+
+            $postAction = trim((string) ($_POST['telemetry_action'] ?? ''));
+            if ($postAction === 'delete_filtered') {
+                $deleteFilters = [
+                    'eventType' => trim((string) ($_POST['eventType'] ?? '')),
+                    'repo'      => trim((string) ($_POST['repo'] ?? '')),
+                    'actor'     => trim((string) ($_POST['actor'] ?? '')),
+                    'language'  => trim((string) ($_POST['language'] ?? '')),
+                    'os'        => trim((string) ($_POST['os'] ?? '')),
+                    'fromUtc'   => trim((string) ($_POST['fromUtc'] ?? '')),
+                    'toUtc'     => trim((string) ($_POST['toUtc'] ?? '')),
+                    'onlyFailures' => isset($_POST['onlyFailures']) ? 'true' : '',
+                    'take' => isset($_POST['take']) && is_numeric($_POST['take']) ? (string) (int) $_POST['take'] : '',
+                ];
+
+                if (empty(array_filter($deleteFilters, static fn($value) => $value !== ''))) {
+                    $this->flash('error', 'Verwijderen zonder filter is geblokkeerd. Zet minimaal 1 filter.');
+                    header('Location: ?page=admin&section=telemetry');
+                    exit;
+                }
+
+                $deleteError = null;
+                $result = $this->deleteReadmeSyncTelemetry($deleteFilters, $deleteError);
+                if ($result === null) {
+                    $this->flash('error', $deleteError ?: 'Verwijderen van telemetry mislukt.');
+                } else {
+                    $deleted = (int) ($result['deleted'] ?? 0);
+                    $this->flash('success', 'Telemetry opgeschoond. Verwijderde logs: ' . $deleted . '.');
+                }
+
+                $redirectFilters = array_filter([
+                    'eventType' => $deleteFilters['eventType'],
+                    'repo' => $deleteFilters['repo'],
+                    'actor' => $deleteFilters['actor'],
+                    'language' => $deleteFilters['language'],
+                    'os' => $deleteFilters['os'],
+                    'fromUtc' => $deleteFilters['fromUtc'],
+                    'toUtc' => $deleteFilters['toUtc'],
+                    'groupBy' => trim((string) ($_POST['groupBy'] ?? '')),
+                ], static fn($value) => $value !== '');
+
+                $query = http_build_query(array_merge(['page' => 'admin', 'section' => 'telemetry'], $redirectFilters));
+                header('Location: ?' . $query);
+                exit;
+            }
+        }
+
         $filters = [
             'telemetry_page' => max(1, (int) ($_GET['telemetry_page'] ?? 1)),
             'eventType'      => trim($_GET['eventType'] ?? ''),
             'repo'           => trim($_GET['repo'] ?? ''),
+            'actor'          => trim($_GET['actor'] ?? ''),
             'language'       => trim($_GET['language'] ?? ''),
             'os'             => trim($_GET['os'] ?? ''),
             'fromUtc'        => trim($_GET['fromUtc'] ?? ''),
             'toUtc'          => trim($_GET['toUtc'] ?? ''),
         ];
+        $groupBy = trim((string) ($_GET['groupBy'] ?? 'none'));
+        if (!in_array($groupBy, ['none', 'repo', 'actor'], true)) {
+            $groupBy = 'none';
+        }
 
         $apiError = null;
         $telemetry = $this->fetchReadmeSyncTelemetry($filters, $apiError) ?? [];
         $summary = is_array($telemetry['summary'] ?? null) ? $telemetry['summary'] : [];
         $items = is_array($telemetry['items'] ?? null) ? $telemetry['items'] : [];
+        $groupedItems = $groupBy === 'none' ? [] : $this->buildTelemetryGroups($items, $groupBy);
 
         $viewData = [
             'telemetry' => $telemetry,
             'summary' => $summary,
             'items' => $items,
+            'groupedItems' => $groupedItems,
             'filters' => $filters,
+            'groupBy' => $groupBy,
             'apiError' => $apiError,
             'exportUrl' => $this->buildReadmeSyncTelemetryUrl(true, $filters),
             'listUrl' => $this->buildReadmeSyncTelemetryUrl(false, $filters),
@@ -1677,6 +1747,125 @@ class AdminController {
         return $baseUrl . '?' . http_build_query($query);
     }
 
+    private function deleteReadmeSyncTelemetry(array $filters, ?string &$error): ?array {
+        $error = null;
+
+        if (!function_exists('curl_init')) {
+            $error = 'cURL niet beschikbaar op server.';
+            return null;
+        }
+
+        if ($this->readmeSyncAdminApiKey === '') {
+            $error = 'ReadmeSync admin API-key ontbreekt op de server.';
+            return null;
+        }
+
+        $query = array_filter($filters, static fn($value) => $value !== null && $value !== '');
+        $url = $this->readmeSyncTelemetryApiUrl . (empty($query) ? '' : ('?' . http_build_query($query)));
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 25,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => [
+                'Accept: application/json',
+                'X-API-Key: ' . $this->readmeSyncAdminApiKey,
+            ],
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+        ]);
+
+        $raw = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlErr) {
+            $error = 'ReadmeSync telemetry delete niet bereikbaar: ' . $curlErr;
+            return null;
+        }
+
+        $decoded = json_decode((string) $raw, true);
+        if ($httpCode !== 200) {
+            $detail = is_array($decoded) ? (string) ($decoded['detail'] ?? $decoded['title'] ?? '') : '';
+            $error = $detail !== '' ? $detail : 'ReadmeSync telemetry delete gaf HTTP ' . $httpCode . '.';
+            return null;
+        }
+
+        if (!is_array($decoded)) {
+            $error = 'ReadmeSync telemetry delete response is ongeldig.';
+            return null;
+        }
+
+        return $decoded;
+    }
+
+    private function buildTelemetryGroups(array $items, string $groupBy): array {
+        $groups = [];
+
+        foreach ($items as $item) {
+            $repoOwner = trim((string) ($item['repoOwner'] ?? ''));
+            $repoName = trim((string) ($item['repoName'] ?? ''));
+            $repoLabel = ($repoOwner !== '' && $repoName !== '') ? ($repoOwner . '/' . $repoName) : trim((string) ($item['repoUrl'] ?? ''));
+            if ($repoLabel === '') {
+                $repoLabel = 'onbekend';
+            }
+
+            $sourceClient = trim((string) ($item['sourceClient'] ?? 'portfolio'));
+            $sourceUserId = trim((string) ($item['sourceUserId'] ?? ''));
+            $sourceUserName = trim((string) ($item['sourceUserName'] ?? ''));
+            $actorLabel = $sourceUserName !== ''
+                ? $sourceUserName . ($sourceUserId !== '' ? (' (#' . $sourceUserId . ')') : '')
+                : ($sourceUserId !== '' ? ('user #' . $sourceUserId) : $sourceClient);
+
+            $eventType = trim((string) ($item['eventType'] ?? 'unknown'));
+            $groupLabel = $groupBy === 'actor' ? $actorLabel : $repoLabel;
+            $key = strtolower($groupLabel . '|' . $eventType);
+
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'groupLabel' => $groupLabel,
+                    'repoLabel' => $repoLabel,
+                    'actorLabel' => $actorLabel,
+                    'sourceClient' => $sourceClient,
+                    'sourceUserId' => $sourceUserId,
+                    'sourceUserName' => $sourceUserName,
+                    'eventType' => $eventType,
+                    'count' => 0,
+                    'successCount' => 0,
+                    'failureCount' => 0,
+                    'lastCreatedAt' => null,
+                ];
+            }
+
+            $groups[$key]['count']++;
+            $isSuccess = (bool) ($item['success'] ?? false);
+            if ($isSuccess) {
+                $groups[$key]['successCount']++;
+            } else {
+                $groups[$key]['failureCount']++;
+            }
+
+            $createdAt = (string) ($item['createdAt'] ?? '');
+            if ($createdAt !== '') {
+                $last = (string) ($groups[$key]['lastCreatedAt'] ?? '');
+                if ($last === '' || strtotime($createdAt) > strtotime($last)) {
+                    $groups[$key]['lastCreatedAt'] = $createdAt;
+                }
+            }
+        }
+
+        $result = array_values($groups);
+        usort($result, static function (array $a, array $b): int {
+            return ($b['count'] ?? 0) <=> ($a['count'] ?? 0);
+        });
+
+        return $result;
+    }
+
     private function getDefaultRoadmapItems(): array {
         return [
             ['id' => 'tags', 'title' => 'Tags', 'description' => 'Many-to-many tags op nieuwsberichten, tag-filter op news-pagina', 'status' => 'done'],
@@ -1725,14 +1914,20 @@ class AdminController {
         file_put_contents($path, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 
-    private function fetchReadmeSyncContent(string $repoUrl, ?string &$error): ?string {
+    private function fetchReadmeSyncData(string $repoUrl, ?string &$error): ?array {
         $error = null;
         if (!function_exists('curl_init')) {
             $error = 'cURL niet beschikbaar op server.';
             return null;
         }
 
-        $payload = json_encode(['githubRepoUrl' => $repoUrl]);
+        $authUser = Auth::user();
+        $payload = json_encode([
+            'githubRepoUrl' => $repoUrl,
+            'clientApp' => 'portfolio',
+            'userId' => isset($authUser['id']) ? (string) $authUser['id'] : null,
+            'userName' => isset($authUser['username']) ? (string) $authUser['username'] : null,
+        ]);
         // Uses the real ReadmeSync API that powers the public ReadmeSync page.
         $ch = curl_init($this->readmeSyncApiUrl);
         curl_setopt_array($ch, [
@@ -1804,12 +1999,170 @@ class AdminController {
         }
 
         $decoded = json_decode((string) $raw, true);
-        $content = trim((string) ($decoded['content'] ?? ''));
-        if ($content === '') {
-            $error = 'ReadmeSync response bevat geen content.';
+        if (!is_array($decoded)) {
+            $error = 'ReadmeSync response is ongeldig JSON.';
             return null;
         }
-        return $content;
+
+        return $decoded;
+    }
+
+    private function extractRoadmapItemsFromApiTodos(array $readmeSyncData, bool $todosOnly): array {
+        $todoEntries = $this->findApiTodoEntries($readmeSyncData);
+        if (empty($todoEntries)) {
+            return [];
+        }
+
+        $items = [];
+        $seenKeys = [];
+
+        foreach ($todoEntries as $index => $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            $rawTitle = trim((string) (
+                $entry['text']
+                ?? $entry['title']
+                ?? $entry['todo']
+                ?? $entry['task']
+                ?? $entry['message']
+                ?? ''
+            ));
+
+            if ($rawTitle === '') {
+                continue;
+            }
+
+            [$title, $priority] = $this->extractPriorityAndNormalizeTitle($rawTitle);
+            if ($title === '') {
+                continue;
+            }
+
+            $statusValue = strtolower((string) ($entry['status'] ?? 'todo'));
+            $isDone = $statusValue === 'done' || $statusValue === 'completed' || !empty($entry['done']);
+            $status = $isDone ? 'done' : 'todo';
+
+            if ($todosOnly && $status === 'done') {
+                continue;
+            }
+
+            $sourceFile = trim((string) (
+                $entry['file']
+                ?? $entry['path']
+                ?? $entry['filePath']
+                ?? ($entry['location']['file'] ?? '')
+            ));
+
+            $sourceLine = (int) (
+                $entry['line']
+                ?? $entry['lineNumber']
+                ?? ($entry['location']['line'] ?? 0)
+            );
+
+            $normalizedTitle = $this->normalizeRoadmapTitle($title);
+            $dedupeKey = $normalizedTitle . '|' . strtolower($sourceFile !== '' ? $sourceFile : 'todo');
+            if ($normalizedTitle === '' || isset($seenKeys[$dedupeKey])) {
+                continue;
+            }
+            $seenKeys[$dedupeKey] = true;
+
+            $priorityValue = strtolower((string) ($entry['priority'] ?? ''));
+            if (in_array($priorityValue, ['high', 'medium', 'low', 'normal'], true)) {
+                $priority = $priorityValue;
+            }
+
+            $description = '';
+            if ($sourceFile !== '') {
+                $description = 'Bestand: ' . $sourceFile;
+                if ($sourceLine > 0) {
+                    $description .= ' (regel ' . $sourceLine . ')';
+                }
+            }
+
+            $items[] = [
+                'id' => 'todo-' . ($index + 1) . '-' . substr(md5($title . '|' . $sourceFile . '|' . $sourceLine), 0, 8),
+                'title' => $title,
+                'description' => $description,
+                'status' => $status,
+                'priority' => $priority,
+                'sourceLine' => $sourceLine > 0 ? $sourceLine : null,
+                'sourceSection' => $sourceFile !== '' ? $sourceFile : 'todo',
+                'syncSource' => 'readmesync-todos',
+            ];
+        }
+
+        return $items;
+    }
+
+    private function findApiTodoEntries(array $payload): array {
+        $candidatePaths = [
+            ['todos'],
+            ['todoItems'],
+            ['result', 'todos'],
+            ['results', 'todos'],
+            ['data', 'todos'],
+            ['analysis', 'todos'],
+        ];
+
+        foreach ($candidatePaths as $path) {
+            $candidate = $this->readArrayPath($payload, $path);
+            if ($this->isTodoEntryList($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return $this->findTodoEntriesRecursive($payload);
+    }
+
+    private function readArrayPath(array $payload, array $path) {
+        $current = $payload;
+        foreach ($path as $segment) {
+            if (!is_array($current) || !array_key_exists($segment, $current)) {
+                return null;
+            }
+            $current = $current[$segment];
+        }
+        return $current;
+    }
+
+    private function findTodoEntriesRecursive($value): array {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        if ($this->isTodoEntryList($value)) {
+            return $value;
+        }
+
+        foreach ($value as $nested) {
+            $found = $this->findTodoEntriesRecursive($nested);
+            if (!empty($found)) {
+                return $found;
+            }
+        }
+
+        return [];
+    }
+
+    private function isTodoEntryList($value): bool {
+        if (!is_array($value) || empty($value)) {
+            return false;
+        }
+
+        $first = reset($value);
+        if (!is_array($first)) {
+            return false;
+        }
+
+        $todoLikeKeys = ['text', 'title', 'todo', 'task', 'message'];
+        foreach ($todoLikeKeys as $key) {
+            if (array_key_exists($key, $first)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function parseChecklistItems(string $markdown, bool $todosOnly): array {
@@ -2054,7 +2407,7 @@ class AdminController {
             if ($title === '') {
                 continue;
             }
-            $key = $this->normalizeRoadmapTitle($title);
+            $key = $this->buildRoadmapMergeKey((array) $item);
             if ($key !== '' && !isset($indexByTitle[$key])) {
                 $indexByTitle[$key] = $index;
             }
@@ -2066,7 +2419,7 @@ class AdminController {
                 continue;
             }
 
-            $key = $this->normalizeRoadmapTitle($title);
+            $key = $this->buildRoadmapMergeKey((array) $synced);
             if ($key !== '' && isset($indexByTitle[$key])) {
                 $targetIndex = $indexByTitle[$key];
                 $current = (array) $merged[$targetIndex];
@@ -2082,13 +2435,13 @@ class AdminController {
                 $current['priority'] = $synced['priority'] ?? ($current['priority'] ?? 'normal');
                 $current['sourceLine'] = $synced['sourceLine'] ?? ($current['sourceLine'] ?? null);
                 $current['sourceSection'] = $synced['sourceSection'] ?? ($current['sourceSection'] ?? null);
-                $current['syncSource'] = 'readmesync';
+                $current['syncSource'] = (string) ($synced['syncSource'] ?? 'readmesync');
 
                 $merged[$targetIndex] = $current;
                 continue;
             }
 
-            $synced['syncSource'] = 'readmesync';
+            $synced['syncSource'] = (string) ($synced['syncSource'] ?? 'readmesync');
             $merged[] = $synced;
             $newIndex = count($merged) - 1;
             if ($key !== '') {
@@ -2097,6 +2450,25 @@ class AdminController {
         }
 
         return $merged;
+    }
+
+    private function buildRoadmapMergeKey(array $item): string {
+        $title = trim((string) ($item['title'] ?? ''));
+        if ($title === '') {
+            return '';
+        }
+
+        $titleKey = $this->normalizeRoadmapTitle($title);
+        if ($titleKey === '') {
+            return '';
+        }
+
+        $source = strtolower(trim((string) ($item['sourceSection'] ?? '')));
+        if ($source === '' || $source === 'roadmap' || $source === 'todo') {
+            return $titleKey;
+        }
+
+        return $titleKey . '|' . $source;
     }
 
     private function parseGitHubOwnerRepo(string $url): ?array {
