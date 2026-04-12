@@ -10,6 +10,7 @@ BESTAND: /app/Views/projects.php (UPDATED with Modal Support)
         <h1><i class="fas fa-folder-open"></i> <span data-translate="projects_title"><?= trans('projects_title') ?></span></h1>
         <p class="section-intro" data-translate="projects_intro"><?= trans('projects_intro') ?></p>
         <p class="section-hint"><i class="fas fa-hand-pointer"></i> <span data-translate="projects_click_details"><?= trans('projects_click_details') ?></span></p>
+        <p class="section-hint"><a href="?page=project-roadmaps" class="btn btn-ghost">Bekijk alle project roadmaps</a></p>
 
         <div class="project-filters">
             <button class="filter-btn active" data-filter="all">
@@ -35,9 +36,9 @@ BESTAND: /app/Views/projects.php (UPDATED with Modal Support)
                      data-category="<?= htmlspecialchars($project['category']) ?>"
                      data-modal='<?= $projectModel->getModalData($project) ?>'>
 
-                    <?php if (!empty($project['image'])): ?>
+                    <?php if (!empty($project['image_path'])): ?>
                         <div class="project-image-wrapper">
-                            <img src="<?= htmlspecialchars($project['image']) ?>"
+                            <img src="<?= htmlspecialchars($project['image_path']) ?>"
                                  alt="<?= htmlspecialchars($project['title']) ?>"
                                  class="project-image"
                                  onerror="this.src='public/images/placeholder.jpg'">
@@ -58,6 +59,9 @@ BESTAND: /app/Views/projects.php (UPDATED with Modal Support)
                         </div>
 
                         <div class="project-links" onclick="event.stopPropagation()">
+                            <a href="?page=project&amp;slug=<?= urlencode((string) ($project['slug'] ?? '')) ?>" class="btn btn-ghost" onclick="event.stopPropagation()">
+                                <i class="fas fa-circle-info"></i> Details
+                            </a>
                             <?php if (!empty($project['repo_url'])): ?>
                                 <a href="<?= htmlspecialchars($project['repo_url']) ?>"
                                    target="_blank"
