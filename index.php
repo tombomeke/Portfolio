@@ -43,6 +43,15 @@ switch ($page) {
     case 'projects':
         $controller->showProjects();
         break;
+    case 'project':
+        $controller->showProjectDetail();
+        break;
+    case 'project-roadmaps':
+        $controller->showProjectRoadmaps();
+        break;
+    case 'cron-sync-roadmaps':
+        $controller->cronSyncRoadmaps();
+        break;
     case 'news':
         $controller->showNews();
         break;
