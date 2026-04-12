@@ -60,14 +60,40 @@ $featuresEn  = implode("\n", $project['features_en'] ?? []);
             </div>
 
             <div class="form-group">
-                <label>Afbeelding</label>
+                <label>Cover afbeelding</label>
                 <?php if ($project['image_path']): ?>
                     <img src="<?= htmlspecialchars($project['image_path']) ?>" class="img-preview" alt="">
                     <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;margin-top:.5rem">
-                        <input type="checkbox" name="remove_image" value="1"> Afbeelding verwijderen
+                        <input type="checkbox" name="remove_image" value="1"> Cover afbeelding verwijderen
                     </label>
                 <?php endif; ?>
                 <input type="file" name="image" accept="image/*" style="margin-top:.5rem">
+                <span class="form-hint">Primaire afbeelding voor de projectkaart.</span>
+            </div>
+
+            <?php
+            $galleryImages = $galleryImages ?? [];
+            ?>
+            <div class="form-group">
+                <label>Galerij afbeeldingen</label>
+                <?php if (!empty($galleryImages)): ?>
+                    <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:.75rem">
+                        <?php foreach ($galleryImages as $img): ?>
+                            <div style="position:relative;display:inline-block">
+                                <img src="<?= htmlspecialchars((string) $img['image_path']) ?>"
+                                     style="width:100px;height:75px;object-fit:cover;border-radius:8px;border:1px solid var(--border-color)" alt="">
+                                <label style="display:flex;align-items:center;gap:.25rem;font-size:.75rem;margin-top:.25rem">
+                                    <input type="checkbox" name="delete_images[]" value="<?= (int) $img['id'] ?>">
+                                    Verwijderen
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem">Nog geen extra afbeeldingen.</p>
+                <?php endif; ?>
+                <input type="file" name="gallery_images[]" accept="image/*" multiple>
+                <span class="form-hint">Selecteer meerdere bestanden om toe te voegen aan de carousel.</span>
             </div>
 
             <div>

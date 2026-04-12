@@ -5,9 +5,18 @@
 <div class="card">
     <div class="card-header">
         <span class="card-title">Alle projecten (<?= count($projects) ?>)</span>
-        <a href="?page=admin&section=projects&action=create" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Toevoegen
-        </a>
+        <div style="display:flex;gap:.4rem;align-items:center">
+            <form method="POST" action="?page=admin&section=projects&action=sync-all"
+                  onsubmit="return confirm('Alle project-roadmaps synchroniseren? Dit kan even duren.')">
+                <?= \Auth::csrfField() ?>
+                <button type="submit" class="btn btn-ghost btn-sm" title="Alle roadmaps syncen via ReadmeSync API">
+                    <i class="fas fa-rotate"></i> Sync roadmaps
+                </button>
+            </form>
+            <a href="?page=admin&section=projects&action=create" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Toevoegen
+            </a>
+        </div>
     </div>
 
     <?php if (empty($projects)): ?>
@@ -40,6 +49,9 @@
                     </td>
                     <td><?= $p['sort_order'] ?></td>
                     <td style="display:flex;gap:.4rem">
+                        <a href="?page=project&slug=<?= urlencode((string) ($p['slug'] ?? '')) ?>&tab=roadmap" class="btn btn-ghost btn-sm" title="Open publieke roadmap">
+                            <i class="fas fa-list-check"></i>
+                        </a>
                         <a href="?page=admin&section=projects&action=edit&id=<?= $p['id'] ?>" class="btn btn-ghost btn-sm">
                             <i class="fas fa-pencil"></i>
                         </a>

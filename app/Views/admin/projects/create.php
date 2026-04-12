@@ -57,8 +57,15 @@
             </div>
 
             <div class="form-group">
-                <label>Afbeelding</label>
+                <label>Cover afbeelding</label>
                 <input type="file" name="image" accept="image/*">
+                <span class="form-hint">Primaire afbeelding voor de projectkaart.</span>
+            </div>
+
+            <div class="form-group">
+                <label>Extra afbeeldingen (galerij)</label>
+                <input type="file" name="gallery_images[]" accept="image/*" multiple>
+                <span class="form-hint">Meerdere afbeeldingen mogelijk. Zichtbaar in de carousel op de detailpagina.</span>
             </div>
 
             <div>
