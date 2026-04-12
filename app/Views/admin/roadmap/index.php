@@ -3,10 +3,54 @@
 <?php endif; ?>
 
 <?php $defaultRepoUrl = !empty($config['repoUrl']) ? (string) $config['repoUrl'] : 'https://github.com/tombomeke/Portfolio'; ?>
+<?php $defaultMarkdownSource = !empty($config['markdownSource']) ? (string) $config['markdownSource'] : "# Roadmap\n\n- [ ] [P1] Voeg item 1 toe\n- [ ] [low] Voeg item 2 toe\n- [x] Reeds afgewerkt item\n- [ ] TODO: extra sync test in checkbox-vorm\n\n## TODO\n\n- Extra taak zonder checkbox (fallback naar todo)\n# TODO: Nog een taak als compacte TODO-regel\n- [TODO] Nog een testregel met bracket-syntax\n- Fix navbar op mobiel TODO: toevoegen aan roadmap\n- Nog een task"; ?>
 
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-wand-magic-sparkles"></i> Sync vanuit ReadmeSync</span>
+        <span class="card-title"><i class="fas fa-pen-to-square"></i> Roadmap markdown (direct beheren)</span>
+    </div>
+    <form method="POST" action="?page=admin&section=roadmap" class="form-grid" style="gap:1rem">
+        <?= \Auth::csrfField() ?>
+        <input type="hidden" name="roadmap_action" value="sync_markdown">
+
+        <div class="form-group">
+            <label>Roadmap markdown</label>
+            <textarea id="roadmap-markdown-source" name="markdown_source" class="form-input" rows="12" style="width:100%;font-family:Consolas,monospace" required><?= htmlspecialchars($defaultMarkdownSource) ?></textarea>
+            <span class="form-hint">Deze markdown wordt direct gebruikt om roadmap-items op deze website bij te werken. Geen README of extern .md bestand nodig.</span>
+        </div>
+
+        <div class="form-group">
+            <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+                <input id="roadmap-todos-only" type="checkbox" name="todos_only" value="1" checked>
+                <span>Importeer alleen TODO items (onafgevinkt)</span>
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+                <input type="checkbox" name="merge_mode" value="1" checked>
+                <span>Merge mode: behoud bestaande items en update gematchte titels</span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-rotate"></i> Sync roadmap vanuit tekst</button>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="margin-bottom:1rem">
+    <div class="card-header">
+        <span class="card-title"><i class="fas fa-magnifying-glass"></i> Preview gevonden roadmap items</span>
+        <span class="badge" id="roadmap-preview-count">0 items</span>
+    </div>
+    <p class="text-muted text-sm" style="margin:0 0 .75rem">Live preview op basis van de markdown hierboven. Zo zie je meteen wat er gesynced wordt.</p>
+    <div id="roadmap-preview-list" style="display:grid;gap:.55rem"></div>
+</div>
+
+<div class="card" style="margin-bottom:1rem">
+    <div class="card-header">
+        <span class="card-title"><i class="fas fa-wand-magic-sparkles"></i> Optioneel: Sync vanuit ReadmeSync URL</span>
     </div>
     <form method="POST" action="?page=admin&section=roadmap" class="form-grid" style="gap:1rem">
         <?= \Auth::csrfField() ?>
@@ -98,73 +142,169 @@
 
 <div class="card" style="margin-top:1rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-lightbulb"></i> TODO verbeteringen</span>
+        <span class="card-title"><i class="fas fa-circle-info"></i> Roadmap bron</span>
     </div>
-    <p class="text-muted text-sm" style="margin:0 0 .75rem">
-        Deze roadmap wordt gedeeld met de website via <code>app/Config/roadmap_items.json</code>. De sync schrijft dus naar dezelfde bron als de publieke roadmapweergave.
+    <p class="text-muted text-sm" style="margin:0">
+        Deze roadmap wordt gedeeld met de website via <code>app/Config/roadmap_items.json</code>. Alles wat je hierboven synced komt direct op de publieke roadmap terecht.
     </p>
-    <ul style="margin-left:1.1rem;display:grid;gap:.35rem;color:var(--text-muted)">
-        <li>Section-targeted parsing: sync alleen uit README sectie "Roadmap" of "TODO".</li>
-        <li>Merge mode: bewaar handmatige items en werk alleen gematchte synced items bij.</li>
-        <li>Prioriteit parsing: herken tags zoals [P1], [P2], [low].</li>
-        <li>Traceability: sla source line nummers op voor debug links naar bronregels.</li>
-    </ul>
-</div>
-
-<div class="card" style="margin-top:1rem">
-    <div class="card-header">
-        <span class="card-title"><i class="fas fa-file-lines"></i> Roadmap markdown template</span>
-    </div>
-    <p class="text-muted text-sm" style="margin:0 0 .75rem">
-        Gebruik dit formaat om checklist-items snel te copy-pasten in je README. De sync herkent checkboxes, gewone bullets en <strong># TODO:</strong>-regels.
-    </p>
-    <textarea id="roadmap-template" class="form-input" rows="10" style="width:100%;font-family:Consolas,monospace">## Roadmap
-
-- [ ] [P1] Voeg item 1 toe
-- [ ] [low] Voeg item 2 toe
-- [x] Reeds afgewerkt item
-- [ ] TODO: extra sync test in checkbox-vorm
-
-## TODO
-
-- Extra taak zonder checkbox (fallback naar todo)
-# TODO: Nog een taak als compacte TODO-regel
-- [TODO] Nog een testregel met bracket-syntax
-- Fix navbar op mobiel TODO: toevoegen aan roadmap
-- Nog een task
-</textarea>
-    <div class="form-actions" style="margin-top:.75rem">
-        <button type="button" id="copy-roadmap-template" class="btn btn-ghost"><i class="fas fa-copy"></i> Copy template</button>
-        <button type="button" id="download-roadmap-template" class="btn btn-ghost"><i class="fas fa-download"></i> Download .md</button>
-    </div>
 </div>
 
 <script>
 (() => {
-    const template = document.getElementById('roadmap-template');
-    const copyBtn = document.getElementById('copy-roadmap-template');
-    const downloadBtn = document.getElementById('download-roadmap-template');
-    if (!template || !copyBtn || !downloadBtn) return;
+    const markdownInput = document.getElementById('roadmap-markdown-source');
+    const todosOnlyInput = document.getElementById('roadmap-todos-only');
+    const previewCount = document.getElementById('roadmap-preview-count');
+    const previewList = document.getElementById('roadmap-preview-list');
 
-    copyBtn.addEventListener('click', async () => {
-        try {
-            await navigator.clipboard.writeText(template.value);
-            copyBtn.textContent = 'Gekopieerd';
-            setTimeout(() => { copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy template'; }, 1300);
-        } catch (_) {
-            template.select();
-            document.execCommand('copy');
+    if (!markdownInput || !todosOnlyInput || !previewCount || !previewList) {
+        return;
+    }
+
+    const normalizeTitle = (value) => {
+        return (value || '')
+            .toLowerCase()
+            .replace(/\[(p1|p2|p3|high|medium|med|low)\]/gi, '')
+            .replace(/\s+/g, ' ')
+            .replace(/[^a-z0-9 ]/g, '')
+            .trim();
+    };
+
+    const parsePriority = (value) => {
+        const match = (value || '').match(/\[(p1|p2|p3|high|medium|med|low)\]/i);
+        if (!match) {
+            return 'normal';
         }
-    });
+        const token = match[1].toLowerCase();
+        if (token === 'p1' || token === 'high') return 'high';
+        if (token === 'p2' || token === 'medium' || token === 'med') return 'medium';
+        if (token === 'p3' || token === 'low') return 'low';
+        return 'normal';
+    };
 
-    downloadBtn.addEventListener('click', () => {
-        const blob = new Blob([template.value], { type: 'text/markdown;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'roadmap-template.md';
-        a.click();
-        URL.revokeObjectURL(url);
-    });
+    const cleanupTitle = (value) => {
+        return (value || '').replace(/\[(p1|p2|p3|high|medium|med|low)\]/gi, '').trim();
+    };
+
+    const parseLine = (line) => {
+        const trimmed = line.trim();
+        if (!trimmed) return null;
+
+        let match = line.match(/^\s*[-*]\s*\[( |x|X)\]\s+(.+)$/);
+        if (match) {
+            const rawTitle = (match[2] || '').trim();
+            if (!rawTitle) return null;
+            return {
+                status: (match[1] || '').trim().toLowerCase() === 'x' ? 'done' : 'todo',
+                title: cleanupTitle(rawTitle),
+                priority: parsePriority(rawTitle),
+            };
+        }
+
+        match = line.match(/^\s*(?:[-*]|\d+\.)\s+(.+)$/);
+        if (match) {
+            const rawTitle = (match[1] || '').trim();
+            if (!rawTitle) return null;
+            return { status: 'todo', title: cleanupTitle(rawTitle), priority: parsePriority(rawTitle) };
+        }
+
+        match = trimmed.match(/^\s*(?:[#>\-*]\s*)?(?:TODO|TO DO)\s*[:\-]\s*(.+)$/i);
+        if (match) {
+            const rawTitle = (match[1] || '').trim();
+            if (!rawTitle) return null;
+            return { status: 'todo', title: cleanupTitle(rawTitle), priority: parsePriority(rawTitle) };
+        }
+
+        match = trimmed.match(/^\s*\[\s*(?:TODO|TO DO)\s*\]\s*(.+)$/i);
+        if (match) {
+            const rawTitle = (match[1] || '').trim();
+            if (!rawTitle) return null;
+            return { status: 'todo', title: cleanupTitle(rawTitle), priority: parsePriority(rawTitle) };
+        }
+
+        match = trimmed.match(/\b(?:TODO|TO DO)\b\s*[:\-]\s*(.+)$/i);
+        if (match) {
+            const rawTitle = (match[1] || '').trim();
+            if (!rawTitle) return null;
+            return { status: 'todo', title: cleanupTitle(rawTitle), priority: parsePriority(rawTitle) };
+        }
+
+        return null;
+    };
+
+    const collectTargetLines = (lines) => {
+        const sectionLines = [];
+        let activeSection = null;
+        let foundTargetSection = false;
+
+        lines.forEach((line, index) => {
+            const text = (line || '').trim();
+            const headingMatch = text.match(/^#{1,6}\s*(.+?)\s*$/);
+            if (headingMatch) {
+                const heading = (headingMatch[1] || '').trim();
+                if (/^(roadmap|todo)(?:\b|\s*[:\-].*)?$/i.test(heading)) {
+                    activeSection = heading.toLowerCase().replace(/\s*[:\-].*$/, '');
+                    foundTargetSection = true;
+                } else {
+                    activeSection = null;
+                }
+                return;
+            }
+
+            if (activeSection) {
+                sectionLines.push({ line, lineNumber: index + 1, section: activeSection });
+            }
+        });
+
+        if (foundTargetSection) return sectionLines;
+        return lines.map((line, index) => ({ line, lineNumber: index + 1, section: '' }));
+    };
+
+    const renderPreview = () => {
+        const lines = (markdownInput.value || '').split(/\r?\n/);
+        const targetLines = collectTargetLines(lines);
+        const items = [];
+        const seen = new Set();
+
+        targetLines.forEach((entry) => {
+            const parsed = parseLine(entry.line || '');
+            if (!parsed) return;
+            if (todosOnlyInput.checked && parsed.status === 'done') return;
+
+            const key = normalizeTitle(parsed.title);
+            if (!key || seen.has(key)) return;
+            seen.add(key);
+
+            items.push({
+                ...parsed,
+                lineNumber: entry.lineNumber,
+                section: entry.section,
+            });
+        });
+
+        previewCount.textContent = `${items.length} items`;
+        if (items.length === 0) {
+            previewList.innerHTML = '<p class="text-muted" style="margin:0">Geen items gevonden met de huidige markdown/filter.</p>';
+            return;
+        }
+
+        previewList.innerHTML = items.map((item) => {
+            const isDone = item.status === 'done';
+            const priorityPart = item.priority && item.priority !== 'normal'
+                ? `<small class="text-muted" style="display:block">Prioriteit: ${item.priority}</small>`
+                : '';
+            const sectionPart = item.section ? ` · Sectie: ${item.section}` : '';
+            return `
+                <div style="padding:.65rem .8rem;border:1px solid var(--border);border-radius:8px;background:${isDone ? 'rgba(34,197,94,.06)' : 'rgba(245,158,11,.05)'}">
+                    <strong style="display:block">${item.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong>
+                    ${priorityPart}
+                    <small class="text-muted" style="display:block">Status: ${item.status}${sectionPart} · regel #${item.lineNumber}</small>
+                </div>
+            `;
+        }).join('');
+    };
+
+    markdownInput.addEventListener('input', renderPreview);
+    todosOnlyInput.addEventListener('change', renderPreview);
+    renderPreview();
 })();
 </script>

@@ -1434,6 +1434,37 @@ class AdminController {
         if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
             $action = $_POST['roadmap_action'] ?? 'save';
 
+            if ($action === 'sync_markdown') {
+                $markdownSource = trim((string) ($_POST['markdown_source'] ?? ''));
+                $todosOnly = isset($_POST['todos_only']) && $_POST['todos_only'] === '1';
+                $mergeMode = isset($_POST['merge_mode']) && $_POST['merge_mode'] === '1';
+
+                if ($markdownSource === '') {
+                    $this->flash('error', 'Vul eerst roadmap markdown in.');
+                    header('Location: ?page=admin&section=roadmap'); exit;
+                }
+
+                $items = $this->parseChecklistItems($markdownSource, $todosOnly);
+                if (empty($items)) {
+                    $this->flash('error', 'Geen roadmap-, checklist- of TODO-items gevonden in de ingevoerde markdown.');
+                    header('Location: ?page=admin&section=roadmap'); exit;
+                }
+
+                if ($mergeMode) {
+                    $items = $this->mergeRoadmapItems((array) ($config['items'] ?? []), $items);
+                }
+
+                $config['items'] = $items;
+                $config['source'] = 'manual-markdown';
+                $config['lastSyncAt'] = date('c');
+                $config['markdownSource'] = $markdownSource;
+                $this->saveRoadmapConfig($config);
+
+                ActivityLogModel::log('updated', 'Synced roadmap from admin markdown (' . count($items) . ' items, merge=' . ($mergeMode ? 'yes' : 'no') . ')');
+                $this->flash('success', 'Roadmap bijgewerkt vanuit de markdown op deze pagina.');
+                header('Location: ?page=admin&section=roadmap'); exit;
+            }
+
             if ($action === 'sync') {
                 $repoUrl = trim($_POST['repo_url'] ?? '');
                 $todosOnly = isset($_POST['todos_only']) && $_POST['todos_only'] === '1';
@@ -1467,6 +1498,7 @@ class AdminController {
                 $config['repoUrl'] = $repoUrl;
                 $config['source'] = 'readmesync';
                 $config['lastSyncAt'] = date('c');
+                $config['markdownSource'] = $content;
                 $this->saveRoadmapConfig($config);
 
                 ActivityLogModel::log('updated', 'Synced roadmap from ReadmeSync (' . count($items) . ' items, merge=' . ($mergeMode ? 'yes' : 'no') . ')');
@@ -1481,6 +1513,7 @@ class AdminController {
                     'source' => 'manual',
                     'repoUrl' => '',
                     'lastSyncAt' => null,
+                    'markdownSource' => '',
                     'items' => $this->getDefaultRoadmapItems(),
                 ];
                 $this->saveRoadmapConfig($config);
@@ -1660,6 +1693,7 @@ class AdminController {
             'source' => 'manual',
             'repoUrl' => '',
             'lastSyncAt' => null,
+            'markdownSource' => '',
             'items' => $this->getDefaultRoadmapItems(),
         ];
 
@@ -1677,6 +1711,7 @@ class AdminController {
         $decoded['source'] = $decoded['source'] ?? 'manual';
         $decoded['repoUrl'] = $decoded['repoUrl'] ?? '';
         $decoded['lastSyncAt'] = $decoded['lastSyncAt'] ?? null;
+        $decoded['markdownSource'] = is_string($decoded['markdownSource'] ?? null) ? $decoded['markdownSource'] : '';
 
         return $decoded;
     }
@@ -2036,8 +2071,14 @@ class AdminController {
                 $targetIndex = $indexByTitle[$key];
                 $current = (array) $merged[$targetIndex];
 
+                $currentStatus = (string) ($current['status'] ?? 'todo');
+                $incomingStatus = (string) ($synced['status'] ?? 'todo');
+                $resolvedStatus = ($currentStatus === 'done' && $incomingStatus === 'todo')
+                    ? 'done'
+                    : $incomingStatus;
+
                 $current['title'] = $synced['title'] ?? ($current['title'] ?? $title);
-                $current['status'] = $synced['status'] ?? ($current['status'] ?? 'todo');
+                $current['status'] = $resolvedStatus;
                 $current['priority'] = $synced['priority'] ?? ($current['priority'] ?? 'normal');
                 $current['sourceLine'] = $synced['sourceLine'] ?? ($current['sourceLine'] ?? null);
                 $current['sourceSection'] = $synced['sourceSection'] ?? ($current['sourceSection'] ?? null);
