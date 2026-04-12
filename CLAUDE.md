@@ -111,6 +111,11 @@ Recente hardening in Portfolio:
 Auth-gedrag:
 - Genereren van README vereist login; gasten zien een info-notice met login/register links.
 
+Contract-check na elke ReadmeSync.API deployment (verplicht):
+1. `GET https://tombomekestudio.com/` of `GET /health` moet `apiContractVersion` tonen.
+2. `POST /api/readmesync/generate` moet response-key `todos` bevatten (naast `success`, `language`, `content`).
+3. Als `todos` ontbreekt, draait oude runtime of verkeerde target-map; eerst dat fixen, pas dan Portfolio roadmap sync testen.
+
 Praktische debugflow bij "Repository niet gevonden of is privé":
 1. open page source en zoek comment `[ReadmeSync debug]`.
 2. check `http_code` en `curl_error`.

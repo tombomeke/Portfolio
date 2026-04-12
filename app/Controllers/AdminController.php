@@ -1481,38 +1481,27 @@ class AdminController {
                 $apiError = null;
                 $readmeSyncData = $this->fetchReadmeSyncData($normalizedRepoUrl, $apiError);
                 if ($readmeSyncData === null) {
-                    if ($apiError !== null && stripos($apiError, 'Repository niet gevonden') !== false) {
-                        $config['items'] = $this->appendRoadmapTodoIfMissing(
-                            (array) ($config['items'] ?? []),
-                            'Fix ReadmeSync API/GitHub connectiviteit voor ' . $normalizedRepoUrl,
-                            'Controleer ReadmeSync.API GitHub token/configuratie en netwerktoegang; sync faalde met repo/API-bereikbaarheid.',
-                            'ops',
-                            'high'
-                        );
-                        $this->saveRoadmapConfig($config);
-                    }
-
                     $this->flash('error', $apiError ?: 'ReadmeSync synchronisatie mislukt.');
+                    header('Location: ?page=admin&section=roadmap'); exit;
+                }
+
+                if (!$this->apiResponseHasTodosField($readmeSyncData)) {
+                    $responseKeys = implode(', ', array_keys($readmeSyncData));
+                    $this->flash('error', 'ReadmeSync API is verouderd of fout gedeployed: verwacht todos-veld, ontvangen keys: ' . ($responseKeys !== '' ? $responseKeys : '(geen)') . '.');
                     header('Location: ?page=admin&section=roadmap'); exit;
                 }
 
                 $items = $this->extractRoadmapItemsFromApiTodos($readmeSyncData, $todosOnly);
 
-                // Backward compatibility: older API versions may only return markdown content.
                 if (empty($items)) {
-                    $content = trim((string) ($readmeSyncData['content'] ?? ''));
-                    if ($content !== '') {
-                        $items = $this->parseChecklistItems($content, $todosOnly);
-                    }
-                }
-
-                if (empty($items)) {
-                    $this->flash('error', 'Geen TODO-items per file gevonden in de ReadmeSync API output.');
+                    $this->flash('warning', 'Geen echte TODO-items gevonden in de repository code.');
                     header('Location: ?page=admin&section=roadmap'); exit;
                 }
 
+                $existingItems = $this->cleanupRoadmapItems((array) ($config['items'] ?? []), true, false);
+
                 if ($mergeMode) {
-                    $items = $this->mergeRoadmapItems((array) ($config['items'] ?? []), $items);
+                    $items = $this->mergeRoadmapItems($existingItems, $items);
                 }
 
                 $config['items'] = $items;
@@ -1526,6 +1515,17 @@ class AdminController {
                 $this->flash('success', $mergeMode
                     ? 'Roadmap gemerged en gesynchroniseerd vanuit API TODO-items.'
                     : 'Roadmap gesynchroniseerd vanuit API TODO-items.');
+                header('Location: ?page=admin&section=roadmap'); exit;
+            }
+
+            if ($action === 'cleanup') {
+                $before = count((array) ($config['items'] ?? []));
+                $config['items'] = $this->cleanupRoadmapItems((array) ($config['items'] ?? []), true, true);
+                $after = count((array) ($config['items'] ?? []));
+                $config['source'] = 'manual';
+                $this->saveRoadmapConfig($config);
+                ActivityLogModel::log('updated', 'Roadmap cleanup uitgevoerd (' . $before . ' -> ' . $after . ' items)');
+                $this->flash('success', 'Roadmap opgeschoond: ' . max(0, $before - $after) . ' items verwijderd (test/afgerond).');
                 header('Location: ?page=admin&section=roadmap'); exit;
             }
 
@@ -2132,6 +2132,47 @@ class AdminController {
         }
 
         return $this->findTodoEntriesRecursive($payload);
+    }
+
+    private function apiResponseHasTodosField(array $payload): bool {
+        return array_key_exists('todos', $payload)
+            || array_key_exists('todoItems', $payload)
+            || (is_array($payload['result'] ?? null) && array_key_exists('todos', $payload['result']))
+            || (is_array($payload['results'] ?? null) && array_key_exists('todos', $payload['results']))
+            || (is_array($payload['data'] ?? null) && array_key_exists('todos', $payload['data']))
+            || (is_array($payload['analysis'] ?? null) && array_key_exists('todos', $payload['analysis']));
+    }
+
+    private function cleanupRoadmapItems(array $items, bool $removeTestItems = true, bool $removeDoneItems = true): array {
+        $cleaned = [];
+
+        foreach ($items as $item) {
+            $title = trim((string) ($item['title'] ?? ''));
+            $description = trim((string) ($item['description'] ?? ''));
+            $status = strtolower((string) ($item['status'] ?? 'todo'));
+            $sourceSection = strtolower(trim((string) ($item['sourceSection'] ?? '')));
+            $syncSource = strtolower(trim((string) ($item['syncSource'] ?? '')));
+
+            if ($removeDoneItems && $status === 'done') {
+                continue;
+            }
+
+            if ($removeTestItems) {
+                $isLegacySection = $sourceSection === 'roadmap' || $sourceSection === 'todo';
+                $isLegacySample = preg_match('/\b(voeg item|fallback naar todo|testregel|nog een task|extra sync test|\[todo\]|fix navbar op mobiel)\b/i', $title) === 1;
+                $isOpsConnectiviteitNoise = ($sourceSection === 'ops' || $syncSource === 'manual')
+                    && preg_match('/\bfix readmesync api\/github connectiviteit\b/i', $title) === 1;
+                $isTestDescription = preg_match('/\b(sync test|fallback|test)\b/i', $description) === 1;
+
+                if ($isLegacySection || $isLegacySample || $isOpsConnectiviteitNoise || $isTestDescription) {
+                    continue;
+                }
+            }
+
+            $cleaned[] = $item;
+        }
+
+        return array_values($cleaned);
     }
 
     private function readArrayPath(array $payload, array $path) {

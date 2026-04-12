@@ -43,6 +43,12 @@
             <button type="submit" class="btn btn-primary"><i class="fas fa-rotate"></i> Sync roadmap uit API</button>
         </div>
     </form>
+
+    <form method="POST" action="?page=admin&section=roadmap" style="margin-top:.75rem" onsubmit="return confirm('Verwijder afgeronde en test/placeholder TODO-items uit de roadmap?');">
+        <?= \Auth::csrfField() ?>
+        <input type="hidden" name="roadmap_action" value="cleanup">
+        <button type="submit" class="btn btn-secondary"><i class="fas fa-filter-circle-xmark"></i> Opschonen (test + afgerond)</button>
+    </form>
 </div>
 
 <div class="card" style="margin-bottom:1rem">
