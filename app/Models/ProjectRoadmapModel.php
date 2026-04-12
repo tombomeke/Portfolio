@@ -75,6 +75,7 @@ class ProjectRoadmapModel {
         return $grouped;
     }
 
+    // TODO(roadmap): preserve manually-set 'done' status across syncs instead of full DELETE+INSERT
     /**
      * Replace all items for this project with a fresh set from sync.
      * Returns the number of items inserted.

@@ -207,6 +207,30 @@ class ProjectModel {
 
     // ── Gallery ──────────────────────────────────────────────────────────────
 
+    /**
+     * Batch-load gallery images for multiple projects in a single query.
+     * Returns [projectId => [image_path, ...]] for efficient use on listing pages.
+     */
+    public function getGalleryImagesForProjects(array $projectIds): array {
+        if (empty($projectIds)) return [];
+
+        $db          = Database::getConnection();
+        $placeholders = implode(',', array_fill(0, count($projectIds), '?'));
+        $stmt        = $db->prepare(
+            "SELECT project_id, image_path FROM project_images
+             WHERE project_id IN ({$placeholders})
+             ORDER BY sort_order ASC, id ASC"
+        );
+        $stmt->execute(array_values($projectIds));
+
+        $result = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $pid = (int) $row['project_id'];
+            $result[$pid][] = (string) $row['image_path'];
+        }
+        return $result;
+    }
+
     public function getImagesByProjectId(int $projectId): array {
         $db   = Database::getConnection();
         $stmt = $db->prepare(
@@ -219,6 +243,7 @@ class ProjectModel {
         return $stmt->fetchAll();
     }
 
+    // TODO(gallery): add drag-and-drop sort_order reordering in admin edit view
     public function addImage(int $projectId, string $imagePath, int $sortOrder = 0): int {
         $db   = Database::getConnection();
         $stmt = $db->prepare(

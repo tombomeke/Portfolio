@@ -99,10 +99,26 @@ class PortfolioController {
 
     public function showProjects() {
         $projects = $this->projectModel->getAllProjects();
+
+        // Batch-load gallery images so the modal carousel can show them too
+        $projectIds    = array_column($projects, 'id');
+        $galleryByPid  = $this->projectModel->getGalleryImagesForProjects($projectIds);
+        foreach ($projects as &$p) {
+            $pid = (int) $p['id'];
+            if (!empty($galleryByPid[$pid])) {
+                foreach ($galleryByPid[$pid] as $path) {
+                    if (!in_array($path, $p['images'], true)) {
+                        $p['images'][] = $path;
+                    }
+                }
+            }
+        }
+        unset($p);
+
         $data = [
-            'title' => 'Projecten',
-            'projects' => $projects,
-            'projectModel' => $this->projectModel
+            'title'        => 'Projecten',
+            'projects'     => $projects,
+            'projectModel' => $this->projectModel,
         ];
         $this->render('projects', $data);
     }
@@ -797,6 +813,7 @@ class PortfolioController {
         return trans('wip_default_page_name');
     }
 
+    // TODO(cron): add last-run timestamp check to prevent too-frequent external calls
     /**
      * Token-protected cron endpoint for periodic roadmap sync.
      * Call via: GET ?page=cron-sync-roadmaps&token=SECRET
@@ -806,8 +823,8 @@ class PortfolioController {
     public function cronSyncRoadmaps(): void {
         header('Content-Type: application/json');
 
-        $token   = trim((string) ($_GET['token'] ?? ''));
-        $envToken = trim((string) (getenv('CRON_SYNC_TOKEN') ?: ''));
+        $token    = trim((string) ($_GET['token'] ?? ''));
+        $envToken = trim((string) portfolioEnv('CRON_SYNC_TOKEN'));
 
         if ($envToken === '' || $token !== $envToken) {
             http_response_code(403);

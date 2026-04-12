@@ -83,6 +83,7 @@ class ProjectRoadmapService {
         }
     }
 
+    // TODO(roadmap): add retry with exponential backoff when API returns non-200
     public function syncProjectRoadmap(array $project, ?array $authUser = null): array {
         $repoUrl = trim((string) ($project['repo_url'] ?? ''));
         if ($repoUrl === '') {

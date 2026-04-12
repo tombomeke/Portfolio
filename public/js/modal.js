@@ -215,33 +215,50 @@ class ModalSystem {
      * Open project modal
      */
     openProjectModal(data) {
+        const images = Array.isArray(data.images) && data.images.length > 0
+            ? data.images
+            : (data.image ? [data.image] : []);
+        const hasMultiple = images.length > 1;
+
+        // Build gallery HTML
+        const galleryHtml = images.length > 0 ? `
+            <div class="modal-gallery" id="modal-gallery-${data.id}">
+                ${hasMultiple ? `<button type="button" class="modal-gallery-nav" data-dir="-1" aria-label="Vorige">&#8592;</button>` : ''}
+                <div class="modal-gallery-img-wrap">
+                    <img src="${images[0]}" alt="${data.title}" class="modal-gallery-img" onerror="this.style.display='none'">
+                </div>
+                ${hasMultiple ? `<button type="button" class="modal-gallery-nav" data-dir="1" aria-label="Volgende">&#8594;</button>` : ''}
+                ${hasMultiple ? `
+                    <div class="modal-gallery-dots">
+                        ${images.map((_, i) => `<button type="button" class="modal-gallery-dot${i === 0 ? ' active' : ''}" data-idx="${i}" aria-label="Afbeelding ${i+1}"></button>`).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        ` : '';
+
         const content = `
             <div class="modal-header">
                 <h2><i class="fas fa-folder-open"></i> ${data.title}</h2>
                 ${data.status ? `<span class="project-status status-${data.status}">${this.getStatusText(data.status)}</span>` : ''}
             </div>
-            
-            ${data.image ? `
-            <div class="modal-image">
-                <img src="${data.image}" alt="${data.title}" onerror="this.style.display='none'">
-            </div>
-            ` : ''}
-            
+
+            ${galleryHtml}
+
             <div class="modal-body">
                 <div class="modal-section">
                     <h3><i class="fas fa-align-left"></i> Description</h3>
                     <p>${data.description}</p>
                     ${data.long_description ? `<p class="mt-2">${data.long_description}</p>` : ''}
                 </div>
-                
+
                 <div class="modal-section">
                     <h3><i class="fas fa-code"></i> ${this.t('modal_project_tech')}</h3>
                     <div class="tech-stack-modal">
-                        ${data.tech.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+                        ${(data.tech || []).map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
                     </div>
                 </div>
-                
-                ${data.features ? `
+
+                ${data.features && data.features.length ? `
                 <div class="modal-section">
                     <h3><i class="fas fa-star"></i> ${this.t('modal_project_features')}</h3>
                     <ul class="modal-list">
@@ -249,8 +266,13 @@ class ModalSystem {
                     </ul>
                 </div>
                 ` : ''}
-                
+
                 <div class="modal-actions">
+                    ${data.slug ? `
+                    <a href="?page=project&slug=${encodeURIComponent(data.slug)}" class="btn btn-ghost">
+                        <i class="fas fa-circle-info"></i> Details &amp; Roadmap
+                    </a>
+                    ` : ''}
                     ${data.repo_url ? `
                     <a href="${data.repo_url}" target="_blank" class="btn btn-secondary">
                         <i class="fab fa-github"></i> ${this.t('modal_project_github')}
@@ -266,6 +288,49 @@ class ModalSystem {
         `;
 
         this.showModal(content);
+
+        // Wire up gallery carousel after modal is in DOM
+        if (hasMultiple) {
+            this._initModalGallery(images);
+        }
+    }
+
+    /**
+     * Initialize gallery carousel inside the open modal.
+     */
+    _initModalGallery(images) {
+        const modal = document.getElementById('universal-modal');
+        if (!modal) return;
+
+        let idx = 0;
+        const imgEl  = modal.querySelector('.modal-gallery-img');
+        const dots   = Array.from(modal.querySelectorAll('.modal-gallery-dot'));
+        const navBtns = Array.from(modal.querySelectorAll('.modal-gallery-nav'));
+
+        const render = () => {
+            imgEl.style.opacity = '0';
+            setTimeout(() => {
+                imgEl.src = images[idx];
+                imgEl.style.opacity = '1';
+            }, 150);
+            dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        };
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                idx = (idx + parseInt(btn.dataset.dir) + images.length) % images.length;
+                render();
+            });
+        });
+
+        dots.forEach(dot => {
+            dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                idx = parseInt(dot.dataset.idx);
+                render();
+            });
+        });
     }
 
     /**

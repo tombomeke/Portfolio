@@ -650,6 +650,7 @@ class AdminController {
         }
     }
 
+    // TODO(admin): show per-project sync result detail on sync-all completion page
     private function syncAllProjectRoadmaps(): void {
         // Simple rate limit: check last sync-all via session
         $lastSyncAll = (int) ($_SESSION['last_sync_all'] ?? 0);

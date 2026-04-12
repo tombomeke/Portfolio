@@ -59,9 +59,6 @@ BESTAND: /app/Views/projects.php (UPDATED with Modal Support)
                         </div>
 
                         <div class="project-links" onclick="event.stopPropagation()">
-                            <a href="?page=project&amp;slug=<?= urlencode((string) ($project['slug'] ?? '')) ?>" class="btn btn-ghost" onclick="event.stopPropagation()">
-                                <i class="fas fa-circle-info"></i> Details
-                            </a>
                             <?php if (!empty($project['repo_url'])): ?>
                                 <a href="<?= htmlspecialchars($project['repo_url']) ?>"
                                    target="_blank"
