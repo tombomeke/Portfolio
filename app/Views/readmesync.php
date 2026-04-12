@@ -83,6 +83,19 @@
                     Bekijk op GitHub &#8599;
                 </a>
             </div>
+
+            <?php if (!empty($_SESSION['auth_user']) && (($_SESSION['auth_user']['role'] ?? '') === 'owner')): ?>
+            <details class="readmesync-debug" style="margin-bottom:.9rem">
+                <summary>Debug details (owner)</summary>
+                <div class="debug-grid">
+                    <div><strong>Payload source_user_id:</strong> <?= htmlspecialchars((string) ($debugSourceUserId ?? 'null'), ENT_QUOTES, 'UTF-8') ?></div>
+                    <div><strong>Payload source_user_name:</strong> <?= htmlspecialchars((string) ($debugSourceUserName ?? 'null'), ENT_QUOTES, 'UTF-8') ?></div>
+                    <div><strong>API contract version:</strong> <?= htmlspecialchars((string) ($debugApiContractVersion ?? 'none'), ENT_QUOTES, 'UTF-8') ?></div>
+                    <div><strong>Response keys:</strong> <?= htmlspecialchars(implode(', ', (array) ($debugResponseKeys ?? [])), ENT_QUOTES, 'UTF-8') ?></div>
+                </div>
+            </details>
+            <?php endif; ?>
+
             <pre><code><?= htmlspecialchars($result, ENT_QUOTES, 'UTF-8') ?></code></pre>
         </div>
         <?php endif; ?>

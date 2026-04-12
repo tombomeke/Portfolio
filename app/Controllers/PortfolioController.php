@@ -14,6 +14,7 @@ require_once __DIR__ . '/../Models/FaqModel.php';
 require_once __DIR__ . '/../Models/NewsCommentModel.php';
 require_once __DIR__ . '/../Models/SiteSettingModel.php';
 require_once __DIR__ . '/../Models/UserModel.php';
+require_once __DIR__ . '/../Models/ReadmeSyncScanLogModel.php';
 require_once __DIR__ . '/../Auth/Auth.php';
 
 class PortfolioController {
@@ -25,6 +26,7 @@ class PortfolioController {
     private $contactModel;
     private $commentModel;
     private $userModel;
+    private $readmeSyncScanLogModel;
     private $contactRecipient = 'tom1dekoning@gmail.com';
 
     public function __construct() {
@@ -36,6 +38,7 @@ class PortfolioController {
         $this->contactModel   = new ContactMessageModel();
         $this->commentModel   = new NewsCommentModel();
         $this->userModel      = new UserModel();
+        $this->readmeSyncScanLogModel = new ReadmeSyncScanLogModel();
     }
 
     public function showAbout() {
@@ -453,6 +456,10 @@ class PortfolioController {
         $result   = null;
         $error    = null;
         $language = null;
+        $apiContractVersion = null;
+        $responseKeys = [];
+        $payloadSourceUserId = null;
+        $payloadSourceUserName = null;
 
         $debugCurlErr  = null;
         $debugHttpCode = null;
@@ -470,11 +477,34 @@ class PortfolioController {
                 $error = 'cURL is niet beschikbaar op deze server.';
             } else {
                 $authUser = Auth::user();
+                $resolvedUserId = null;
+                if (!empty($authUser['id'])) {
+                    $resolvedUserId = (string) $authUser['id'];
+                } elseif (!empty($authUser['user_id'])) {
+                    $resolvedUserId = (string) $authUser['user_id'];
+                } elseif (!empty($authUser['username'])) {
+                    $resolvedUserId = (string) $authUser['username'];
+                }
+
+                $resolvedUserName = null;
+                if (!empty($authUser['username'])) {
+                    $resolvedUserName = (string) $authUser['username'];
+                } elseif (!empty($authUser['name'])) {
+                    $resolvedUserName = (string) $authUser['name'];
+                } elseif (!empty($authUser['display_name'])) {
+                    $resolvedUserName = (string) $authUser['display_name'];
+                } elseif (!empty($authUser['email'])) {
+                    $resolvedUserName = (string) $authUser['email'];
+                }
+
+                $payloadSourceUserId = $resolvedUserId;
+                $payloadSourceUserName = $resolvedUserName;
+
                 $payload = json_encode([
                     'githubRepoUrl' => $repoUrl,
                     'clientApp' => 'portfolio',
-                    'userId' => isset($authUser['id']) ? (string) $authUser['id'] : null,
-                    'userName' => isset($authUser['username']) ? (string) $authUser['username'] : null,
+                    'userId' => $resolvedUserId,
+                    'userName' => $resolvedUserName,
                 ]);
                 $curlOpts = [
                     CURLOPT_POST           => true,
@@ -527,6 +557,8 @@ class PortfolioController {
                     $data     = json_decode($raw, true);
                     $result   = $data['content']  ?? null;
                     $language = $data['language'] ?? null;
+                    $apiContractVersion = $data['apiContractVersion'] ?? null;
+                    $responseKeys = is_array($data) ? array_keys($data) : [];
                     $debugHttpCode = null; // no debug needed on success
                 } elseif ($httpCode === 404) {
                     $decoded = json_decode((string) $raw, true);
@@ -550,6 +582,31 @@ class PortfolioController {
                         $error = $decoded['detail'] ?? $decoded['error'] ?? 'Er is een fout opgetreden bij het genereren.';
                     }
                 }
+
+                $rawDecoded = json_decode((string) ($raw ?? ''), true);
+                if (is_array($rawDecoded) && empty($responseKeys)) {
+                    $responseKeys = array_keys($rawDecoded);
+                    if ($apiContractVersion === null) {
+                        $apiContractVersion = $rawDecoded['apiContractVersion'] ?? null;
+                    }
+                }
+
+                $this->readmeSyncScanLogModel->log([
+                    'user_id' => isset($authUser['id']) ? (int) $authUser['id'] : null,
+                    'username' => $authUser['username'] ?? null,
+                    'user_role' => $authUser['role'] ?? null,
+                    'source_client' => 'portfolio',
+                    'source_user_id' => $payloadSourceUserId,
+                    'source_user_name' => $payloadSourceUserName,
+                    'repo_url' => $repoUrl,
+                    'success' => $error === null && $result !== null,
+                    'http_code' => isset($httpCode) ? (int) $httpCode : null,
+                    'language' => $language,
+                    'todo_count' => is_array($rawDecoded['todos'] ?? null) ? count($rawDecoded['todos']) : null,
+                    'api_contract_version' => is_string($apiContractVersion) ? $apiContractVersion : null,
+                    'response_keys' => !empty($responseKeys) ? implode(',', $responseKeys) : null,
+                    'error_message' => $error,
+                ]);
             }
         }
 
@@ -562,6 +619,10 @@ class PortfolioController {
             'debugCurlErr'  => $debugCurlErr,
             'debugHttpCode' => $debugHttpCode,
             'debugRawBody'  => $debugRawBody ?? null,
+            'debugSourceUserId' => $payloadSourceUserId,
+            'debugSourceUserName' => $payloadSourceUserName,
+            'debugResponseKeys' => $responseKeys,
+            'debugApiContractVersion' => $apiContractVersion,
         ]);
     }
 

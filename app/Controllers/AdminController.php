@@ -1939,11 +1939,31 @@ class AdminController {
         }
 
         $authUser = Auth::user();
+        $resolvedUserId = null;
+        if (!empty($authUser['id'])) {
+            $resolvedUserId = (string) $authUser['id'];
+        } elseif (!empty($authUser['user_id'])) {
+            $resolvedUserId = (string) $authUser['user_id'];
+        } elseif (!empty($authUser['username'])) {
+            $resolvedUserId = (string) $authUser['username'];
+        }
+
+        $resolvedUserName = null;
+        if (!empty($authUser['username'])) {
+            $resolvedUserName = (string) $authUser['username'];
+        } elseif (!empty($authUser['name'])) {
+            $resolvedUserName = (string) $authUser['name'];
+        } elseif (!empty($authUser['display_name'])) {
+            $resolvedUserName = (string) $authUser['display_name'];
+        } elseif (!empty($authUser['email'])) {
+            $resolvedUserName = (string) $authUser['email'];
+        }
+
         $payload = json_encode([
             'githubRepoUrl' => $repoUrl,
             'clientApp' => 'portfolio',
-            'userId' => isset($authUser['id']) ? (string) $authUser['id'] : null,
-            'userName' => isset($authUser['username']) ? (string) $authUser['username'] : null,
+            'userId' => $resolvedUserId,
+            'userName' => $resolvedUserName,
         ]);
         // Uses the real ReadmeSync API that powers the public ReadmeSync page.
         $ch = curl_init($this->readmeSyncApiUrl);
@@ -2091,13 +2111,7 @@ class AdminController {
                 $priority = $priorityValue;
             }
 
-            $description = '';
-            if ($sourceFile !== '') {
-                $description = 'Bestand: ' . $sourceFile;
-                if ($sourceLine > 0) {
-                    $description .= ' (regel ' . $sourceLine . ')';
-                }
-            }
+            $description = trim((string) ($entry['description'] ?? ''));
 
             $items[] = [
                 'id' => 'todo-' . ($index + 1) . '-' . substr(md5($title . '|' . $sourceFile . '|' . $sourceLine), 0, 8),

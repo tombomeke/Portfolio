@@ -75,3 +75,27 @@ ALTER TABLE users ADD COLUMN preferred_language VARCHAR(2)   NOT NULL DEFAULT 'n
 
 -- Add 'user' role for public registrations (owner/admin unchanged)
 ALTER TABLE users MODIFY COLUMN role ENUM('owner','admin','user') NOT NULL DEFAULT 'admin';
+
+-- Local ReadmeSync scan log (website-side audit/debug)
+CREATE TABLE IF NOT EXISTS readmesync_scan_logs (
+    id                   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id              INT UNSIGNED NULL,
+    username             VARCHAR(100) NULL,
+    user_role            VARCHAR(20)  NULL,
+    source_client        VARCHAR(64)  NOT NULL DEFAULT 'portfolio',
+    source_user_id       VARCHAR(128) NULL,
+    source_user_name     VARCHAR(128) NULL,
+    repo_url             VARCHAR(512) NULL,
+    success              TINYINT(1)   NOT NULL DEFAULT 0,
+    http_code            INT          NULL,
+    language             VARCHAR(32)  NULL,
+    todo_count           INT          NULL,
+    api_contract_version VARCHAR(80)  NULL,
+    response_keys        VARCHAR(500) NULL,
+    error_message        TEXT         NULL,
+    created_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_created_at (created_at),
+    INDEX idx_repo (repo_url(191)),
+    INDEX idx_user (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
