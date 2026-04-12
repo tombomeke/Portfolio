@@ -4,6 +4,41 @@
 Tom Dekoning's live portfolio op **tombomeke.com** (Combell shared hosting, PHP).
 Custom PHP MVC — geen framework. Eigenhandig gebouwd.
 
+## Instructies
+
+Werkdiscipline en kwaliteitseisen:
+
+1. Voor je start met coderen:
+- Lees eerst bestaande TODO's en relevante documentatie.
+- Werk dit bestand (`CLAUDE.md`) bij wanneer een taak of flow inhoudelijk verandert.
+
+2. Taal en duidelijkheid:
+- Code en comments zijn in het Engels.
+- Documentatie is duidelijk, kort en praktisch.
+
+3. TODO-beleid (verplicht):
+- Houd centrale TODO's en planning bij in documentatie (bijv. `docs/...` of planbestand).
+- Zet ook TODO's in het codebestand waar je werkt als daar nog vervolgwerk openstaat.
+- Gebruik in code een herkenbaar format, bijvoorbeeld: `TODO(scope): korte uitleg`.
+- Vink of verwijder TODO's zodra het werk effectief klaar en getest is.
+- Laat geen verouderde of vage TODO's achter.
+
+4. Test- en debugbeleid:
+- Elke functionele wijziging moet getest worden.
+- Voer relevante tests/checks uit voordat een taak als klaar wordt gemarkeerd.
+- Als iets niet testbaar is in de huidige omgeving: noteer waarom en geef een veilige fallback of vervolgstap.
+
+5. Productieklare oplevering:
+- Geen debugcode in productieflow (`var_dump`, losse `console.log`, tijdelijke testhooks).
+- Geen onnodige comments of dode code.
+- Houd wijzigingen klein, leesbaar en consistent met bestaande stijl.
+
+6. Definition of Done per taak:
+- Implementatie werkt functioneel.
+- Relevante tests/checks zijn uitgevoerd en slagen.
+- Documentatie en TODO-status zijn bijgewerkt.
+- Geen tijdelijke debug/test-restanten in productiecode.
+
 ## Structuur
 ```
 index.php                          ← router (?page=xxx)
@@ -17,7 +52,8 @@ app/
     NewsModel.php                  ← news (DB, R+W)
     NewsCommentModel.php           ← news comments + approval flow
     FaqModel.php                   ← FAQ categories + items (DB, R+W)
-    ProjectModels.php              ← projecten (DB, R+W — was statische array)
+    ProjectModels.php              ← projecten (DB, R+W) + gallery (project_images tabel)
+    ProjectRoadmapModel.php        ← roadmap items per project (DB, project_roadmap_items + project_sync_log)
     ContactMessageModel.php        ← contact inbox (DB)
     UserModel.php                  ← gebruikers + profielvelden
     TagModel.php                   ← news tags (many-to-many)
@@ -38,6 +74,8 @@ public/
 database/
   migrate.sql                      ← alle CREATE TABLE statements
   migrate_v2.sql                   ← uitbreidingen (tags/comments/activity/settings/profile fields)
+  migrate_v3.sql                   ← project_images, project_roadmap_items, project_sync_log
+  migrate_roadmap_data.php         ← eenmalig: JSON roadmaps → DB (run na migrate_v3)
   seed_projects.sql                ← initiële projectdata (run na migrate)
   seed_site_settings.sql           ← defaults voor site settings
   seed_skills.sql                  ← skills seed
@@ -69,8 +107,8 @@ Belangrijk voor profielen/avatars:
 **tombomeke-ehb/backend-web-portfolio** is een Laravel 12 app (5x uitgebreider) die we aan het migreren zijn naar déze structuur. Prioriteit:
 1. ✅ News systeem (nieuwsberichten, NL/EN)
 2. ✅ FAQ systeem
-3. Projects DB-driven (nu nog statische array in ProjectModels.php)
-4. Contact berichten opslaan in DB (nu alleen e-mail)
+3. ✅ Projects DB-driven (admin CRUD, multi-image gallery, roadmap sync)
+4. ✅ Contact berichten opslaan in DB + admin inbox
 
 ## Auth & Admin systeem
 Session-based auth met twee rollen: `owner` (tombomeke) en `admin` (vertrouwde vrienden).
@@ -99,6 +137,16 @@ Session payload bevat naast role/username ook profieldata (zoals `profile_photo_
 `?page=readmesync` → cURL call naar `https://tombomekestudio.com/api/readmesync/generate`
 Toont live code-overzicht van elke publieke GitHub repo.
 
+Project-roadmap flow (volledig uitgebouwd):
+- `?page=project&slug=<slug>` toont projectdetail: cover + galerij carousel, tabs `Overzicht` en `Roadmap`.
+- Roadmap tab: filters (open/done/high), GitHub deep links per TODO item, last-sync timestamp.
+- `?page=project-roadmaps` toont centrale roadmap-pagina: zoekfunctie, progress bars, alle projecten.
+- Bij admin project create/update met `repo_url` wordt automatisch ReadmeSync API aangeroepen.
+- TODO-opslag in DB-tabel `project_roadmap_items` via `ProjectRoadmapModel`. JSON-fallback actief zolang migrate_v3 nog niet gedraaid is.
+- Admin "Sync roadmaps" knop voor bulk-sync van alle projecten (rate limit 5 min).
+- Cron endpoint: `?page=cron-sync-roadmaps&token=CRON_SYNC_TOKEN` (env var vereist).
+- Multi-image galerij: `project_images` tabel, admin create/edit ondersteunt meerdere uploads.
+
 Telemetry wordt nu ook server-side opgehaald via de ReadmeSync API-admin endpoint en getoond in `?page=admin&section=telemetry`.
 Daarvoor worden `READMESYNC_API_URL`, `READMESYNC_ADMIN_TELEMETRY_URL` en `READMESYNC_ADMIN_API_KEY` uit env gebruikt.
 
@@ -123,6 +171,27 @@ Praktische debugflow bij "Repository niet gevonden of is privé":
 
 Let op: GitHub token staat in de API-repo (`ReadmeSync.API`), niet in deze Portfolio-repo.
 Let op: database- en API-secrets staan niet meer hardcoded in de repo; zet ze server-side via env vars.
+
+## Project-roadmap (geïmplementeerd + open TODO's)
+Hoofddoel: per project automatisch roadmap TODO's tonen via ReadmeSync, plus centrale roadmap-overzichten.
+
+Geïmplementeerd ✅:
+1. ✅ Multi-image galerij (project_images DB, admin carousel, dots-navigatie)
+2. ✅ Roadmap DB-opslag (project_roadmap_items, project_sync_log)
+3. ✅ Roadmap UI: filters open/done/high, GitHub deep links, last-sync timestamp
+4. ✅ Centrale roadmap pagina: zoekfunctie, progress bars
+5. ✅ Bulk sync: admin knop + cron endpoint (CRON_SYNC_TOKEN env var)
+6. ✅ ReadmeSync pagina: loading spinner, copy-to-clipboard, betere quicklinks
+
+Open TODO's (volgende iteraties):
+- [ ] Roadmap items handmatig markeren als done/open in admin
+- [ ] Diff/versiehistoriek per sync (nieuw vs. verdwenen items)
+- [ ] i18n-audit: nieuwe labels in translations.php (NL/EN keys)
+- [ ] Multi-image sort_order drag-and-drop in admin
+- [ ] tests/ProjectImageTest.php + tests/ProjectRoadmapModelTest.php schrijven
+- [ ] Sync retry + backoff bij API-fouten
+
+Planbestand: `docs/project-roadmap-sync-plan.md`
 
 ## Recente terminal geschiedenis (Claude)
 - WIP admin-sectie toegevoegd (`admin/wip`) + `wip_pages.json` configuratie.
