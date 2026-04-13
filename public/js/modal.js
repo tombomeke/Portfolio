@@ -120,16 +120,20 @@ class ModalSystem {
             });
         });
 
-        // Projects
-        document.querySelectorAll('.project-card').forEach(card => {
+        // Projects — only cards with data-modal get a click handler
+        document.querySelectorAll('.project-card[data-modal]').forEach(card => {
             card.style.cursor = 'pointer';
             card.addEventListener('click', (e) => {
-                // Don't trigger if clicking on buttons
-                if (e.target.closest('.btn') || e.target.closest('.project-links')) {
+                // Don't trigger if clicking on buttons or links
+                if (e.target.closest('.btn') || e.target.closest('.project-links') || e.target.closest('a')) {
                     return;
                 }
                 e.preventDefault();
-                const data = JSON.parse(card.getAttribute('data-modal'));
+                const raw = card.getAttribute('data-modal');
+                if (!raw) return;
+                let data;
+                try { data = JSON.parse(raw); } catch (_) { return; }
+                if (!data) return;
                 this.openProjectModal(data);
             });
         });
