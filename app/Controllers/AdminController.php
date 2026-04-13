@@ -1595,6 +1595,7 @@ class AdminController {
     }
 
     private function handleImageUpload(?array $file, string $subfolder): ?string {
+        // TODO(upload): Audit profile image uploads for MIME validation, metadata stripping, and payload hardening.
         if (!$file || $file['error'] !== UPLOAD_ERR_OK || $file['size'] === 0) {
             return null;
         }

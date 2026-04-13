@@ -45,6 +45,7 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
                 <a href="<?= htmlspecialchars((string) $project['repo_url']) ?>" target="_blank" class="btn btn-secondary"><i class="fab fa-github"></i> GitHub</a>
             <?php endif; ?>
             <?php if (!empty($project['demo_url'])): ?>
+                <?php // TODO(projects): Remove or replace the Portfolio Website demo link and use a real website screenshot instead of Minecraft art. ?>
                 <a href="<?= htmlspecialchars((string) $project['demo_url']) ?>" target="_blank" class="btn btn-primary"><i class="fas fa-link"></i> Demo</a>
             <?php endif; ?>
             <a href="?page=project-roadmaps" class="btn btn-ghost"><?= trans('project_all_roadmaps') ?></a>

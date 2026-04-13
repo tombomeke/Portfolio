@@ -50,6 +50,7 @@
 .auth-page { min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 3rem 1rem; }
 .auth-container { width: 100%; max-width: 420px; }
 .auth-card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; padding: 2.5rem; box-shadow: 0 4px 24px rgba(0,0,0,.06); }
+    <?php // TODO(ui): Refine auth heading and input contrast on login/register pages. ?>
 .auth-header { text-align: center; margin-bottom: 2rem; }
 .auth-logo { font-size: 2.5rem; color: var(--primary-color, #3b82f6); margin-bottom: .75rem; }
 .auth-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 .4rem; color: #0f172a; }

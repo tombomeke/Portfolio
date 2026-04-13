@@ -42,6 +42,7 @@ $styleVersion = (string) (@filemtime(__DIR__ . '/../../public/css/style.css') ?:
                 <div class="nav-menu">
                     <a href="?page=home" class="nav-link" data-translate="nav_about"><?= trans('nav_about') ?></a>
                     <a href="?page=dev-life" class="nav-link" data-translate="nav_devlife"><?= trans('nav_devlife') ?></a>
+                    <?php // TODO(nav): Remove Games from public navigation while the section stays WIP. ?>
                     <a href="?page=games" class="nav-link" data-translate="nav_games"><?= trans('nav_games') ?></a>
                     <a href="?page=projects" class="nav-link" data-translate="nav_projects"><?= trans('nav_projects') ?></a>
                     <!-- TODO(i18n): [P3] 'News', 'FAQ', 'ReadmeSync' are hardcoded — add trans() keys -->
@@ -149,6 +150,7 @@ $styleVersion = (string) (@filemtime(__DIR__ . '/../../public/css/style.css') ?:
             <div class="social-links">
                 <a href="https://github.com/tombomeke" target="_blank" aria-label="GitHub"><i class="fab fa-github"></i></a>
                 <a href="https://www.linkedin.com/in/tom-dekoning-567523352/" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <?php // TODO(ui): Verify the footer mail button and remove it if the mailto target is not useful. ?>
                 <a href="mailto:<?= htmlspecialchars($contactEmail) ?>" aria-label="Email"><i class="fas fa-envelope"></i></a>
             </div>
         </div>

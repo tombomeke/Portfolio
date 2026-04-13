@@ -11,6 +11,7 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
 ?>
 <section class="contact">
     <div class="container">
+        <?php // TODO(i18n): Finish the English audit on the contact page and remove remaining hardcoded labels. ?>
         <h1><i class="fas fa-envelope"></i> <span data-translate="contact_title"><?= trans('contact_title') ?></span></h1>
         <p class="section-intro" data-translate="contact_intro"><?= trans('contact_intro') ?></p>
         <?php if ($success): ?>

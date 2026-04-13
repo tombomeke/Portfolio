@@ -4,6 +4,14 @@
 Tom Dekoning's live portfolio op **tombomeke.com** (Combell shared hosting, PHP).
 Custom PHP MVC — geen framework. Eigenhandig gebouwd.
 
+## Stable facts
+- This repo is the live PHP portfolio, not a framework app.
+- ReadmeSync roadmaps are generated from code comments plus the admin sync flow.
+- `owner` can do everything; `admin` manages content; public registration is disabled.
+- Session refresh matters after profile/role changes.
+- `users.profile_photo_path` already stores a web path; do not prefix it again in views.
+- `CLAUDE.md` is the source of truth for project workflow, open TODOs, and repo-specific guardrails.
+
 ## Instructies
 
 Werkdiscipline en kwaliteitseisen:
@@ -49,6 +57,17 @@ Aanvullende regels:
 - Relevante tests/checks zijn uitgevoerd en slagen.
 - Documentatie en TODO-status zijn bijgewerkt.
 - Geen tijdelijke debug/test-restanten in productiecode.
+- De AI doet de commits zelf met duidelijke, compacte commit messages.
+- Pas na jouw expliciete akkoord wordt aan het einde een pull request aangemaakt.
+- Als de tooling voor pull requests nog niet beschikbaar is, vraag eerst toestemming om de benodigde tool te installeren en gebruik die daarna.
+
+7. Workflow voor grotere taken:
+- Start met de bestaande TODO's en relevante context in dit bestand.
+- Inspecteer daarna alleen de files die waarschijnlijk de echte bron van het probleem zijn.
+- Zet een korte planstap als de wijziging meer dan één file of risico raakt.
+- Wijzig zo klein mogelijk, test direct daarna, en werk TODO's bij.
+- Commit zelf met een duidelijke, compacte boodschap.
+- Vraag pas op het einde om akkoord voor een PR; maak die daarna alleen als jij dat bevestigt.
 
 ## Structuur
 ```
@@ -181,6 +200,24 @@ Dit is externe feedback uit een gebruikers-test. Sommige punten zijn al opgelost
 - Top-left brand/home link: het portfolio-label linksboven voelt te specifiek; Home als knop is een beter algemeen startpunt.
 - Image upload security: profielafbeeldingen verdienen extra audit op file-type validatie, metadata strippen, en mogelijke steganography / payload-risico's.
 - All feedback stays captured: ook persoonlijke voorkeuren en suggesties blijven in deze QA-sectie, niet alleen harde bugs.
+
+**Open TODOs from friend test**
+- [P2] `TODO(ui)`: Refine auth heading and input contrast on login/register pages.
+- [P2] `TODO(auth)`: Replace full-name registration with username-based signup and revisit forgot-password / delete-account-data flows.
+- [P2] `TODO(profile)`: Reconcile public settings with admin profile settings so duplicated controls have one clear source of truth.
+- [P2] `TODO(news)`: Verify comment post/refresh flow so new comments are visible immediately after submit.
+- [P2] `TODO(projects)`: Remove or replace the Portfolio Website demo link and use a real website screenshot instead of Minecraft art.
+- [P2] `TODO(dev-life)`: Deduplicate repeated Dev Life entries and trim misleading level labels.
+- [P2] `TODO(i18n)`: Finish the English audit on the contact page and remove remaining hardcoded labels.
+- [P2] `TODO(download)`: Replace the placeholder CV PDF with the real file and verify the download route.
+- [P2] `TODO(ui)`: Verify the footer mail button and remove it if the mailto target is not useful.
+- [P2] `TODO(content)`: Replace the placeholder FAQ content or remove the FAQ section entirely.
+- [P3] `TODO(ui)`: Remove the optional green Live badge from ReadmeSync if it does not add value.
+- [P3] `TODO(nav)`: Remove Games from public navigation while the section stays WIP.
+- [P2] `TODO(dev-life)`: Fill or remove the blank Education & Certificates and Current Learning Goals sections.
+- [P1] `TODO(upload)`: Audit profile image uploads for MIME validation, metadata stripping, and payload hardening.
+- [P3] `TODO(profile)`: Ask for preferred language during signup or derive it from the current site language instead of defaulting to Dutch.
+- [P3] `TODO(content)`: Reframe News as blog/articles if that matches the site direction better.
 
 **Al opgelost / eerder afgerond**
 - Admin dashboard/admin route hardening en role checks.

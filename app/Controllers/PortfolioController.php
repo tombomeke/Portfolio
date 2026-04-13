@@ -291,6 +291,7 @@ class PortfolioController {
     }
 
     public function downloadCV() {
+        // TODO(download): Replace the placeholder CV PDF with the real file and verify the download route.
         $file = __DIR__ . '/../../public/files/CV_JouwNaam.pdf';
 
         if (file_exists($file)) {
@@ -350,6 +351,7 @@ class PortfolioController {
     }
 
     public function handleComment(int $newsItemId): void {
+        // TODO(news): Verify comment post/refresh flow so new comments are visible immediately after submit.
         $authUser = $_SESSION['auth_user'] ?? null;
         if (!$authUser) {
             header('Location: ?page=login&redirect=' . urlencode('?page=news-item&id=' . $newsItemId));
@@ -577,6 +579,7 @@ class PortfolioController {
     }
 
     public function showRegister(): void {
+        // TODO(profile): Ask for preferred language during signup or derive it from the current site language instead of defaulting to Dutch.
         if (Auth::check()) {
             header('Location: ?page=home');
             exit;

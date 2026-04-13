@@ -1,3 +1,4 @@
+<?php // TODO(content): Replace the placeholder FAQ content or remove the FAQ section entirely. ?>
 <section class="faq-page">
     <div class="container container--narrow">
         <h1>FAQ</h1>

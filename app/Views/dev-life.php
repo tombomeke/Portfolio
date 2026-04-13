@@ -5,6 +5,8 @@ BESTAND: /app/Views/dev-life.php (UPDATED with Modal Support)
 ================================================================================
 */
 ?>
+<?php // TODO(dev-life): Deduplicate repeated Dev Life entries and trim misleading level labels. ?>
+<?php // TODO(dev-life): Fill or remove the blank Education & Certificates and Current Learning Goals sections. ?>
 <section class="dev-life">
     <div class="container">
         <h1 data-translate="skills_title"><?= trans('skills_title') ?></h1>

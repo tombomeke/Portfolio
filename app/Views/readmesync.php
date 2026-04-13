@@ -2,6 +2,7 @@
     <div class="container">
 
         <div class="readmesync-header">
+            <?php // TODO(ui): Remove the optional green Live badge from ReadmeSync if it does not add value. ?>
             <h1>ReadmeSync <span class="badge-live">Live</span></h1>
             <p class="lead">
                 <?= trans('readmesync_intro') ?>

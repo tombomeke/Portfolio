@@ -2,6 +2,8 @@
     <div class="flash <?= htmlspecialchars($flash['type']) ?>"><?= htmlspecialchars($flash['message']) ?></div>
 <?php endif; ?>
 
+<?php // TODO(profile): Reconcile public settings with admin profile settings so duplicated controls have one clear source of truth. ?>
+
 <!-- Profile information -->
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header">
