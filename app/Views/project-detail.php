@@ -84,19 +84,25 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
             $totalCount     = (int) ($projectRoadmap['totalCount']    ?? count($roadmapItems));
             $filterBase     = "?page=project&amp;slug={$slugEncoded}&amp;tab=roadmap";
             ?>
-            <article class="project-card" style="margin-top:1rem">
+            <article class="project-card roadmap-panel" style="margin-top:1rem">
                 <div class="project-content">
-                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
-                        <h3 style="margin:0">Roadmap TODOs</h3>
-                        <small style="color:var(--text-muted)">
-                            <?= $openCount ?> open · <?= $totalCount ?> totaal
-                            <?php if ($lastSyncAt): ?>
-                                · gesynchroniseerd op <?= htmlspecialchars(date('d/m/Y H:i', strtotime($lastSyncAt))) ?>
-                            <?php endif; ?>
-                        </small>
+                    <div class="roadmap-header">
+                        <div>
+                            <h3 style="margin:0">Roadmap TODOs</h3>
+                            <p class="roadmap-header-meta">
+                                <?= $openCount ?> open · <?= $totalCount ?> totaal
+                                <?php if ($lastSyncAt): ?>
+                                    · gesynchroniseerd op <?= htmlspecialchars(date('d/m/Y H:i', strtotime($lastSyncAt))) ?>
+                                <?php endif; ?>
+                            </p>
+                        </div>
+                        <div class="roadmap-summary-badges">
+                            <span class="roadmap-summary-badge roadmap-summary-badge--open"><?= $openCount ?> open</span>
+                            <span class="roadmap-summary-badge roadmap-summary-badge--total"><?= $totalCount ?> items</span>
+                        </div>
                     </div>
 
-                    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem">
+                    <div class="roadmap-filters">
                         <a href="<?= $filterBase ?>" class="btn btn-sm <?= $activeFilter === '' ? 'btn-primary' : 'btn-ghost' ?>">Alle</a>
                         <a href="<?= $filterBase ?>&amp;filter=open" class="btn btn-sm <?= $activeFilter === 'open' ? 'btn-primary' : 'btn-ghost' ?>">Open</a>
                         <a href="<?= $filterBase ?>&amp;filter=done" class="btn btn-sm <?= $activeFilter === 'done' ? 'btn-primary' : 'btn-ghost' ?>">Klaar</a>
@@ -289,6 +295,65 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
     flex-wrap: wrap;
 }
 
+.roadmap-panel {
+    border: 1px solid rgba(99,102,241,.12);
+    box-shadow: 0 10px 30px rgba(15,23,42,.06);
+    background: linear-gradient(180deg, rgba(99,102,241,.04), rgba(255,255,255,0));
+}
+
+.roadmap-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: .9rem;
+}
+
+.roadmap-header-meta {
+    margin: .2rem 0 0;
+    color: var(--text-muted, #94a3b8);
+    font-size: .8rem;
+}
+
+.roadmap-summary-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+
+.roadmap-summary-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: .38rem .6rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .01em;
+    border: 1px solid transparent;
+}
+.roadmap-summary-badge--open {
+    background: rgba(245,158,11,.12);
+    color: #b45309;
+    border-color: rgba(245,158,11,.2);
+}
+.roadmap-summary-badge--total {
+    background: rgba(99,102,241,.08);
+    color: #4f46e5;
+    border-color: rgba(99,102,241,.18);
+}
+
+.roadmap-filters {
+    display: flex;
+    gap: .45rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding: .5rem;
+    border-radius: 12px;
+    background: rgba(148,163,184,.08);
+    border: 1px solid rgba(148,163,184,.14);
+}
+
 /* Roadmap empty state */
 .roadmap-empty {
     display: flex;
@@ -299,6 +364,9 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
     padding: 2.5rem 1rem;
     text-align: center;
     color: var(--text-muted, #94a3b8);
+    border: 1px dashed rgba(148,163,184,.35);
+    border-radius: 14px;
+    background: rgba(255,255,255,.55);
 }
 .roadmap-empty p { margin: 0; }
 
@@ -319,49 +387,54 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
 .roadmap-file-label {
     font-family: 'Courier New', monospace;
     font-size: .72rem;
-    color: var(--text-muted, #94a3b8);
-    background: var(--border-color, #e2e8f0);
-    border-radius: 4px;
-    padding: 2px 7px;
+    color: #334155;
+    background: rgba(99,102,241,.10);
+    border: 1px solid rgba(99,102,241,.14);
+    border-radius: 999px;
+    padding: 3px 8px;
     text-decoration: none;
     transition: color .1s, background .1s;
 }
 a.roadmap-file-label:hover {
     color: var(--primary, #4f46e5);
-    background: rgba(99,102,241,.12);
+    background: rgba(99,102,241,.16);
 }
 .roadmap-todo-item {
     display: flex;
     gap: .65rem;
     align-items: flex-start;
-    padding: .5rem .5rem;
-    border-radius: 6px;
-    border-left: 2px solid transparent;
-    background: transparent;
-    transition: background .1s, border-color .1s;
+    padding: .7rem .8rem;
+    border-radius: 12px;
+    border: 1px solid rgba(148,163,184,.18);
+    background: rgba(255,255,255,.78);
+    transition: background .12s, border-color .12s, transform .12s, box-shadow .12s;
 }
 .roadmap-todo-item:hover {
-    background: rgba(99,102,241,.05);
-    border-left-color: var(--primary, #4f46e5);
+    background: rgba(255,255,255,.96);
+    border-color: rgba(99,102,241,.22);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(15,23,42,.04);
 }
 .roadmap-todo-item--done {
-    opacity: .45;
-    border-left-color: #22c55e !important;
+    opacity: .52;
+    background: rgba(34,197,94,.05);
+    border-color: rgba(34,197,94,.18);
 }
 .roadmap-todo-item--done:hover {
-    background: rgba(34,197,94,.04);
+    background: rgba(34,197,94,.07);
 }
 .roadmap-todo-item--high:not(.roadmap-todo-item--done) {
-    border-left-color: #f59e0b;
+    border-color: rgba(245,158,11,.25);
+    background: rgba(245,158,11,.05);
 }
 .roadmap-todo-item--high:not(.roadmap-todo-item--done):hover {
-    background: rgba(245,158,11,.06);
+    background: rgba(245,158,11,.08);
 }
 .roadmap-todo-status {
-    font-size: .8rem;
+    font-size: .82rem;
     color: var(--text-muted, #94a3b8);
     flex-shrink: 0;
-    margin-top: .18rem;
+    margin-top: .12rem;
     line-height: 1;
     width: 1em;
     text-align: center;
@@ -404,10 +477,10 @@ a.roadmap-file-label:hover {
     display: inline-flex;
     align-items: center;
     gap: .2em;
-    background: rgba(245,158,11,.15);
+    background: rgba(245,158,11,.14);
     color: #d97706;
-    border-radius: 4px;
-    padding: 1px 6px;
+    border-radius: 999px;
+    padding: 2px 7px;
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .02em;
@@ -417,6 +490,19 @@ a.roadmap-file-label:hover {
 @media (max-width: 768px) {
     .project-detail-page .project-gallery {
         grid-template-columns: 44px 1fr 44px;
+    }
+
+    .roadmap-header {
+        align-items: stretch;
+    }
+
+    .roadmap-summary-badges {
+        width: 100%;
+    }
+
+    .roadmap-summary-badge {
+        flex: 1 1 auto;
+        justify-content: center;
     }
 }
 </style>
