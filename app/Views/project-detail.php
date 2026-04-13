@@ -228,26 +228,55 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
 <style>
 .project-detail-page .project-gallery {
     display: grid;
-    grid-template-columns: 56px 1fr 56px;
-    gap: .8rem;
+    grid-template-columns: 40px 1fr 40px;
+    gap: .6rem;
     align-items: center;
     margin-bottom: 1rem;
 }
 
+@media (max-width: 768px) {
+    .project-detail-page .project-gallery {
+        grid-template-columns: 36px 1fr 36px;
+        gap: .4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .project-detail-page .project-gallery {
+        grid-template-columns: 32px 1fr 32px;
+        gap: .3rem;
+    }
+}
+
 .project-detail-page .gallery-nav {
-    height: 56px;
+    height: 40px;
     border: 1px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: 8px;
     background: var(--surface-color);
     color: var(--text-primary);
     cursor: pointer;
     transition: background .15s;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
+
+@media (max-width: 480px) {
+    .project-detail-page .gallery-nav {
+        height: 36px;
+        border-radius: 6px;
+        font-size: 1rem;
+    }
+}
+
 .project-detail-page .gallery-nav:hover {
     background: var(--primary, #4f46e5);
     color: #fff;
     border-color: var(--primary, #4f46e5);
 }
+
 .project-detail-page .gallery-nav--hidden {
     visibility: hidden;
     pointer-events: none;
@@ -255,16 +284,31 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
 
 .gallery-image-wrap {
     position: relative;
+    overflow: hidden;
 }
 
 .project-detail-image {
     width: 100%;
-    max-height: 420px;
+    max-height: 600px;
     object-fit: cover;
-    border-radius: 14px;
+    border-radius: 12px;
     border: 1px solid var(--border-color);
     display: block;
     transition: opacity .12s ease;
+}
+
+@media (max-width: 768px) {
+    .project-detail-image {
+        max-height: 400px;
+        border-radius: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .project-detail-image {
+        max-height: 280px;
+        border-radius: 8px;
+    }
 }
 
 .gallery-dots {
@@ -272,17 +316,21 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
     justify-content: center;
     gap: .4rem;
     margin-top: .6rem;
+    flex-wrap: wrap;
 }
+
 .gallery-dot {
-    width: 9px;
-    height: 9px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     border: none;
     background: var(--border-color);
     cursor: pointer;
     padding: 0;
     transition: background .15s, transform .15s;
+    flex-shrink: 0;
 }
+
 .gallery-dot--active,
 .gallery-dot:hover {
     background: var(--primary, #4f46e5);
@@ -493,16 +541,104 @@ a.roadmap-file-label:hover {
     }
 
     .roadmap-header {
+        flex-direction: column;
         align-items: stretch;
     }
 
     .roadmap-summary-badges {
         width: 100%;
+        gap: .3rem;
     }
 
     .roadmap-summary-badge {
         flex: 1 1 auto;
         justify-content: center;
+        font-size: .65rem;
+        padding: .3rem .4rem;
+    }
+
+    .roadmap-filters {
+        gap: .3rem;
+        padding: .35rem;
+        flex-wrap: wrap;
+    }
+
+    .roadmap-todo-item {
+        padding: .55rem .6rem;
+        gap: .4rem;
+    }
+
+    .roadmap-todo-item .btn {
+        font-size: .75rem;
+        padding: .25rem .5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .roadmap-header {
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .roadmap-header > div:first-child > h3 {
+        font-size: 1.1rem;
+        margin-bottom: .3rem;
+    }
+
+    .roadmap-header-meta {
+        font-size: .7rem;
+    }
+
+    .roadmap-summary-badges {
+        width: 100%;
+        gap: .25rem;
+    }
+
+    .roadmap-summary-badge {
+        flex: 1 1 auto;
+        font-size: .6rem;
+        padding: .2rem .35rem;
+    }
+
+    .roadmap-filters {
+        gap: .2rem;
+        padding: .25rem;
+        background: rgba(148,163,184,.05);
+    }
+
+    .roadmap-filters .btn {
+        font-size: .75rem;
+        padding: .35rem .55rem;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .roadmap-todo-list {
+        gap: .3rem;
+    }
+
+    .roadmap-todo-item {
+        padding: .45rem .5rem;
+        gap: .35rem;
+        flex-wrap: wrap;
+    }
+
+    .roadmap-todo-status {
+        font-size: .75rem;
+    }
+
+    .roadmap-todo-text {
+        font-size: .8rem;
+    }
+
+    .roadmap-todo-meta {
+        font-size: .65rem;
+        gap: .2rem;
+    }
+
+    .roadmap-badge-high {
+        font-size: .6rem;
+        padding: 1px 5px;
     }
 }
 </style>

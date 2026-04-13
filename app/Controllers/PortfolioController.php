@@ -670,13 +670,15 @@ class PortfolioController {
                             $error = 'Repository niet gevonden of is privé.';
                         }
                     }
+                } elseif ($httpCode === 502 || $httpCode === 503 || $httpCode === 504) {
+                    $error = 'ReadmeSync API server is momenteel niet beschikbaar (HTTP ' . $httpCode . '). Probeer het later opnieuw.';
                 } else {
                     $decoded = json_decode($raw, true);
                     $detail  = strtolower((string) ($decoded['detail'] ?? $decoded['error'] ?? $raw ?? ''));
                     if (strpos($detail, 'ssl') !== false || strpos($detail, 'certificate') !== false) {
                         $error = 'ReadmeSync backend SSL-probleem: certificaat verlopen of ongeldig.';
                     } else {
-                        $error = $decoded['detail'] ?? $decoded['error'] ?? 'Er is een fout opgetreden bij het genereren.';
+                        $error = $decoded['detail'] ?? $decoded['error'] ?? 'Er is een fout opgetreden bij het genereren (HTTP ' . $httpCode . ').';
                     }
                 }
 
