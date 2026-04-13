@@ -17,11 +17,22 @@ Werkdiscipline en kwaliteitseisen:
 - Documentatie is duidelijk, kort en praktisch.
 
 3. TODO-beleid (verplicht):
-- Houd centrale TODO's en planning bij in documentatie (bijv. `docs/...` of planbestand).
-- Zet ook TODO's in het codebestand waar je werkt als daar nog vervolgwerk openstaat.
-- Gebruik in code een herkenbaar format, bijvoorbeeld: `TODO(scope): korte uitleg`.
-- Vink of verwijder TODO's zodra het werk effectief klaar en getest is.
-- Laat geen verouderde of vage TODO's achter.
+
+**Twee-lagen systeem** — TODOs leven op twee plaatsen met een duidelijke rolverdeling:
+
+| Laag | Locatie | Wanneer gebruiken |
+|---|---|---|
+| **Code comment** | `// TODO(scope): ...` in het PHP-bestand zelf | Iets staat open op een *specifieke regel* in bestaande code |
+| **Project backlog** | Onderstaande lijst in dit bestand | Features die nog niet bestaan, audits over meerdere bestanden, tests, architectuurkeuzes |
+
+**Vuistregel:** is er een concreet bestaand bestand én specifieke plek voor de TODO? Zet het daar én in de backlog. Is het een feature-idee, audit of testbestand dat nog niet bestaat? Dan alleen in de backlog hieronder.
+
+**Waarom twee lagen?** De admin roadmap pagina (`?page=admin&section=projects`) synchroniseert TODO-comments vanuit code via de ReadmeSync API. Die API scant codebestanden — niet dit CLAUDE.md bestand. Code-TODOs komen dus automatisch in de admin UI terecht. Plannings-TODOs zonder code-thuis leven alleen hier.
+
+Aanvullende regels:
+- Gebruik altijd het format `TODO(scope): korte uitleg in het Engels`.
+- Vink of verwijder TODO's zodra het werk klaar en getest is — zowel in code als in de backlog.
+- Laat geen verouderde of vage TODO's achter in beide lagen.
 
 4. Test- en debugbeleid:
 - Elke functionele wijziging moet getest worden.
@@ -184,14 +195,37 @@ Geïmplementeerd ✅:
 6. ✅ ReadmeSync pagina: loading spinner, copy-to-clipboard, betere quicklinks
 
 Open TODO's (volgende iteraties):
-- [ ] Roadmap items handmatig markeren als done/open in admin
-- [ ] Diff/versiehistoriek per sync (nieuw vs. verdwenen items)
-- [ ] i18n-audit: nieuwe labels in translations.php (NL/EN keys)
-- [ ] Multi-image sort_order drag-and-drop in admin
-- [ ] tests/ProjectImageTest.php + tests/ProjectRoadmapModelTest.php schrijven
-- [ ] Sync retry + backoff bij API-fouten
 
-Planbestand: `docs/project-roadmap-sync-plan.md`
+**Roadmap / ReadmeSync**
+- [ ] `TODO(roadmap)`: Roadmap items handmatig markeren als done/open in admin (zonder re-sync)
+- [ ] `TODO(roadmap)`: Diff/versiehistoriek per sync — "nieuw vs. verdwenen items" badge → `ProjectRoadmapModel::upsertFromSync()`
+- [ ] `TODO(roadmap)`: Preserve manually-set 'done' status across syncs → `ProjectRoadmapModel::upsertFromSync()`
+- [ ] `TODO(roadmap)`: Retry met exponential backoff bij API-fouten → `ProjectRoadmapService::syncProjectRoadmap()`
+- [ ] `TODO(roadmap)`: Optional "target section" input voor admin roadmap parser → `AdminController.php:~1595`
+- [ ] `TODO(roadmap)`: Keep source line numbers in roadmap UI traceability → `AdminController.php:~2374`
+- [ ] `TODO(cron)`: Last-run timestamp check om te-frequent cron calls te voorkomen → `PortfolioController::cronSyncRoadmaps()`
+
+**Gallery / Projects**
+- [ ] `TODO(gallery)`: Drag-and-drop sort_order reordering voor gallery images in admin edit view
+- [ ] `TODO(admin)`: Per-project sync resultaat tonen op sync-all completion page
+
+**Auth / Security**
+- [ ] `TODO(auth)`: E-mailverificatie flow voor nieuw aangemaakte admin accounts
+- [ ] `TODO(upload)`: Server-side MIME type validatie op image uploads (niet alleen extensie)
+- [ ] `TODO(csrf)`: Audit alle admin POST forms — elk form heeft `Auth::csrfField()` + handler verifieert
+
+**Code kwaliteit / architectuur**
+- [ ] `TODO(cache)`: `GameStatsModel` raakt externe API bij elke pageload — voeg bestandscache toe (10 min TTL)
+
+**i18n**
+- [ ] `TODO(i18n)`: Volledige audit op hardcoded NL strings in views (bekende locaties: `project-detail.php`, `project-roadmaps.php`, admin views)
+- [ ] `TODO(i18n)`: Ontbrekende vertaalsleutels toevoegen voor roadmap UI labels (open/done/high filters, sync timestamp, progress)
+
+**Tests**
+- [ ] `TODO(test)`: `tests/ProjectImageTest.php` schrijven (gallery CRUD + sort_order)
+- [ ] `TODO(test)`: `tests/ProjectRoadmapModelTest.php` schrijven (upsertFromSync, logSync, getLastSync)
+
+Documentatie: `docs/architecture.md`, `docs/readmesync-integration.md`, `docs/database-schema.md`
 
 ## Recente terminal geschiedenis (Claude)
 - WIP admin-sectie toegevoegd (`admin/wip`) + `wip_pages.json` configuratie.
