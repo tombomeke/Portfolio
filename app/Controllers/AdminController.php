@@ -605,7 +605,7 @@ class AdminController {
         }
     }
 
-    // TODO(admin): show per-project sync result detail on sync-all completion page
+    // TODO(admin): [P3] show per-project sync result detail on sync-all completion page
     private function syncAllProjectRoadmaps(): void {
         // Simple rate limit: check last sync-all via session
         $lastSyncAll = (int) ($_SESSION['last_sync_all'] ?? 0);
@@ -1568,7 +1568,7 @@ class AdminController {
                 $todosOnly = isset($_POST['todos_only']) && $_POST['todos_only'] === '1';
                 $mergeMode = isset($_POST['merge_mode']) && $_POST['merge_mode'] === '1';
 
-                // TODO(roadmap): add optional "target section" input so parsing can focus on a single README block (e.g. Roadmap/TODO).
+                // TODO(roadmap): [P3] add optional "target section" input so parsing can focus on a single README block (e.g. Roadmap/TODO).
 
                 $normalizedRepoUrl = $this->normalizeGitHubRepoUrl($repoUrl);
                 if ($normalizedRepoUrl === null) {
@@ -2347,7 +2347,7 @@ class AdminController {
         $items = [];
         $seenNormalizedTitles = [];
 
-        // TODO(roadmap): keep source line numbers to improve traceability in roadmap UI.
+        // TODO(roadmap): [P3] keep source line numbers to improve traceability in roadmap UI.
 
         foreach ($targetLines as $lineIndex => $lineEntry) {
             $line = is_array($lineEntry) ? (string) ($lineEntry['line'] ?? '') : (string) $lineEntry;
