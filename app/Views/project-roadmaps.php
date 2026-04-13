@@ -26,7 +26,7 @@
                     <article class="project-card roadmap-project-card" data-roadmap-title="<?= htmlspecialchars(strtolower($project['title'])) ?>">
                         <div class="project-content">
                             <h3><?= htmlspecialchars($project['title']) ?></h3>
-                            <p style="color:var(--text-muted);font-size:.85rem"><?= htmlspecialchars($project['description']) ?></p>
+                            <p class="roadmap-project-description"><?= htmlspecialchars($project['description']) ?></p>
 
                             <?php if ($totalCount > 0): ?>
                                 <div class="roadmap-progress" title="<?= $doneCount ?>/<?= $totalCount ?> <?= trans('project_roadmaps_done_percent') ?>">
@@ -48,7 +48,7 @@
                                 <?= $lastSyncAt ? htmlspecialchars(date('d/m/Y H:i', strtotime($lastSyncAt))) : trans('project_roadmaps_not_yet') ?>
                             </p>
 
-                            <div class="project-links" style="margin-top:.75rem">
+                            <div class="project-links roadmap-project-links">
                                 <a class="btn btn-primary btn-sm" href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=roadmap">
                                     <?= trans('project_roadmaps_view') ?>
                                 </a>
@@ -81,23 +81,43 @@
     padding: .7rem .95rem;
     border: 1px solid rgba(148,163,184,.26);
     border-radius: 14px;
-    background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(248,250,252,.92));
-    color: var(--text-primary);
+    background: rgba(15,23,42,.45);
+    color: #e2e8f0;
     font-size: .92rem;
-    box-shadow: 0 8px 20px rgba(15,23,42,.04);
+    box-shadow: 0 8px 20px rgba(15,23,42,.18);
+}
+
+.roadmap-search-input::placeholder {
+    color: #94a3b8;
 }
 
 .roadmap-project-card {
-    border: 1px solid rgba(99,102,241,.10);
-    box-shadow: 0 10px 24px rgba(15,23,42,.05);
-    background: linear-gradient(180deg, rgba(99,102,241,.03), rgba(255,255,255,.98));
+    border: 1px solid rgba(99,102,241,.18);
+    box-shadow: 0 10px 24px rgba(15,23,42,.22);
+    background: linear-gradient(180deg, rgba(59,130,246,.10), rgba(15,23,42,.55));
     transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    max-width: 460px;
 }
 
 .roadmap-project-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(99,102,241,.18);
-    box-shadow: 0 16px 36px rgba(15,23,42,.08);
+    border-color: rgba(99,102,241,.35);
+    box-shadow: 0 16px 36px rgba(15,23,42,.30);
+}
+
+.roadmap-project-card .project-content {
+    gap: .7rem;
+}
+
+.roadmap-project-card h3 {
+    color: #f8fafc;
+}
+
+.roadmap-project-description {
+    color: #94a3b8;
+    font-size: .88rem;
+    margin: 0;
+    line-height: 1.5;
 }
 
 .roadmap-progress {
@@ -125,7 +145,7 @@
 .roadmap-card-sync,
 .roadmap-card-empty {
     font-size: .8rem;
-    color: var(--text-muted);
+    color: #94a3b8;
     margin: 0;
 }
 
@@ -138,19 +158,29 @@
     border: 1px solid transparent;
 }
 .roadmap-stat-pill--primary {
-    background: rgba(99,102,241,.08);
-    color: #4f46e5;
-    border-color: rgba(99,102,241,.14);
+    background: rgba(99,102,241,.22);
+    color: #c7d2fe;
+    border-color: rgba(99,102,241,.35);
 }
 .roadmap-stat-pill--warning {
-    background: rgba(245,158,11,.12);
-    color: #b45309;
-    border-color: rgba(245,158,11,.16);
+    background: rgba(245,158,11,.2);
+    color: #fcd34d;
+    border-color: rgba(245,158,11,.35);
 }
 .roadmap-stat-pill--success {
-    background: rgba(34,197,94,.10);
-    color: #15803d;
-    border-color: rgba(34,197,94,.16);
+    background: rgba(34,197,94,.2);
+    color: #86efac;
+    border-color: rgba(34,197,94,.35);
+}
+
+.roadmap-project-links {
+    margin-top: .75rem;
+    flex-wrap: wrap;
+}
+
+.roadmap-project-links .btn {
+    min-width: 126px;
+    justify-content: center;
 }
 
 @media (max-width: 768px) {
@@ -164,6 +194,10 @@
 
     .roadmap-card-stats {
         gap: .25rem;
+    }
+
+    .roadmap-project-card {
+        max-width: 100%;
     }
 }
 </style>
