@@ -2,56 +2,10 @@
 // app/Controllers/AdminController.php
 
 require_once __DIR__ . '/../Auth/Auth.php';
+require_once __DIR__ . '/../Config/env.php';
 require_once __DIR__ . '/../Config/Database.php';
 require_once __DIR__ . '/../Models/NewsModel.php';
 require_once __DIR__ . '/../Models/FaqModel.php';
-
-// Ensure portfolioEnv() is available for admin config loading
-if (!function_exists('portfolioEnv')) {
-	function portfolioEnv(string $key, string $default = ''): string {
-		$value = getenv($key);
-		if ($value !== false && $value !== '') {
-			return (string) $value;
-		}
-		if (isset($_ENV[$key]) && $_ENV[$key] !== '') {
-			return (string) $_ENV[$key];
-		}
-		if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') {
-			return (string) $_SERVER[$key];
-		}
-		static $dotEnv = null;
-		if ($dotEnv === null) {
-			$dotEnv = [];
-			$candidatePaths = [
-				dirname(__DIR__, 2) . '/.env',
-				dirname(__DIR__, 3) . '/.env',
-			];
-			$documentRoot = rtrim((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''), '/\\');
-			if ($documentRoot !== '') {
-				$candidatePaths[] = $documentRoot . '/.env';
-				$candidatePaths[] = dirname($documentRoot) . '/.env';
-			}
-			if (DIRECTORY_SEPARATOR === '/') {
-				$candidatePaths[] = '/.env';
-			}
-			$candidatePaths = array_values(array_unique($candidatePaths));
-			foreach ($candidatePaths as $dotEnvPath) {
-				if (!is_file($dotEnvPath) || !is_readable($dotEnvPath)) continue;
-				$lines = file($dotEnvPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
-				foreach ($lines as $line) {
-					$line = ltrim((string) $line, "\xEF\xBB\xBF");
-					$line = trim($line);
-					if ($line === '' || str_starts_with($line, '#') || strpos($line, '=') === false) continue;
-					[$envKey, $envValue] = array_map('trim', explode('=', $line, 2));
-					if ($envKey === '') continue;
-					$envValue = trim($envValue, " \t\n\r\0\x0B\"'");
-					$dotEnv[$envKey] = $envValue;
-				}
-			}
-		}
-		return isset($dotEnv[$key]) ? (string) $dotEnv[$key] : $default;
-	}
-}
 require_once __DIR__ . '/../Models/ProjectModels.php';
 require_once __DIR__ . '/../Models/ContactMessageModel.php';
 require_once __DIR__ . '/../Models/UserModel.php';
@@ -76,7 +30,7 @@ class AdminController {
     private ActivityLogModel    $activityLog;
     private SiteSettingModel    $settings;
     private ProjectRoadmapService $projectRoadmapService;
-    private string              $contactEmail = 'tom1dekoning@gmail.com';
+    private string              $contactEmail;
     private string              $readmeSyncApiUrl = 'https://tombomekestudio.com/api/readmesync/generate';
     private string              $readmeSyncTelemetryApiUrl = 'https://tombomekestudio.com/api/v1/admin/telemetry';
     private string              $readmeSyncTelemetryExportUrl = 'https://tombomekestudio.com/api/v1/admin/telemetry/export';
@@ -94,6 +48,7 @@ class AdminController {
         $this->activityLog = new ActivityLogModel();
         $this->settings    = new SiteSettingModel();
         $this->projectRoadmapService = new ProjectRoadmapService();
+        $this->contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com');
 
         $readmeSyncApiUrl = portfolioEnv('READMESYNC_API_URL', $this->readmeSyncApiUrl);
         $readmeSyncTelemetryApiUrl = portfolioEnv('READMESYNC_ADMIN_TELEMETRY_URL', $this->readmeSyncTelemetryApiUrl);
@@ -685,9 +640,10 @@ class AdminController {
     }
 
     private function listProjects(): void {
-        $projects = $this->projects->getAllForAdmin();
-        $flash    = $this->popFlash();
-        $this->renderAdmin('projects/index', compact('projects', 'flash'), 'Projecten beheren');
+        $projects  = $this->projects->getAllForAdmin();
+        $syncLogs  = $this->projectRoadmapService->getRecentSyncLogs(30);
+        $flash     = $this->popFlash();
+        $this->renderAdmin('projects/index', compact('projects', 'syncLogs', 'flash'), 'Projecten beheren');
     }
 
     private function createProject(): void {
@@ -1468,7 +1424,8 @@ class AdminController {
         }
 
         $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!in_array($file['type'], $allowed, true)) {
+        $mimeType = $this->detectImageMimeType($file['tmp_name'] ?? '');
+        if ($mimeType === null || !in_array($mimeType, $allowed, true)) {
             return null;
         }
 
@@ -1483,6 +1440,26 @@ class AdminController {
             return "public/images/uploads/{$subfolder}/{$filename}";
         }
         return null;
+    }
+
+    private function detectImageMimeType(string $filePath): ?string {
+        if ($filePath === '' || !is_file($filePath)) {
+            return null;
+        }
+
+        if (!function_exists('finfo_open')) {
+            return null;
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo === false) {
+            return null;
+        }
+
+        $mimeType = finfo_file($finfo, $filePath);
+        finfo_close($finfo);
+
+        return is_string($mimeType) && $mimeType !== '' ? $mimeType : null;
     }
 
     private function parseTech(string $raw): array {
