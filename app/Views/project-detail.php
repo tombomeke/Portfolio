@@ -6,7 +6,7 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
 
 <section class="projects project-detail-page">
     <div class="container">
-        <p class="section-intro"><a href="?page=projects">&larr; Terug naar projecten</a></p>
+        <p class="section-intro"><a href="?page=projects">&larr; <?= trans('project_back_to_projects') ?></a></p>
 
         <h1><i class="fas fa-folder-open"></i> <?= htmlspecialchars((string) ($project['title'] ?? 'Project')) ?></h1>
         <p class="section-intro"><?= htmlspecialchars((string) ($project['description'] ?? '')) ?></p>
@@ -14,7 +14,7 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
         <?php if (!empty($projectImages)): ?>
             <div class="project-gallery" data-gallery>
                 <?php if (count($projectImages) > 1): ?>
-                    <button type="button" class="gallery-nav" data-gallery-prev aria-label="Vorige afbeelding">&larr;</button>
+                    <button type="button" class="gallery-nav" data-gallery-prev aria-label="<?= trans('project_previous_image') ?>">&larr;</button>
                 <?php else: ?>
                     <span class="gallery-nav gallery-nav--hidden" aria-hidden="true"></span>
                 <?php endif; ?>
@@ -24,13 +24,13 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
                         <div class="gallery-dots" data-gallery-dots>
                             <?php foreach ($projectImages as $idx => $_): ?>
                                 <button type="button" class="gallery-dot <?= $idx === 0 ? 'gallery-dot--active' : '' ?>"
-                                        data-gallery-dot="<?= $idx ?>" aria-label="Afbeelding <?= $idx + 1 ?>"></button>
+                                        data-gallery-dot="<?= $idx ?>" aria-label="<?= trans('project_image') ?> <?= $idx + 1 ?>"></button>
                             <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
                 </div>
                 <?php if (count($projectImages) > 1): ?>
-                    <button type="button" class="gallery-nav" data-gallery-next aria-label="Volgende afbeelding">&rarr;</button>
+                    <button type="button" class="gallery-nav" data-gallery-next aria-label="<?= trans('project_next_image') ?>">&rarr;</button>
                 <?php else: ?>
                     <span class="gallery-nav gallery-nav--hidden" aria-hidden="true"></span>
                 <?php endif; ?>
@@ -44,9 +44,9 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
             <?php if (!empty($project['demo_url'])): ?>
                 <a href="<?= htmlspecialchars((string) $project['demo_url']) ?>" target="_blank" class="btn btn-primary"><i class="fas fa-link"></i> Demo</a>
             <?php endif; ?>
-            <a href="?page=project-roadmaps" class="btn btn-ghost">Alle roadmaps</a>
+            <a href="?page=project-roadmaps" class="btn btn-ghost"><?= trans('project_all_roadmaps') ?></a>
             <?php if (!empty($canSyncRoadmap) && !empty($project['repo_url'])): ?>
-                <a href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=roadmap&amp;sync=1" class="btn btn-secondary">Sync roadmap via API</a>
+                <a href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=roadmap&amp;sync=1" class="btn btn-secondary"><?= trans('project_sync_roadmap') ?></a>
             <?php endif; ?>
         </div>
 
@@ -55,17 +55,17 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
         <?php endif; ?>
 
         <div class="project-detail-tabs" role="tablist">
-            <a class="btn <?= $activeTab === 'overview' ? 'btn-primary' : 'btn-ghost' ?>" href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=overview">Overzicht</a>
-            <a class="btn <?= $activeTab === 'roadmap' ? 'btn-primary' : 'btn-ghost' ?>" href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=roadmap">Roadmap</a>
+            <a class="btn <?= $activeTab === 'overview' ? 'btn-primary' : 'btn-ghost' ?>" href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=overview"><?= trans('project_tab_overview') ?></a>
+            <a class="btn <?= $activeTab === 'roadmap' ? 'btn-primary' : 'btn-ghost' ?>" href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=roadmap"><?= trans('project_tab_roadmap') ?></a>
         </div>
 
         <?php if ($activeTab === 'overview'): ?>
             <article class="project-card" style="margin-top:1rem">
                 <div class="project-content">
-                    <h3>Beschrijving</h3>
+                    <h3><?= trans('project_description_title') ?></h3>
                     <p><?= nl2br(htmlspecialchars((string) ($project['long_description'] ?: $project['description']))) ?></p>
                     <?php if (!empty($project['features'])): ?>
-                        <h3 style="margin-top:1rem">Features</h3>
+                        <h3 style="margin-top:1rem"><?= trans('project_features_title') ?></h3>
                         <ul>
                             <?php foreach ((array) $project['features'] as $feature): ?>
                                 <li><?= htmlspecialchars((string) $feature) ?></li>
@@ -88,38 +88,38 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
                 <div class="project-content">
                     <div class="roadmap-header">
                         <div>
-                            <h3 style="margin:0">Roadmap TODOs</h3>
+                            <h3 style="margin:0"><?= trans('roadmap_todos_title') ?></h3>
                             <p class="roadmap-header-meta">
-                                <?= $openCount ?> open · <?= $totalCount ?> totaal
+                                <?= $openCount ?> <?= trans('roadmap_open_label') ?> · <?= $totalCount ?> <?= trans('roadmap_total_label') ?>
                                 <?php if ($lastSyncAt): ?>
-                                    · gesynchroniseerd op <?= htmlspecialchars(date('d/m/Y H:i', strtotime($lastSyncAt))) ?>
+                                    · <?= trans('roadmap_synced_on') ?> <?= htmlspecialchars(date('d/m/Y H:i', strtotime($lastSyncAt))) ?>
                                 <?php endif; ?>
                             </p>
                         </div>
                         <div class="roadmap-summary-badges">
-                            <span class="roadmap-summary-badge roadmap-summary-badge--open"><?= $openCount ?> open</span>
-                            <span class="roadmap-summary-badge roadmap-summary-badge--total"><?= $totalCount ?> items</span>
+                            <span class="roadmap-summary-badge roadmap-summary-badge--open"><?= $openCount ?> <?= trans('roadmap_open_label') ?></span>
+                            <span class="roadmap-summary-badge roadmap-summary-badge--total"><?= $totalCount ?> <?= trans('roadmap_items_label') ?></span>
                         </div>
                     </div>
 
                     <div class="roadmap-filters">
-                        <a href="<?= $filterBase ?>" class="btn btn-sm <?= $activeFilter === '' ? 'btn-primary' : 'btn-ghost' ?>">Alle</a>
-                        <a href="<?= $filterBase ?>&amp;filter=open" class="btn btn-sm <?= $activeFilter === 'open' ? 'btn-primary' : 'btn-ghost' ?>">Open</a>
-                        <a href="<?= $filterBase ?>&amp;filter=done" class="btn btn-sm <?= $activeFilter === 'done' ? 'btn-primary' : 'btn-ghost' ?>">Klaar</a>
-                        <a href="<?= $filterBase ?>&amp;filter=high" class="btn btn-sm <?= $activeFilter === 'high' ? 'btn-primary' : 'btn-ghost' ?>">Hoge prioriteit</a>
+                        <a href="<?= $filterBase ?>" class="btn btn-sm <?= $activeFilter === '' ? 'btn-primary' : 'btn-ghost' ?>"><?= trans('roadmap_filter_all') ?></a>
+                        <a href="<?= $filterBase ?>&amp;filter=open" class="btn btn-sm <?= $activeFilter === 'open' ? 'btn-primary' : 'btn-ghost' ?>"><?= trans('roadmap_filter_open') ?></a>
+                        <a href="<?= $filterBase ?>&amp;filter=done" class="btn btn-sm <?= $activeFilter === 'done' ? 'btn-primary' : 'btn-ghost' ?>"><?= trans('roadmap_filter_done') ?></a>
+                        <a href="<?= $filterBase ?>&amp;filter=high" class="btn btn-sm <?= $activeFilter === 'high' ? 'btn-primary' : 'btn-ghost' ?>"><?= trans('roadmap_filter_high') ?></a>
                     </div>
 
                     <?php if (empty($roadmapItems)): ?>
                         <div class="roadmap-empty">
                             <i class="fas fa-list-check" style="font-size:2rem;opacity:.25;margin-bottom:.5rem"></i>
                             <?php if ($activeFilter !== ''): ?>
-                                <p>Geen items gevonden voor dit filter.</p>
-                                <a href="<?= $filterBase ?>" class="btn btn-ghost btn-sm">Alle tonen</a>
+                                <p><?= trans('roadmap_no_items_for_filter') ?></p>
+                                <a href="<?= $filterBase ?>" class="btn btn-ghost btn-sm"><?= trans('roadmap_show_all') ?></a>
                             <?php else: ?>
-                                <p>Nog geen roadmap items gesynchroniseerd voor dit project.</p>
+                                <p><?= trans('roadmap_not_synced_for_project') ?></p>
                                 <?php if (!empty($canSyncRoadmap) && $repoUrl !== ''): ?>
                                     <a href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=roadmap&amp;sync=1"
-                                       class="btn btn-ghost btn-sm">Nu synchroniseren</a>
+                                       class="btn btn-ghost btn-sm"><?= trans('roadmap_sync_now') ?></a>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
@@ -171,7 +171,7 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
                                             <?php if ($file !== '' && $line > 0): ?>
                                                 <?php if ($githubLink !== ''): ?>
                                                     <a href="<?= htmlspecialchars($githubLink) ?>" target="_blank" rel="noopener"
-                                                       title="Open op GitHub">:<?= $line ?></a>
+                                                       title="<?= trans('project_open_github') ?>">:<?= $line ?></a>
                                                 <?php else: ?>
                                                     <span>:<?= $line ?></span>
                                                 <?php endif; ?>

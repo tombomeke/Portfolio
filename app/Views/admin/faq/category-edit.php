@@ -4,8 +4,8 @@
 
 <div class="card">
     <div class="card-header">
-        <span class="card-title">Categorie bewerken #<?= $category['id'] ?></span>
-        <a href="?page=admin&section=faq" class="btn btn-ghost btn-sm">← Terug</a>
+        <span class="card-title"><?= trans('admin_faq_edit_category') ?> #<?= $category['id'] ?></span>
+        <a href="?page=admin&section=faq" class="btn btn-ghost btn-sm">← <?= trans('admin_back') ?></a>
     </div>
     <form method="POST" action="?page=admin&section=faq&action=category-edit&id=<?= $category['id'] ?>">
         <?= \Auth::csrfField() ?>
@@ -15,11 +15,11 @@
                 <input type="text" name="slug" value="<?= htmlspecialchars($category['slug']) ?>" required>
             </div>
             <div class="form-group">
-                <label>Volgorde</label>
+                <label><?= trans('admin_faq_order') ?></label>
                 <input type="number" name="sort_order" value="<?= $category['sort_order'] ?>" min="0">
             </div>
             <div class="form-group">
-                <label>Naam (NL) *</label>
+                <label><?= trans('admin_faq_name_nl_required') ?></label>
                 <input type="text" name="name_nl" value="<?= htmlspecialchars($category['name_nl'] ?? '') ?>" required>
             </div>
             <div class="form-group">
@@ -28,8 +28,8 @@
             </div>
         </div>
         <div class="form-actions" style="margin-top:1.25rem">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Opslaan</button>
-            <a href="?page=admin&section=faq" class="btn btn-ghost">Annuleren</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <?= trans('admin_save') ?></button>
+            <a href="?page=admin&section=faq" class="btn btn-ghost"><?= trans('admin_cancel') ?></a>
         </div>
     </form>
 </div>

@@ -4,22 +4,22 @@
 
 <div class="card">
     <div class="card-header">
-        <span class="card-title">Contact berichten (<?= count($messages) ?>)</span>
+        <span class="card-title"><?= trans('admin_contact_messages') ?> (<?= count($messages) ?>)</span>
     </div>
 
     <?php if (empty($messages)): ?>
-        <p style="color:var(--text-muted)">Geen berichten ontvangen.</p>
+        <p style="color:var(--text-muted)"><?= trans('admin_contact_no_messages') ?></p>
     <?php else: ?>
     <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
-                    <th>Van</th>
-                    <th>E-mail</th>
-                    <th>Status</th>
-                    <th>Beantwoord</th>
-                    <th>Ontvangen</th>
-                    <th>Acties</th>
+                    <th><?= trans('admin_table_from') ?></th>
+                    <th><?= trans('contact_email') ?></th>
+                    <th><?= trans('admin_table_status') ?></th>
+                    <th><?= trans('admin_contact_replied') ?></th>
+                    <th><?= trans('admin_received_label') ?></th>
+                    <th><?= trans('admin_actions') ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -35,13 +35,13 @@
                     <td><?= htmlspecialchars($m['email']) ?></td>
                     <td>
                         <?php if (!$m['read_at']): ?>
-                            <span class="badge-status unread">Ongelezen</span>
+                            <span class="badge-status unread"><?= trans('admin_stats_unread') ?></span>
                         <?php else: ?>
-                            <span class="badge-status read">Gelezen</span>
+                            <span class="badge-status read"><?= trans('admin_contact_read') ?></span>
                         <?php endif; ?>
                     </td>
                     <td>
-                        <?= $m['replied_at'] ? '<span style="color:var(--success)"><i class="fas fa-check"></i> Ja</span>' : '—' ?>
+                        <?= $m['replied_at'] ? '<span style="color:var(--success)"><i class="fas fa-check"></i> ' . htmlspecialchars(trans('admin_contact_yes')) . '</span>' : '—' ?>
                     </td>
                     <td><?= date('d-m-Y H:i', strtotime($m['created_at'])) ?></td>
                     <td style="display:flex;gap:.4rem">
@@ -50,7 +50,7 @@
                         </a>
                         <form method="POST" action="?page=admin&section=contact&action=delete&id=<?= $m['id'] ?>" class="confirm-inline">
                             <?= \Auth::csrfField() ?>
-                            <button type="submit" data-confirm="Bericht verwijderen?">
+                            <button type="submit" data-confirm="<?= trans('admin_contact_delete_confirm') ?>">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>

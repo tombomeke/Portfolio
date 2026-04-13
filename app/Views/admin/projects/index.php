@@ -4,34 +4,34 @@
 
 <div class="card">
     <div class="card-header">
-        <span class="card-title">Alle projecten (<?= count($projects) ?>)</span>
+        <span class="card-title"><?= trans('admin_projects_all') ?> (<?= count($projects) ?>)</span>
         <div style="display:flex;gap:.4rem;align-items:center">
             <form method="POST" action="?page=admin&section=projects&action=sync-all"
-                  onsubmit="return confirm('Alle project-roadmaps synchroniseren? Dit kan even duren.')">
+                  onsubmit="return confirm('<?= trans('admin_projects_sync_all_confirm') ?>')">
                 <?= \Auth::csrfField() ?>
-                <button type="submit" class="btn btn-ghost btn-sm" title="Alle roadmaps syncen via ReadmeSync API">
-                    <i class="fas fa-rotate"></i> Sync roadmaps
+                <button type="submit" class="btn btn-ghost btn-sm" title="<?= trans('admin_projects_sync_all_title') ?>">
+                    <i class="fas fa-rotate"></i> <?= trans('admin_projects_sync_roadmaps') ?>
                 </button>
             </form>
             <a href="?page=admin&section=projects&action=create" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus"></i> Toevoegen
+                <i class="fas fa-plus"></i> <?= trans('admin_add') ?>
             </a>
         </div>
     </div>
 
     <?php if (empty($projects)): ?>
-        <p style="color:var(--text-muted)">Nog geen projecten. <a href="?page=admin&section=projects&action=create" style="color:var(--primary)">Voeg er een toe.</a></p>
+        <p style="color:var(--text-muted)"><?= trans('admin_projects_none') ?> <a href="?page=admin&section=projects&action=create" style="color:var(--primary)"><?= trans('admin_dev_add_one') ?></a></p>
     <?php else: ?>
     <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Titel (NL)</th>
-                    <th>Categorie</th>
-                    <th>Status</th>
-                    <th>Volgorde</th>
-                    <th>Acties</th>
+                    <th><?= trans('admin_dev_title_nl') ?></th>
+                    <th><?= trans('modal_skill_category') ?></th>
+                    <th><?= trans('admin_table_status') ?></th>
+                    <th><?= trans('admin_dev_order') ?></th>
+                    <th><?= trans('admin_actions') ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -49,7 +49,7 @@
                     </td>
                     <td><?= $p['sort_order'] ?></td>
                     <td style="display:flex;gap:.4rem">
-                        <a href="?page=project&slug=<?= urlencode((string) ($p['slug'] ?? '')) ?>&tab=roadmap" class="btn btn-ghost btn-sm" title="Open publieke roadmap">
+                        <a href="?page=project&slug=<?= urlencode((string) ($p['slug'] ?? '')) ?>&tab=roadmap" class="btn btn-ghost btn-sm" title="<?= trans('admin_projects_open_public_roadmap') ?>">
                             <i class="fas fa-list-check"></i>
                         </a>
                         <a href="?page=admin&section=projects&action=edit&id=<?= $p['id'] ?>" class="btn btn-ghost btn-sm">
@@ -57,7 +57,7 @@
                         </a>
                         <form method="POST" action="?page=admin&section=projects&action=delete&id=<?= $p['id'] ?>" class="confirm-inline">
                             <?= \Auth::csrfField() ?>
-                            <button type="submit" data-confirm="Project verwijderen?">
+                            <button type="submit" data-confirm="<?= trans('admin_projects_delete_confirm') ?>">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
@@ -73,24 +73,24 @@
 <?php $syncLogs = $syncLogs ?? []; ?>
 <div class="card" style="margin-top:1.5rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-rotate"></i> Roadmap sync logs</span>
-        <span class="badge"><?= count($syncLogs) ?> recente entries</span>
+        <span class="card-title"><i class="fas fa-rotate"></i> <?= trans('admin_projects_sync_logs') ?></span>
+        <span class="badge"><?= count($syncLogs) ?> <?= trans('admin_projects_recent_entries') ?></span>
     </div>
     <?php if (empty($syncLogs)): ?>
         <p style="color:var(--text-muted);padding:.75rem 0">
-            Nog geen sync logs. Klik "Sync roadmaps" of open een project-detail met <code>?tab=roadmap&sync=1</code>.
+            <?= trans('admin_projects_no_sync_logs') ?>
         </p>
     <?php else: ?>
     <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
-                    <th>Tijdstip</th>
-                    <th>Project</th>
-                    <th>Items</th>
-                    <th>Status</th>
-                    <th>Contract</th>
-                    <th>Foutmelding</th>
+                    <th><?= trans('admin_table_timestamp') ?></th>
+                    <th><?= trans('admin_projects_project') ?></th>
+                    <th><?= trans('roadmap_items_label') ?></th>
+                    <th><?= trans('admin_table_status') ?></th>
+                    <th><?= trans('admin_projects_contract') ?></th>
+                    <th><?= trans('admin_projects_error_message') ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -112,7 +112,7 @@
                         <?php if ($log['success']): ?>
                             <span style="color:#22c55e;font-size:.8rem"><i class="fas fa-check-circle"></i> OK</span>
                         <?php else: ?>
-                            <span style="color:#ef4444;font-size:.8rem"><i class="fas fa-times-circle"></i> Fout</span>
+                            <span style="color:#ef4444;font-size:.8rem"><i class="fas fa-times-circle"></i> <?= trans('admin_projects_error') ?></span>
                         <?php endif; ?>
                     </td>
                     <td style="font-size:.75rem;color:var(--text-muted)"><?= htmlspecialchars((string) ($log['api_contract_version'] ?? '—')) ?></td>

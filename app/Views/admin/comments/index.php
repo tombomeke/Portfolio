@@ -4,19 +4,19 @@
 
 <div class="card">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-comments"></i> Reacties modereren</span>
+        <span class="card-title"><i class="fas fa-comments"></i> <?= trans('admin_comments_moderate_title') ?></span>
     </div>
     <?php if (empty($comments)): ?>
-        <p class="empty-state"><i class="far fa-comment-dots"></i> Nog geen reacties.</p>
+        <p class="empty-state"><i class="far fa-comment-dots"></i> <?= trans('admin_comments_none') ?></p>
     <?php else: ?>
     <table class="table">
         <thead>
             <tr>
-                <th>Artikel</th>
-                <th>Auteur</th>
-                <th>Reactie</th>
-                <th style="width:110px">Datum</th>
-                <th style="width:90px">Status</th>
+                <th><?= trans('admin_table_article') ?></th>
+                <th><?= trans('admin_table_author') ?></th>
+                <th><?= trans('admin_table_comment') ?></th>
+                <th style="width:110px"><?= trans('admin_table_date') ?></th>
+                <th style="width:90px"><?= trans('admin_table_status') ?></th>
                 <th style="width:110px"></th>
             </tr>
         </thead>
@@ -33,9 +33,9 @@
             <td class="text-muted text-sm"><?= date('d/m/Y H:i', strtotime($c['created_at'])) ?></td>
             <td>
                 <?php if ($c['is_approved']): ?>
-                    <span class="badge badge--success">Goedgekeurd</span>
+                    <span class="badge badge--success"><?= trans('admin_comments_approved') ?></span>
                 <?php else: ?>
-                    <span class="badge badge--warning">In afwachting</span>
+                    <span class="badge badge--warning"><?= trans('admin_comments_pending') ?></span>
                 <?php endif; ?>
             </td>
             <td>
@@ -43,7 +43,7 @@
                     <?php if (!$c['is_approved']): ?>
                     <form method="POST" action="?page=admin&section=comments&action=approve&id=<?= $c['id'] ?>">
                         <?= \Auth::csrfField() ?>
-                        <button type="submit" class="btn btn-ghost btn-xs" style="color:var(--success)" title="Goedkeuren">
+                        <button type="submit" class="btn btn-ghost btn-xs" style="color:var(--success)" title="<?= trans('admin_action_approve') ?>">
                             <i class="fas fa-check"></i>
                         </button>
                     </form>
@@ -51,7 +51,7 @@
                     <form method="POST" action="?page=admin&section=comments&action=delete&id=<?= $c['id'] ?>">
                         <?= \Auth::csrfField() ?>
                         <button type="submit" class="btn btn-ghost btn-xs" style="color:var(--danger)"
-                                data-confirm="Reactie van <?= htmlspecialchars(addslashes($c['username'] ?? '?')) ?> verwijderen?" title="Verwijderen">
+                                data-confirm="<?= trans('admin_comments_delete_confirm') ?> <?= htmlspecialchars(addslashes($c['username'] ?? '?')) ?>?" title="<?= trans('admin_action_delete') ?>">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>

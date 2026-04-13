@@ -1,14 +1,14 @@
 <section class="projects">
     <div class="container">
-        <h1><i class="fas fa-list-check"></i> Project Roadmaps</h1>
-        <p class="section-intro">Overzicht van TODO-items per project, gesynchroniseerd via ReadmeSync.API.</p>
+        <h1><i class="fas fa-list-check"></i> <?= trans('project_roadmaps_title') ?></h1>
+        <p class="section-intro"><?= trans('project_roadmaps_intro') ?></p>
 
         <?php if (empty($projects)): ?>
-            <p class="section-intro">Nog geen projecten gevonden.</p>
+            <p class="section-intro"><?= trans('project_roadmaps_none_found') ?></p>
         <?php else: ?>
 
             <div class="roadmap-page-toolbar">
-                <input type="text" id="roadmap-search" placeholder="Zoek project…"
+                <input type="text" id="roadmap-search" placeholder="<?= htmlspecialchars(trans('project_roadmaps_search_placeholder')) ?>"
                        class="roadmap-search-input">
             </div>
 
@@ -29,28 +29,28 @@
                             <p style="color:var(--text-muted);font-size:.85rem"><?= htmlspecialchars($project['description']) ?></p>
 
                             <?php if ($totalCount > 0): ?>
-                                <div class="roadmap-progress" title="<?= $doneCount ?>/<?= $totalCount ?> klaar">
+                                <div class="roadmap-progress" title="<?= $doneCount ?>/<?= $totalCount ?> <?= trans('project_roadmaps_done_percent') ?>">
                                     <div class="roadmap-progress-bar" style="width:<?= $progress ?>%"></div>
                                 </div>
                                 <p class="roadmap-card-stats">
-                                    <span class="roadmap-stat-pill roadmap-stat-pill--primary"><?= $progress ?>% klaar</span>
-                                    <span class="roadmap-stat-pill roadmap-stat-pill--warning"><?= $openCount ?> open</span>
-                                    <span class="roadmap-stat-pill roadmap-stat-pill--success"><?= $doneCount ?> gedaan</span>
+                                    <span class="roadmap-stat-pill roadmap-stat-pill--primary"><?= $progress ?>% <?= trans('project_roadmaps_done_percent') ?></span>
+                                    <span class="roadmap-stat-pill roadmap-stat-pill--warning"><?= $openCount ?> <?= trans('roadmap_open_label') ?></span>
+                                    <span class="roadmap-stat-pill roadmap-stat-pill--success"><?= $doneCount ?> <?= trans('project_roadmaps_done_count') ?></span>
                                 </p>
                             <?php else: ?>
                                 <p class="roadmap-card-empty">
-                                    Nog niet gesynchroniseerd.
+                                    <?= trans('project_roadmaps_not_synced') ?>
                                 </p>
                             <?php endif; ?>
 
                             <p class="roadmap-card-sync">
-                                <strong>Gesynchroniseerd:</strong>
-                                <?= $lastSyncAt ? htmlspecialchars(date('d/m/Y H:i', strtotime($lastSyncAt))) : 'Nog niet' ?>
+                                <strong><?= trans('project_roadmaps_synced') ?></strong>
+                                <?= $lastSyncAt ? htmlspecialchars(date('d/m/Y H:i', strtotime($lastSyncAt))) : trans('project_roadmaps_not_yet') ?>
                             </p>
 
                             <div class="project-links" style="margin-top:.75rem">
                                 <a class="btn btn-primary btn-sm" href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=roadmap">
-                                    Bekijk roadmap
+                                    <?= trans('project_roadmaps_view') ?>
                                 </a>
                                 <?php if (!empty($project['repo_url'])): ?>
                                     <a class="btn btn-ghost btn-sm" href="<?= htmlspecialchars((string) $project['repo_url']) ?>" target="_blank" rel="noopener">
@@ -63,7 +63,7 @@
                 <?php endforeach; ?>
             </div>
 
-            <p id="roadmap-no-results" style="display:none;color:var(--text-muted)">Geen projecten gevonden.</p>
+            <p id="roadmap-no-results" style="display:none;color:var(--text-muted)"><?= trans('project_roadmaps_no_results') ?></p>
         <?php endif; ?>
     </div>
 </section>

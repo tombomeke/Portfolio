@@ -10,8 +10,8 @@ $featuresEn  = implode("\n", $project['features_en'] ?? []);
 
 <div class="card">
     <div class="card-header">
-        <span class="card-title">Project bewerken: <?= htmlspecialchars($project['title_nl'] ?? '#'.$project['id']) ?></span>
-        <a href="?page=admin&section=projects" class="btn btn-ghost btn-sm">← Terug</a>
+        <span class="card-title"><?= trans('admin_projects_edit_project') ?>: <?= htmlspecialchars($project['title_nl'] ?? '#'.$project['id']) ?></span>
+        <a href="?page=admin&section=projects" class="btn btn-ghost btn-sm">← <?= trans('admin_back') ?></a>
     </div>
 
     <form method="POST" action="?page=admin&section=projects&action=edit&id=<?= $project['id'] ?>" enctype="multipart/form-data">
@@ -32,16 +32,16 @@ $featuresEn  = implode("\n", $project['features_en'] ?? []);
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Status</label>
+                    <label><?= trans('admin_table_status') ?></label>
                     <select name="status">
-                        <option value="">— Geen —</option>
+                        <option value="">— <?= trans('admin_projects_none_option') ?> —</option>
                         <?php foreach (['active','development','completed'] as $s): ?>
                             <option value="<?= $s ?>" <?= ($project['status'] ?? '') === $s ? 'selected' : '' ?>><?= $s ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Volgorde</label>
+                    <label><?= trans('admin_dev_order') ?></label>
                     <input type="number" name="sort_order" value="<?= $project['sort_order'] ?>" min="0">
                 </div>
                 <div class="form-group">
@@ -64,7 +64,7 @@ $featuresEn  = implode("\n", $project['features_en'] ?? []);
                 <?php if ($project['image_path']): ?>
                     <img src="<?= htmlspecialchars($project['image_path']) ?>" class="img-preview" alt="">
                     <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;margin-top:.5rem">
-                        <input type="checkbox" name="remove_image" value="1"> Cover afbeelding verwijderen
+                        <input type="checkbox" name="remove_image" value="1"> <?= trans('admin_projects_remove_cover') ?>
                     </label>
                 <?php endif; ?>
                 <input type="file" name="image" accept="image/*" style="margin-top:.5rem">
@@ -84,13 +84,13 @@ $featuresEn  = implode("\n", $project['features_en'] ?? []);
                                      style="width:100px;height:75px;object-fit:cover;border-radius:8px;border:1px solid var(--border-color)" alt="">
                                 <label style="display:flex;align-items:center;gap:.25rem;font-size:.75rem;margin-top:.25rem">
                                     <input type="checkbox" name="delete_images[]" value="<?= (int) $img['id'] ?>">
-                                    Verwijderen
+                                    <?= trans('admin_action_delete') ?>
                                 </label>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem">Nog geen extra afbeeldingen.</p>
+                    <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem"><?= trans('admin_projects_no_extra_images') ?></p>
                 <?php endif; ?>
                 <input type="file" name="gallery_images[]" accept="image/*" multiple>
                 <span class="form-hint">Selecteer meerdere bestanden om toe te voegen aan de carousel.</span>
@@ -146,8 +146,8 @@ $featuresEn  = implode("\n", $project['features_en'] ?? []);
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Opslaan</button>
-                <a href="?page=admin&section=projects" class="btn btn-ghost">Annuleren</a>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <?= trans('admin_save') ?></button>
+                <a href="?page=admin&section=projects" class="btn btn-ghost"><?= trans('admin_cancel') ?></a>
             </div>
         </div>
     </form>

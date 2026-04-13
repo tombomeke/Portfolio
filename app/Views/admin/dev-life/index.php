@@ -3,30 +3,30 @@
 <?php endif; ?>
 
 <div style="display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
-    <a href="?page=admin&section=dev-life&action=skill-create" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Skill toevoegen</a>
-    <a href="?page=admin&section=dev-life&action=edu-create"   class="btn btn-ghost btn-sm"><i class="fas fa-plus"></i> Opleiding toevoegen</a>
-    <a href="?page=admin&section=dev-life&action=goal-create"  class="btn btn-ghost btn-sm"><i class="fas fa-plus"></i> Leerdoel toevoegen</a>
+    <a href="?page=admin&section=dev-life&action=skill-create" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> <?= trans('admin_dev_skill_add') ?></a>
+    <a href="?page=admin&section=dev-life&action=edu-create"   class="btn btn-ghost btn-sm"><i class="fas fa-plus"></i> <?= trans('admin_dev_education_add') ?></a>
+    <a href="?page=admin&section=dev-life&action=goal-create"  class="btn btn-ghost btn-sm"><i class="fas fa-plus"></i> <?= trans('admin_dev_goal_add') ?></a>
 </div>
 
 <!-- Skills -->
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header">
-        <span class="card-title">Skills (<?= count($skillList) ?>)</span>
+        <span class="card-title"><?= trans('skills_title') ?> (<?= count($skillList) ?>)</span>
         <a href="?page=admin&section=dev-life&action=skill-create" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i></a>
     </div>
     <?php if (empty($skillList)): ?>
-        <p style="color:var(--text-muted)">Nog geen skills.</p>
+        <p style="color:var(--text-muted)"><?= trans('admin_dev_no_skills') ?></p>
     <?php else: ?>
     <div class="table-wrapper">
         <table>
-            <thead><tr><th>Naam</th><th>Categorie</th><th>Level</th><th>Volgorde</th><th>Acties</th></tr></thead>
+            <thead><tr><th><?= trans('contact_name') ?></th><th><?= trans('modal_skill_category') ?></th><th><?= trans('modal_skill_level') ?></th><th><?= trans('admin_dev_order') ?></th><th><?= trans('admin_actions') ?></th></tr></thead>
             <tbody>
                 <?php foreach ($skillList as $s): ?>
                 <tr>
                     <td><strong><?= htmlspecialchars($s['name']) ?></strong></td>
                     <td><code style="font-size:.8rem"><?= htmlspecialchars($s['category']) ?></code></td>
                     <td>
-                        <?php $levels = ['', 'Beginner', 'Intermediate', 'Advanced']; ?>
+                        <?php $levels = ['', trans('admin_dev_level_beginner'), 'Intermediate', 'Advanced']; ?>
                         <span class="badge-status <?= $s['level'] == 3 ? 'active' : ($s['level'] == 2 ? 'development' : 'draft') ?>">
                             <?= $levels[$s['level']] ?? $s['level'] ?>
                         </span>
@@ -36,7 +36,7 @@
                         <a href="?page=admin&section=dev-life&action=skill-edit&id=<?= $s['id'] ?>" class="btn btn-ghost btn-sm"><i class="fas fa-pencil"></i></a>
                         <form method="POST" action="?page=admin&section=dev-life&action=skill-delete&id=<?= $s['id'] ?>" class="confirm-inline">
                             <?= \Auth::csrfField() ?>
-                            <button type="submit" data-confirm="Skill '<?= htmlspecialchars($s['name']) ?>' verwijderen?"><i class="fas fa-trash"></i></button>
+                            <button type="submit" data-confirm="<?= trans('admin_dev_delete_skill_confirm') ?> '<?= htmlspecialchars($s['name']) ?>'?"><i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>
@@ -50,15 +50,15 @@
 <!-- Education -->
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header">
-        <span class="card-title">Opleidingen & Certificaten (<?= count($education) ?>)</span>
+        <span class="card-title"><?= trans('education_title') ?> (<?= count($education) ?>)</span>
         <a href="?page=admin&section=dev-life&action=edu-create" class="btn btn-ghost btn-sm"><i class="fas fa-plus"></i></a>
     </div>
     <?php if (empty($education)): ?>
-        <p style="color:var(--text-muted)">Nog geen opleidingen. <a href="?page=admin&section=dev-life&action=edu-create" style="color:var(--primary)">Voeg er een toe.</a></p>
+        <p style="color:var(--text-muted)"><?= trans('admin_dev_no_education') ?> <a href="?page=admin&section=dev-life&action=edu-create" style="color:var(--primary)"><?= trans('admin_dev_add_one') ?></a></p>
     <?php else: ?>
     <div class="table-wrapper">
         <table>
-            <thead><tr><th>Titel (NL)</th><th>Instelling</th><th>Periode</th><th>Acties</th></tr></thead>
+            <thead><tr><th><?= trans('admin_dev_title_nl') ?></th><th><?= trans('modal_education_institution') ?></th><th><?= trans('modal_education_period') ?></th><th><?= trans('admin_actions') ?></th></tr></thead>
             <tbody>
                 <?php foreach ($education as $e): ?>
                 <tr>
@@ -69,7 +69,7 @@
                         <a href="?page=admin&section=dev-life&action=edu-edit&id=<?= $e['id'] ?>" class="btn btn-ghost btn-sm"><i class="fas fa-pencil"></i></a>
                         <form method="POST" action="?page=admin&section=dev-life&action=edu-delete&id=<?= $e['id'] ?>" class="confirm-inline">
                             <?= \Auth::csrfField() ?>
-                            <button type="submit" data-confirm="Opleiding verwijderen?"><i class="fas fa-trash"></i></button>
+                            <button type="submit" data-confirm="<?= trans('admin_dev_delete_education_confirm') ?>"><i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>
@@ -83,15 +83,15 @@
 <!-- Learning Goals -->
 <div class="card">
     <div class="card-header">
-        <span class="card-title">Leerdoelen (<?= count($goals) ?>)</span>
+        <span class="card-title"><?= trans('learning_title') ?> (<?= count($goals) ?>)</span>
         <a href="?page=admin&section=dev-life&action=goal-create" class="btn btn-ghost btn-sm"><i class="fas fa-plus"></i></a>
     </div>
     <?php if (empty($goals)): ?>
-        <p style="color:var(--text-muted)">Nog geen leerdoelen. <a href="?page=admin&section=dev-life&action=goal-create" style="color:var(--primary)">Voeg er een toe.</a></p>
+        <p style="color:var(--text-muted)"><?= trans('admin_dev_no_goals') ?> <a href="?page=admin&section=dev-life&action=goal-create" style="color:var(--primary)"><?= trans('admin_dev_add_one') ?></a></p>
     <?php else: ?>
     <div class="table-wrapper">
         <table>
-            <thead><tr><th>Titel (NL)</th><th>Voortgang</th><th>Volgorde</th><th>Acties</th></tr></thead>
+            <thead><tr><th><?= trans('admin_dev_title_nl') ?></th><th><?= trans('modal_learning_progress') ?></th><th><?= trans('admin_dev_order') ?></th><th><?= trans('admin_actions') ?></th></tr></thead>
             <tbody>
                 <?php foreach ($goals as $g): ?>
                 <tr>
@@ -102,7 +102,7 @@
                         <a href="?page=admin&section=dev-life&action=goal-edit&id=<?= $g['id'] ?>" class="btn btn-ghost btn-sm"><i class="fas fa-pencil"></i></a>
                         <form method="POST" action="?page=admin&section=dev-life&action=goal-delete&id=<?= $g['id'] ?>" class="confirm-inline">
                             <?= \Auth::csrfField() ?>
-                            <button type="submit" data-confirm="Leerdoel verwijderen?"><i class="fas fa-trash"></i></button>
+                            <button type="submit" data-confirm="<?= trans('admin_dev_delete_goal_confirm') ?>"><i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>

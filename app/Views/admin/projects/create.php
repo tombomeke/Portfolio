@@ -4,8 +4,8 @@
 
 <div class="card">
     <div class="card-header">
-        <span class="card-title">Project toevoegen</span>
-        <a href="?page=admin&section=projects" class="btn btn-ghost btn-sm">← Terug</a>
+        <span class="card-title"><?= trans('admin_projects_add_project') ?></span>
+        <a href="?page=admin&section=projects" class="btn btn-ghost btn-sm">← <?= trans('admin_back') ?></a>
     </div>
 
     <form method="POST" action="?page=admin&section=projects&action=create" enctype="multipart/form-data">
@@ -19,9 +19,9 @@
                     <span class="form-hint">Unieke identifier voor het project.</span>
                 </div>
                 <div class="form-group">
-                    <label>Categorie *</label>
+                    <label><?= trans('admin_dev_category_required') ?></label>
                     <select name="category" required>
-                        <option value="">— Selecteer —</option>
+                        <option value="">— <?= trans('admin_faq_select') ?> —</option>
                         <option value="web">Web</option>
                         <option value="cli">CLI</option>
                         <option value="api">API</option>
@@ -29,16 +29,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Status</label>
+                    <label><?= trans('admin_table_status') ?></label>
                     <select name="status">
-                        <option value="">— Geen —</option>
+                        <option value="">— <?= trans('admin_projects_none_option') ?> —</option>
                         <option value="active">Active</option>
                         <option value="development">Development</option>
                         <option value="completed">Completed</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Volgorde</label>
+                    <label><?= trans('admin_dev_order') ?></label>
                     <input type="number" name="sort_order" value="0" min="0">
                 </div>
                 <div class="form-group">
@@ -118,8 +118,8 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Opslaan</button>
-                <a href="?page=admin&section=projects" class="btn btn-ghost">Annuleren</a>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <?= trans('admin_save') ?></button>
+                <a href="?page=admin&section=projects" class="btn btn-ghost"><?= trans('admin_cancel') ?></a>
             </div>
         </div>
     </form>

@@ -25,11 +25,11 @@ if ($flash): ?>
 
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-chart-line"></i> ReadmeSync telemetry</span>
-        <span class="badge"><?= $totalItems ?> logs</span>
+        <span class="card-title"><i class="fas fa-chart-line"></i> <?= trans('admin_telemetry_title') ?></span>
+        <span class="badge"><?= $totalItems ?> <?= trans('admin_telemetry_logs') ?></span>
     </div>
     <p class="text-muted" style="margin:0">
-        Overzicht van ReadmeSync API-gebruik en repo scans. Dit scherm leest server-side uit de API zodat je geen database-console nodig hebt.
+        <?= trans('admin_telemetry_intro') ?>
     </p>
 </div>
 
@@ -73,9 +73,9 @@ if ($flash): ?>
 
 <div class="card" style="margin-top:1.5rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-filter"></i> Filters</span>
+        <span class="card-title"><i class="fas fa-filter"></i> <?= trans('admin_telemetry_filters') ?></span>
         <?php if ($hasFilters): ?>
-            <a href="?page=admin&section=telemetry" class="btn btn-ghost btn-sm">Reset filters</a>
+            <a href="?page=admin&section=telemetry" class="btn btn-ghost btn-sm"><?= trans('admin_telemetry_reset_filters') ?></a>
         <?php endif; ?>
     </div>
 
@@ -84,59 +84,59 @@ if ($flash): ?>
         <input type="hidden" name="section" value="telemetry">
 
         <div class="form-group">
-            <label>Event type</label>
+            <label><?= trans('admin_telemetry_event_type') ?></label>
             <select name="eventType">
-                <option value="">Alle</option>
-                <option value="repo_scan" <?= (($filters['eventType'] ?? '') === 'repo_scan') ? 'selected' : '' ?>>Repo scans</option>
+                <option value=""><?= trans('admin_telemetry_all') ?></option>
+                <option value="repo_scan" <?= (($filters['eventType'] ?? '') === 'repo_scan') ? 'selected' : '' ?>><?= trans('admin_telemetry_repo_scans') ?></option>
                 <option value="cli" <?= (($filters['eventType'] ?? '') === 'cli') ? 'selected' : '' ?>>CLI</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Repo / owner</label>
+            <label><?= trans('admin_telemetry_repo_owner') ?></label>
             <input type="text" name="repo" value="<?= htmlspecialchars((string) ($filters['repo'] ?? '')) ?>" placeholder="tombomeke / Portfolio">
         </div>
 
         <div class="form-group">
-            <label>Client / user</label>
+            <label><?= trans('admin_telemetry_client_user') ?></label>
             <input type="text" name="actor" value="<?= htmlspecialchars((string) ($filters['actor'] ?? '')) ?>" placeholder="portfolio / user id / username">
         </div>
 
         <div class="form-group">
-            <label>Language</label>
+            <label><?= trans('admin_telemetry_language') ?></label>
             <input type="text" name="language" value="<?= htmlspecialchars((string) ($filters['language'] ?? '')) ?>" placeholder="csharp">
         </div>
 
         <div class="form-group">
-            <label>OS</label>
+            <label><?= trans('admin_telemetry_os') ?></label>
             <input type="text" name="os" value="<?= htmlspecialchars((string) ($filters['os'] ?? '')) ?>" placeholder="Windows">
         </div>
 
         <div class="form-group">
-            <label>From UTC</label>
+            <label><?= trans('admin_telemetry_from_utc') ?></label>
             <input type="datetime-local" name="fromUtc" value="<?= htmlspecialchars((string) ($filters['fromUtc'] ?? '')) ?>">
         </div>
 
         <div class="form-group">
-            <label>To UTC</label>
+            <label><?= trans('admin_telemetry_to_utc') ?></label>
             <input type="datetime-local" name="toUtc" value="<?= htmlspecialchars((string) ($filters['toUtc'] ?? '')) ?>">
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-magnifying-glass"></i> Filteren</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-magnifying-glass"></i> <?= trans('admin_telemetry_filter_btn') ?></button>
         </div>
 
         <div class="form-group">
-            <label>Weergave</label>
+            <label><?= trans('admin_telemetry_display') ?></label>
             <select name="groupBy">
-                <option value="none" <?= $groupBy === 'none' ? 'selected' : '' ?>>Ruwe events</option>
-                <option value="repo" <?= $groupBy === 'repo' ? 'selected' : '' ?>>Gegroepeerd per repo + type</option>
-                <option value="actor" <?= $groupBy === 'actor' ? 'selected' : '' ?>>Gegroepeerd per client/user + type</option>
+                <option value="none" <?= $groupBy === 'none' ? 'selected' : '' ?>><?= trans('admin_telemetry_raw_events') ?></option>
+                <option value="repo" <?= $groupBy === 'repo' ? 'selected' : '' ?>><?= trans('admin_telemetry_grouped_repo') ?></option>
+                <option value="actor" <?= $groupBy === 'actor' ? 'selected' : '' ?>><?= trans('admin_telemetry_grouped_actor') ?></option>
             </select>
         </div>
     </form>
 
-    <form method="POST" action="?page=admin&section=telemetry" style="margin-top:1rem" onsubmit="return confirm('Weet je zeker dat je gefilterde telemetry wilt verwijderen? Dit kan niet ongedaan worden gemaakt.');">
+    <form method="POST" action="?page=admin&section=telemetry" style="margin-top:1rem" onsubmit="return confirm('<?= addslashes(trans('admin_telemetry_delete_confirm')) ?>')">
         <?= \Auth::csrfField() ?>
         <input type="hidden" name="telemetry_action" value="delete_filtered">
         <input type="hidden" name="eventType" value="<?= htmlspecialchars((string) ($filters['eventType'] ?? '')) ?>">
@@ -152,47 +152,45 @@ if ($flash): ?>
             <div class="form-group">
                 <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
                     <input type="checkbox" name="onlyFailures" value="1">
-                    <span>Verwijder alleen fout-events (extra filter)</span>
+                    <span><?= trans('admin_telemetry_only_failures') ?></span>
                 </label>
             </div>
             <div class="form-group">
-                <label>Max te verwijderen (veiligheidslimiet)</label>
+                <label><?= trans('admin_telemetry_max_delete') ?></label>
                 <input type="number" min="1" max="20000" step="1" name="take" value="500">
             </div>
             <div class="form-actions">
-                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Verwijder gefilterde logs</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> <?= trans('admin_telemetry_delete_btn') ?></button>
             </div>
-            <p class="text-muted text-sm" style="margin:0">Tip: eerst filters zetten, dan verwijderen. Verwijderen zonder filters is geblokkeerd.</p>
+            <p class="text-muted text-sm" style="margin:0"><?= trans('admin_telemetry_delete_tip') ?></p>
         </div>
     </form>
 </div>
 
 <?php if (!empty($apiError)): ?>
-    <div class="flash error" style="margin-top:1rem"><?= htmlspecialchars($apiError) ?></div>
+    <div class="flash error" style="margin-top:1rem"><?= htmlspecialchars((string) $apiError) ?></div>
 <?php endif; ?>
 
 <div class="card" style="margin-top:1.5rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-list"></i> <?= $groupBy === 'none' ? 'Recente events' : 'Gegroepeerde events' ?></span>
-        <span class="badge"><?= $groupBy === 'none' ? ('Pagina ' . $currentPage . ' / ' . $totalPages) : (count($groupedItems) . ' groepen') ?></span>
-    </div>
-
+        <span class="card-title"><i class="fas fa-list"></i> <?= $groupBy === 'none' ? trans('admin_telemetry_recent_events') : trans('admin_telemetry_grouped_events') ?></span>
+        <span class="badge"><?= $groupBy === 'none' ? (trans('admin_telemetry_page') . ' ' . $currentPage . ' / ' . $totalPages) : (count($groupedItems) . ' ' . trans('admin_telemetry_groups')) ?></span>
     <?php if ($groupBy !== 'none' && !empty($groupedItems)): ?>
         <div class="table-wrapper">
             <table class="table">
                 <thead>
                     <tr>
-                        <th><?= $groupBy === 'actor' ? 'Client / user' : 'Repo' ?></th>
-                        <th>Type</th>
-                        <th>Aantal</th>
-                        <th>Succes / fout</th>
-                        <th>Laatste event</th>
+                        <th><?= $groupBy === 'actor' ? trans('admin_telemetry_client_user') : trans('admin_telemetry_repo') ?></th>
+                        <th><?= trans('admin_telemetry_type') ?></th>
+                        <th><?= trans('admin_telemetry_count') ?></th>
+                        <th><?= trans('admin_telemetry_success_fail') ?></th>
+                        <th><?= trans('admin_telemetry_last_event') ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($groupedItems as $group): ?>
                         <tr>
-                            <td><?= htmlspecialchars((string) ($group['groupLabel'] ?? 'onbekend')) ?></td>
+                            <td><?= htmlspecialchars((string) ($group['groupLabel'] ?? trans('admin_telemetry_unknown'))) ?></td>
                             <td><span class="badge"><?= htmlspecialchars((string) ($group['eventType'] ?? 'unknown')) ?></span></td>
                             <td><?= (int) ($group['count'] ?? 0) ?></td>
                             <td><?= (int) ($group['successCount'] ?? 0) ?> / <?= (int) ($group['failureCount'] ?? 0) ?></td>
@@ -203,19 +201,19 @@ if ($flash): ?>
             </table>
         </div>
     <?php elseif (empty($items)): ?>
-        <p class="empty-state"><i class="fas fa-inbox"></i> Geen telemetry items gevonden.</p>
+        <p class="empty-state"><i class="fas fa-inbox"></i> <?= trans('admin_telemetry_no_items') ?></p>
     <?php else: ?>
         <div class="table-wrapper">
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Datum</th>
-                        <th>Type</th>
-                        <th>Repo</th>
-                        <th>Client / user</th>
-                        <th>Language</th>
-                        <th>Status</th>
-                        <th>Details</th>
+                        <th><?= trans('admin_telemetry_date') ?></th>
+                        <th><?= trans('admin_telemetry_type') ?></th>
+                        <th><?= trans('admin_telemetry_repo') ?></th>
+                        <th><?= trans('admin_telemetry_client_user') ?></th>
+                        <th><?= trans('admin_telemetry_language') ?></th>
+                        <th><?= trans('admin_telemetry_status') ?></th>
+                        <th><?= trans('admin_telemetry_details') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -234,6 +232,7 @@ if ($flash): ?>
                         $isSuccess = (bool) ($item['success'] ?? false);
                         $statusCode = $item['statusCode'] ?? null;
                         $detail = trim((string) ($item['detail'] ?? ''));
+                        $userLabel = trans('admin_telemetry_user_label');
                         ?>
                         <tr>
                             <td class="text-sm text-muted"><?= !empty($item['createdAt']) ? date('d/m/Y H:i', strtotime((string) $item['createdAt'])) : '—' ?></td>
@@ -251,7 +250,7 @@ if ($flash): ?>
                             <td><?= htmlspecialchars((string) ($item['languageScanned'] ?? '—')) ?></td>
                             <td>
                                 <span class="badge <?= $isSuccess ? 'badge--success' : 'badge--warning' ?>">
-                                    <?= $isSuccess ? 'OK' : 'Error' ?><?= $statusCode ? ' · ' . (int) $statusCode : '' ?>
+                                    <?= $isSuccess ? trans('admin_telemetry_ok') : trans('admin_telemetry_error') ?><?= $statusCode ? ' · ' . (int) $statusCode : '' ?>
                                 </span>
                             </td>
                             <td class="text-sm text-muted">
@@ -267,10 +266,10 @@ if ($flash): ?>
     <?php if ($groupBy === 'none'): ?>
         <div class="form-actions" style="margin-top:1rem;justify-content:space-between;flex-wrap:wrap">
             <a class="btn btn-ghost btn-sm <?= $currentPage <= 1 ? 'disabled' : '' ?>" href="?page=admin&section=telemetry&telemetry_page=<?= $prevPage ?><?= $hasFilters ? '&' . http_build_query($activeFilters) : '' ?>">
-                <i class="fas fa-chevron-left"></i> Vorige
+                <i class="fas fa-chevron-left"></i> <?= trans('admin_telemetry_previous') ?>
             </a>
             <a class="btn btn-ghost btn-sm <?= $currentPage >= $totalPages ? 'disabled' : '' ?>" href="?page=admin&section=telemetry&telemetry_page=<?= $nextPage ?><?= $hasFilters ? '&' . http_build_query($activeFilters) : '' ?>">
-                Volgende <i class="fas fa-chevron-right"></i>
+                <?= trans('admin_telemetry_next') ?> <i class="fas fa-chevron-right"></i>
             </a>
         </div>
     <?php endif; ?>

@@ -10,7 +10,7 @@ BESTAND: /app/Views/projects.php (UPDATED with Modal Support)
         <h1><i class="fas fa-folder-open"></i> <span data-translate="projects_title"><?= trans('projects_title') ?></span></h1>
         <p class="section-intro" data-translate="projects_intro"><?= trans('projects_intro') ?></p>
         <p class="section-hint"><i class="fas fa-hand-pointer"></i> <span data-translate="projects_click_details"><?= trans('projects_click_details') ?></span></p>
-        <p class="section-hint"><a href="?page=project-roadmaps" class="btn btn-ghost">Bekijk alle project roadmaps</a></p>
+        <p class="section-hint"><a href="?page=project-roadmaps" class="btn btn-ghost"><?= trans('projects_view_all_roadmaps') ?></a></p>
 
         <div class="project-filters">
             <button class="filter-btn active" data-filter="all">

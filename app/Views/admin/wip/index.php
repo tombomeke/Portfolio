@@ -7,8 +7,8 @@
         <span class="card-title"><i class="fas fa-hard-hat"></i> WIP Pagina's</span>
     </div>
     <p style="color:var(--text-muted);font-size:.875rem;margin-bottom:1.5rem">
-        Aangevinkte pagina's tonen een "Work In Progress" bericht in plaats van de gewone inhoud.
-        Bezoekers zien een vriendelijke melding dat de pagina nog in ontwikkeling is.
+        <?= trans('admin_wip_intro_1') ?>
+        <?= trans('admin_wip_intro_2') ?>
     </p>
 
     <form method="POST" action="?page=admin&section=wip">
@@ -23,13 +23,13 @@
                     <span class="wip-page-slug">?page=<?= htmlspecialchars($slug) ?></span>
                 </span>
                 <span class="wip-status-badge <?= in_array($slug, $current, true) ? 'wip-status-badge--on' : 'wip-status-badge--off' ?>">
-                    <?= in_array($slug, $current, true) ? 'WIP' : 'Live' ?>
+                    <?= in_array($slug, $current, true) ? trans('admin_wip_badge_wip') : trans('admin_wip_badge_live') ?>
                 </span>
             </label>
             <?php endforeach; ?>
         </div>
         <div class="form-actions" style="margin-top:1.5rem">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Opslaan</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <?= trans('admin_save') ?></button>
         </div>
     </form>
 </div>

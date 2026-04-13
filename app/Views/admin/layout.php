@@ -20,91 +20,91 @@ $isAuth = isset($authUser);
 <aside class="admin-sidebar">
     <a href="?page=admin" class="sidebar-brand">
         tombomeke
-        <span>Admin panel</span>
+        <span><?= trans('admin_panel') ?></span>
     </a>
 
     <nav class="sidebar-nav">
-        <div class="nav-section-label">Content</div>
+        <div class="nav-section-label"><?= trans('admin_nav_content') ?></div>
         <a href="?page=admin" class="sidebar-link <?= ($currentSection === 'dashboard') ? 'active' : '' ?>">
-            <i class="fas fa-gauge-high fa-fw"></i> Dashboard
+            <i class="fas fa-gauge-high fa-fw"></i> <?= trans('nav_dashboard') ?>
         </a>
         <a href="?page=admin&section=news" class="sidebar-link <?= ($currentSection === 'news') ? 'active' : '' ?>">
-            <i class="fas fa-newspaper fa-fw"></i> News
+            <i class="fas fa-newspaper fa-fw"></i> <?= trans('admin_news') ?>
         </a>
         <a href="?page=admin&section=faq" class="sidebar-link <?= ($currentSection === 'faq') ? 'active' : '' ?>">
-            <i class="fas fa-circle-question fa-fw"></i> FAQ
+            <i class="fas fa-circle-question fa-fw"></i> <?= trans('nav_faq') ?>
         </a>
         <a href="?page=admin&section=projects" class="sidebar-link <?= ($currentSection === 'projects') ? 'active' : '' ?>">
-            <i class="fas fa-folder-open fa-fw"></i> Projects
+            <i class="fas fa-folder-open fa-fw"></i> <?= trans('admin_projects') ?>
         </a>
         <a href="?page=admin&section=dev-life" class="sidebar-link <?= ($currentSection === 'dev-life') ? 'active' : '' ?>">
-            <i class="fas fa-laptop-code fa-fw"></i> Dev Life
+            <i class="fas fa-laptop-code fa-fw"></i> <?= trans('admin_dev_life') ?>
         </a>
         <a href="?page=admin&section=tags" class="sidebar-link <?= ($currentSection === 'tags') ? 'active' : '' ?>">
-            <i class="fas fa-tags fa-fw"></i> Tags
+            <i class="fas fa-tags fa-fw"></i> <?= trans('admin_tags') ?>
         </a>
         <a href="?page=admin&section=comments" class="sidebar-link <?= ($currentSection === 'comments') ? 'active' : '' ?>">
-            <i class="fas fa-comments fa-fw"></i> Reacties
+            <i class="fas fa-comments fa-fw"></i> <?= trans('admin_comments') ?>
             <?php if (($pendingComments ?? 0) > 0): ?>
                 <span class="badge"><?= $pendingComments ?></span>
             <?php endif; ?>
         </a>
 
-        <div class="nav-section-label" style="margin-top:.75rem">Inbox</div>
+        <div class="nav-section-label" style="margin-top:.75rem"><?= trans('admin_nav_inbox') ?></div>
         <a href="?page=admin&section=contact" class="sidebar-link <?= ($currentSection === 'contact') ? 'active' : '' ?>">
-            <i class="fas fa-envelope fa-fw"></i> Contact
+            <i class="fas fa-envelope fa-fw"></i> <?= trans('admin_contact') ?>
             <?php if (($unreadMessages ?? 0) > 0): ?>
                 <span class="badge"><?= $unreadMessages ?></span>
             <?php endif; ?>
         </a>
 
         <?php if (isset($authUser) && $authUser['role'] === 'owner'): ?>
-        <div class="nav-section-label" style="margin-top:.75rem">Owner</div>
+        <div class="nav-section-label" style="margin-top:.75rem"><?= trans('admin_nav_owner') ?></div>
         <a href="?page=admin&section=users" class="sidebar-link <?= ($currentSection === 'users') ? 'active' : '' ?>">
-            <i class="fas fa-users fa-fw"></i> Gebruikers
+            <i class="fas fa-users fa-fw"></i> <?= trans('admin_users') ?>
         </a>
         <?php endif; ?>
 
         <?php if (isset($authUser) && $authUser['role'] === 'owner'): ?>
-        <div class="nav-section-label" style="margin-top:.75rem">Systeem</div>
+        <div class="nav-section-label" style="margin-top:.75rem"><?= trans('admin_nav_system') ?></div>
         <a href="?page=admin&section=settings" class="sidebar-link <?= ($currentSection === 'settings') ? 'active' : '' ?>">
-            <i class="fas fa-sliders-h fa-fw"></i> Instellingen
+            <i class="fas fa-sliders-h fa-fw"></i> <?= trans('admin_settings') ?>
         </a>
         <a href="?page=admin&section=wip" class="sidebar-link <?= ($currentSection === 'wip') ? 'active' : '' ?>">
-            <i class="fas fa-hard-hat fa-fw"></i> WIP Pagina's
+            <i class="fas fa-hard-hat fa-fw"></i> <?= trans('admin_wip_pages') ?>
         </a>
         <a href="?page=admin&section=roadmap" class="sidebar-link <?= ($currentSection === 'roadmap') ? 'active' : '' ?>">
-            <i class="fas fa-list-check fa-fw"></i> Roadmap
+            <i class="fas fa-list-check fa-fw"></i> <?= trans('admin_roadmap') ?>
         </a>
         <a href="?page=admin&section=activity-logs" class="sidebar-link <?= ($currentSection === 'activity-logs') ? 'active' : '' ?>">
-            <i class="fas fa-history fa-fw"></i> Activity Log
+            <i class="fas fa-history fa-fw"></i> <?= trans('admin_activity_log') ?>
         </a>
         <a href="?page=admin&section=telemetry" class="sidebar-link <?= ($currentSection === 'telemetry') ? 'active' : '' ?>">
-            <i class="fas fa-chart-line fa-fw"></i> Telemetry
+            <i class="fas fa-chart-line fa-fw"></i> <?= trans('admin_telemetry') ?>
         </a>
         <?php endif; ?>
 
-        <div class="nav-section-label" style="margin-top:.75rem">Account</div>
+        <div class="nav-section-label" style="margin-top:.75rem"><?= trans('admin_nav_account') ?></div>
         <a href="?page=admin&section=profile" class="sidebar-link <?= ($currentSection === 'profile') ? 'active' : '' ?>">
-            <i class="fas fa-user-circle fa-fw"></i> Mijn profiel
+            <i class="fas fa-user-circle fa-fw"></i> <?= trans('admin_my_profile') ?>
         </a>
 
-        <div class="nav-section-label" style="margin-top:.75rem">Site</div>
+        <div class="nav-section-label" style="margin-top:.75rem"><?= trans('admin_nav_site') ?></div>
         <a href="?page=home" target="_blank" class="sidebar-link">
-            <i class="fas fa-arrow-up-right-from-square fa-fw"></i> Bekijk site
+            <i class="fas fa-arrow-up-right-from-square fa-fw"></i> <?= trans('admin_view_site') ?>
         </a>
     </nav>
 
     <div class="sidebar-footer">
-        Ingelogd als <strong><?= htmlspecialchars($authUser['username'] ?? '') ?></strong><br>
-        <a href="?page=admin&section=logout">Uitloggen</a>
+        <?= trans('admin_logged_in_as') ?> <strong><?= htmlspecialchars($authUser['username'] ?? '') ?></strong><br>
+        <a href="?page=admin&section=logout"><?= trans('nav_logout') ?></a>
     </div>
 </aside>
 
 <div class="admin-main">
     <header class="admin-topbar">
         <div class="topbar-left">
-            <button class="sidebar-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+            <button class="sidebar-toggle" type="button" aria-label="<?= trans('admin_open_menu') ?>" aria-expanded="false">
                 <i class="fas fa-bars"></i>
             </button>
             <h1><?= htmlspecialchars($pageTitle ?? 'Admin') ?></h1>

@@ -7,7 +7,7 @@
 
     <?php if (empty($settings)): ?>
         <div class="card">
-            <p class="empty-state"><i class="fas fa-cog"></i> Nog geen instellingen. Voer <code>seed_site_settings.sql</code> uit in phpMyAdmin.</p>
+            <p class="empty-state"><i class="fas fa-cog"></i> <?= trans('admin_settings_empty_hint') ?></p>
         </div>
     <?php else: ?>
 
@@ -33,7 +33,7 @@
                         <label style="display:flex;align-items:center;gap:.5rem;margin-top:.4rem;cursor:pointer">
                             <input type="checkbox" name="<?= htmlspecialchars($s['key']) ?>" value="1"
                                    <?= $s['typed_value'] ? 'checked' : '' ?>>
-                            <span><?= $s['typed_value'] ? 'Ingeschakeld' : 'Uitgeschakeld' ?></span>
+                            <span><?= $s['typed_value'] ? trans('admin_settings_enabled') : trans('admin_settings_disabled') ?></span>
                         </label>
                     <?php elseif ($s['type'] === 'text' || strpos($s['key'], 'description') !== false): ?>
                         <textarea name="<?= htmlspecialchars($s['key']) ?>" rows="3"><?= htmlspecialchars($s['value'] ?? '') ?></textarea>
@@ -50,7 +50,7 @@
     <?php endforeach; ?>
 
     <div class="form-actions" style="margin-top:.5rem">
-        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Instellingen opslaan</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <?= trans('admin_settings_save') ?></button>
     </div>
     <?php endif; ?>
 </form>

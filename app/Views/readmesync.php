@@ -4,25 +4,23 @@
         <div class="readmesync-header">
             <h1>ReadmeSync <span class="badge-live">Live</span></h1>
             <p class="lead">
-                Vul een publieke GitHub repo-URL in om direct een live code-overzicht te genereren —
-                inclusief namespaces, klassen, methoden en open TO-DOs.
-                Aangedreven door <strong>ReadmeSync</strong>, gemaakt door Tombomeke Studios.
+                <?= trans('readmesync_intro') ?>
             </p>
         </div>
 
         <?php if (!isset($_SESSION['auth_user'])): ?>
         <div class="alert alert-info">
             <i class="fas fa-lock"></i>
-            Om een readme te genereren moet je
-            <a href="?page=login&redirect=<?= urlencode('?page=readmesync') ?>">inloggen</a>
-            of <a href="?page=register">registreren</a> — het bekijken van de pagina is gratis.
+            <?= trans('readmesync_login_notice_prefix') ?>
+            <a href="?page=login&redirect=<?= urlencode('?page=readmesync') ?>"><?= trans('nav_login') ?></a>
+            <?= trans('readmesync_login_notice_or') ?> <a href="?page=register"><?= trans('readmesync_register_link') ?></a> <?= trans('readmesync_login_notice_suffix') ?>
         </div>
         <?php endif; ?>
 
         <?php if (!$repoUrl): ?>
         <div class="readmesync-quicklinks">
-            <h2>Mijn projecten</h2>
-            <p>Klik om een live overzicht te laden:</p>
+            <h2><?= trans('readmesync_my_projects') ?></h2>
+            <p><?= trans('readmesync_click_quickload') ?></p>
             <div class="quicklink-grid">
                 <a href="?page=readmesync&amp;repo=https://github.com/tombomeke-ehb/ReadmeSync" class="quicklink-card">
                     <i class="fab fa-github quicklink-icon"></i>
@@ -56,7 +54,7 @@
                     id="readmesync-url-input"
                 />
                 <button type="submit" class="btn btn-primary" id="readmesync-submit">
-                    <i class="fas fa-wand-magic-sparkles"></i> Genereer
+                    <i class="fas fa-wand-magic-sparkles"></i> <?= trans('readmesync_generate') ?>
                 </button>
             </div>
         </form>
@@ -65,7 +63,7 @@
         <div class="readmesync-loading" id="readmesync-loading" style="display:none">
             <div class="readmesync-loading-inner">
                 <div class="readmesync-spinner"></div>
-                <p>Repo ophalen en analyseren&hellip; dit kan 10–30 seconden duren.</p>
+                <p><?= trans('readmesync_loading') ?></p>
             </div>
         </div>
 
@@ -76,11 +74,11 @@
         </div>
         <?php if (!empty($_SESSION['auth_user']) && in_array(($_SESSION['auth_user']['role'] ?? ''), ['owner', 'admin'], true)): ?>
         <details class="readmesync-debug">
-            <summary>Debug details (admin)</summary>
+            <summary><?= trans('readmesync_debug_admin') ?></summary>
             <div class="debug-grid">
-                <div><strong>HTTP code:</strong> <?= (int)($debugHttpCode ?? 0) ?></div>
-                <div><strong>cURL error:</strong> <?= htmlspecialchars((string)($debugCurlErr ?? 'none'), ENT_QUOTES, 'UTF-8') ?></div>
-                <div><strong>Body snippet:</strong></div>
+                <div><strong><?= trans('readmesync_http_code') ?>:</strong> <?= (int)($debugHttpCode ?? 0) ?></div>
+                <div><strong><?= trans('readmesync_curl_error') ?>:</strong> <?= htmlspecialchars((string)($debugCurlErr ?? 'none'), ENT_QUOTES, 'UTF-8') ?></div>
+                <div><strong><?= trans('readmesync_body_snippet') ?>:</strong></div>
                 <pre><?= htmlspecialchars((string)($debugRawBody ?? 'empty'), ENT_QUOTES, 'UTF-8') ?></pre>
             </div>
         </details>
@@ -93,25 +91,25 @@
         <?php if ($result): ?>
         <div class="readmesync-result">
             <div class="result-meta">
-                <span><strong>Taal:</strong> <?= htmlspecialchars(strtoupper($language ?? '?'), ENT_QUOTES, 'UTF-8') ?></span>
+                <span><strong><?= trans('readmesync_language') ?>:</strong> <?= htmlspecialchars(strtoupper($language ?? '?'), ENT_QUOTES, 'UTF-8') ?></span>
                 &nbsp;&middot;&nbsp;
                 <a href="<?= htmlspecialchars($repoUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">
-                    Bekijk op GitHub &#8599;
+                    <?= trans('readmesync_view_github') ?> &#8599;
                 </a>
                 &nbsp;&middot;&nbsp;
-                <button type="button" class="btn-copy" id="readmesync-copy" title="Kopieer naar klembord">
-                    <i class="fas fa-copy"></i> Kopiëren
+                <button type="button" class="btn-copy" id="readmesync-copy" title="<?= trans('readmesync_copy_title') ?>">
+                    <i class="fas fa-copy"></i> <?= trans('readmesync_copy') ?>
                 </button>
             </div>
 
             <?php if (!empty($_SESSION['auth_user']) && (($_SESSION['auth_user']['role'] ?? '') === 'owner')): ?>
             <details class="readmesync-debug" style="margin-bottom:.9rem">
-                <summary>Debug details (owner)</summary>
+                <summary><?= trans('readmesync_debug_owner') ?></summary>
                 <div class="debug-grid">
-                    <div><strong>Payload source_user_id:</strong> <?= htmlspecialchars((string) ($debugSourceUserId ?? 'null'), ENT_QUOTES, 'UTF-8') ?></div>
-                    <div><strong>Payload source_user_name:</strong> <?= htmlspecialchars((string) ($debugSourceUserName ?? 'null'), ENT_QUOTES, 'UTF-8') ?></div>
-                    <div><strong>API contract version:</strong> <?= htmlspecialchars((string) ($debugApiContractVersion ?? 'none'), ENT_QUOTES, 'UTF-8') ?></div>
-                    <div><strong>Response keys:</strong> <?= htmlspecialchars(implode(', ', (array) ($debugResponseKeys ?? [])), ENT_QUOTES, 'UTF-8') ?></div>
+                    <div><strong><?= trans('readmesync_payload_user_id') ?>:</strong> <?= htmlspecialchars((string) ($debugSourceUserId ?? 'null'), ENT_QUOTES, 'UTF-8') ?></div>
+                    <div><strong><?= trans('readmesync_payload_user_name') ?>:</strong> <?= htmlspecialchars((string) ($debugSourceUserName ?? 'null'), ENT_QUOTES, 'UTF-8') ?></div>
+                    <div><strong><?= trans('readmesync_api_contract_version') ?>:</strong> <?= htmlspecialchars((string) ($debugApiContractVersion ?? 'none'), ENT_QUOTES, 'UTF-8') ?></div>
+                    <div><strong><?= trans('readmesync_response_keys') ?>:</strong> <?= htmlspecialchars(implode(', ', (array) ($debugResponseKeys ?? [])), ENT_QUOTES, 'UTF-8') ?></div>
                 </div>
             </details>
             <?php endif; ?>
@@ -134,7 +132,7 @@
     if (form && loading && submit) {
         form.addEventListener('submit', function () {
             submit.disabled = true;
-            submit.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Bezig…';
+            submit.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> <?= addslashes(trans('readmesync_busy')) ?>';
             loading.style.display = 'flex';
         });
     }
@@ -145,9 +143,9 @@
     if (copyBtn && output) {
         copyBtn.addEventListener('click', function () {
             navigator.clipboard.writeText(output.textContent || '').then(function () {
-                copyBtn.innerHTML = '<i class="fas fa-check"></i> Gekopieerd!';
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> <?= addslashes(trans('copied')) ?>';
                 setTimeout(function () {
-                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Kopiëren';
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> <?= addslashes(trans('readmesync_copy')) ?>';
                 }, 2000);
             });
         });

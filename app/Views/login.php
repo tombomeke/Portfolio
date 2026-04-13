@@ -3,8 +3,8 @@
         <div class="auth-card">
             <div class="auth-header">
                 <div class="auth-logo"><i class="fas fa-user-circle"></i></div>
-                <h1 class="auth-title">Welkom terug</h1>
-                <p class="auth-subtitle">Log in om door te gaan</p>
+                <h1 class="auth-title"><?= trans('auth_login_welcome') ?></h1>
+                <p class="auth-subtitle"><?= trans('auth_login_subtitle') ?></p>
             </div>
 
             <?php if ($error): ?>
@@ -18,26 +18,26 @@
                 <?php endif; ?>
 
                 <div class="form-group">
-                    <label for="email">E-mailadres</label>
+                    <label for="email"><?= trans('contact_email') ?></label>
                     <input type="email" id="email" name="email"
-                           placeholder="jouw@email.com"
+                           placeholder="<?= trans('contact_email_placeholder') ?>"
                            required autofocus autocomplete="email">
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Wachtwoord</label>
+                    <label for="password"><?= trans('auth_password') ?></label>
                     <input type="password" id="password" name="password"
                            placeholder="••••••••"
                            required autocomplete="current-password">
                 </div>
 
                 <button type="submit" class="btn btn-primary auth-btn">
-                    <i class="fas fa-sign-in-alt"></i> Inloggen
+                    <i class="fas fa-sign-in-alt"></i> <?= trans('nav_login') ?>
                 </button>
 
                 <div class="auth-links">
                     <a href="?page=register" class="auth-link">
-                        <i class="fas fa-user-plus"></i> Nog geen account? Registreer
+                        <i class="fas fa-user-plus"></i> <?= trans('auth_no_account_register') ?>
                     </a>
                 </div>
             </form>

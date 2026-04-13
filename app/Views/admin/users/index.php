@@ -4,9 +4,9 @@
 
 <div class="card">
     <div class="card-header">
-        <span class="card-title">Gebruikers (<?= count($userList) ?>)</span>
+        <span class="card-title"><?= trans('admin_users') ?> (<?= count($userList) ?>)</span>
         <a href="?page=admin&section=users&action=create" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Admin toevoegen
+            <i class="fas fa-plus"></i> <?= trans('admin_users_add_admin') ?>
         </a>
     </div>
 
@@ -15,11 +15,11 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Gebruikersnaam</th>
-                    <th>E-mail</th>
-                    <th>Rol</th>
-                    <th>Aangemaakt</th>
-                    <th>Acties</th>
+                    <th><?= trans('profile_username') ?></th>
+                    <th><?= trans('contact_email') ?></th>
+                    <th><?= trans('admin_users_role') ?></th>
+                    <th><?= trans('admin_news_created_at') ?></th>
+                    <th><?= trans('admin_actions') ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -34,8 +34,8 @@
                         <?php if ($u['role'] !== 'owner' && $u['id'] !== $authUser['id']): ?>
                         <form method="POST" action="?page=admin&section=users&action=delete&id=<?= $u['id'] ?>" class="confirm-inline">
                             <?= \Auth::csrfField() ?>
-                            <button type="submit" data-confirm="Admin '<?= htmlspecialchars($u['username']) ?>' verwijderen?">
-                                <i class="fas fa-trash"></i> Verwijderen
+                            <button type="submit" data-confirm="<?= trans('admin_users_delete_confirm') ?> '<?= htmlspecialchars($u['username']) ?>'?">
+                                <i class="fas fa-trash"></i> <?= trans('admin_action_delete') ?>
                             </button>
                         </form>
                         <?php else: ?>
@@ -50,6 +50,6 @@
 
     <p style="margin-top:1rem;font-size:.8rem;color:var(--text-muted)">
         <i class="fas fa-info-circle"></i>
-        Owner-accounts kunnen niet worden verwijderd. Nieuwe admins kunnen inloggen maar hebben geen toegang tot dit gebruikersbeheer.
+        <?= trans('admin_users_owner_note') ?>
     </p>
 </div>

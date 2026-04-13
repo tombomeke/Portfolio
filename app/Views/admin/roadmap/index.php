@@ -6,14 +6,14 @@
 
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-code"></i> Roadmap sync via API TODOs</span>
+        <span class="card-title"><i class="fas fa-code"></i> <?= trans('admin_roadmap_title') ?></span>
     </div>
     <form method="POST" action="?page=admin&section=roadmap" class="form-grid" style="gap:1rem">
         <?= \Auth::csrfField() ?>
         <input type="hidden" name="roadmap_action" value="sync">
 
         <div class="form-group">
-            <label>GitHub repository URL</label>
+            <label><?= trans('admin_roadmap_repo_url') ?></label>
             <input
                 type="url"
                 name="repo_url"
@@ -22,50 +22,48 @@
                 value="<?= htmlspecialchars($defaultRepoUrl) ?>"
                 required
             >
-            <span class="form-hint">De ReadmeSync API haalt TODO-items uit codefiles (per file/regel) en zet die in je roadmap.</span>
+            <span class="form-hint"><?= trans('admin_roadmap_repo_hint') ?></span>
         </div>
 
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
                 <input type="checkbox" name="todos_only" value="1" checked>
-                <span>Importeer alleen open TODO-items (onafgevinkt)</span>
+                <span><?= trans('admin_roadmap_todos_only') ?></span>
             </label>
         </div>
 
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
                 <input type="checkbox" name="merge_mode" value="1" checked>
-                <span>Merge mode: behoud bestaande items en update gematchte titels</span>
+                <span><?= trans('admin_roadmap_merge_mode') ?></span>
             </label>
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-rotate"></i> Sync roadmap uit API</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-rotate"></i> <?= trans('admin_roadmap_sync_btn') ?></button>
         </div>
     </form>
 
-    <form method="POST" action="?page=admin&section=roadmap" style="margin-top:.75rem" onsubmit="return confirm('Verwijder afgeronde en test/placeholder TODO-items uit de roadmap?');">
+    <form method="POST" action="?page=admin&section=roadmap" style="margin-top:.75rem" onsubmit="return confirm('<?= addslashes(trans('admin_roadmap_cleanup_confirm')) ?>')">
         <?= \Auth::csrfField() ?>
         <input type="hidden" name="roadmap_action" value="cleanup">
-        <button type="submit" class="btn btn-secondary"><i class="fas fa-filter-circle-xmark"></i> Opschonen (test + afgerond)</button>
-    </form>
-</div>
+        <button type="submit" class="btn btn-secondary"><i class="fas fa-filter-circle-xmark"></i> <?= trans('admin_roadmap_cleanup_btn') ?></button>
 
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-list-check"></i> Roadmap items</span>
-        <span class="badge"><?= count((array) ($config['items'] ?? [])) ?> items</span>
+        <span class="card-title"><i class="fas fa-list-check"></i> <?= trans('admin_roadmap_items_title') ?></span>
+        <span class="badge"><?= count((array) ($config['items'] ?? [])) ?> <?= trans('admin_roadmap_items_count') ?></span>
     </div>
 
     <?php if (!empty($config['lastSyncAt'])): ?>
         <p class="text-muted text-sm" style="margin:0 0 1rem">
-            Laatste sync: <?= date('d/m/Y H:i', strtotime((string) $config['lastSyncAt'])) ?>
-            · bron: <?= htmlspecialchars((string) ($config['source'] ?? 'manual')) ?>
+            <?= trans('admin_roadmap_last_sync') ?>: <?= date('d/m/Y H:i', strtotime((string) $config['lastSyncAt'])) ?>
+            · <?= trans('admin_roadmap_source') ?>: <?= htmlspecialchars((string) ($config['source'] ?? 'manual')) ?>
         </p>
     <?php endif; ?>
 
     <?php if (empty($config['items'])): ?>
-        <p class="empty-state"><i class="fas fa-inbox"></i> Geen roadmap items gevonden.</p>
+        <p class="empty-state"><i class="fas fa-inbox"></i> <?= trans('admin_roadmap_no_items') ?></p>
     <?php else: ?>
         <form method="POST" action="?page=admin&section=roadmap" class="form-grid" style="gap:.75rem">
             <?= \Auth::csrfField() ?>
@@ -95,28 +93,28 @@
             <?php endforeach; ?>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Status opslaan</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <?= trans('admin_roadmap_save_status') ?></button>
             </div>
         </form>
     <?php endif; ?>
 </div>
 
-<div class="card">
+    <div class="card">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-arrow-rotate-left"></i> Reset</span>
+        <span class="card-title"><i class="fas fa-arrow-rotate-left"></i> <?= trans('admin_roadmap_reset_title') ?></span>
     </div>
-    <form method="POST" action="?page=admin&section=roadmap" onsubmit="return confirm('Roadmap terugzetten naar standaarditems?');">
+    <form method="POST" action="?page=admin&section=roadmap" onsubmit="return confirm('<?= addslashes(trans('admin_roadmap_reset_confirm')) ?>')">
         <?= \Auth::csrfField() ?>
         <input type="hidden" name="roadmap_action" value="reset">
-        <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Reset naar defaults</button>
+        <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> <?= trans('admin_roadmap_reset_btn') ?></button>
     </form>
 </div>
 
 <div class="card" style="margin-top:1rem">
     <div class="card-header">
-        <span class="card-title"><i class="fas fa-circle-info"></i> Roadmap bron</span>
+        <span class="card-title"><i class="fas fa-circle-info"></i> <?= trans('admin_roadmap_source_title') ?></span>
     </div>
     <p class="text-muted text-sm" style="margin:0">
-        Deze roadmap wordt gedeeld met de website via <code>app/Config/roadmap_items.json</code>. De sync gebruikt nu API TODO-resultaten per file/regel als bron.
+        <?= trans('admin_roadmap_source_info') ?>
     </p>
 </div>

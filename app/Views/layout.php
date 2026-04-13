@@ -40,9 +40,9 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
                     <a href="?page=games" class="nav-link" data-translate="nav_games"><?= trans('nav_games') ?></a>
                     <a href="?page=projects" class="nav-link" data-translate="nav_projects"><?= trans('nav_projects') ?></a>
                     <!-- TODO(i18n): [P3] 'News', 'FAQ', 'ReadmeSync' are hardcoded — add trans() keys -->
-                    <a href="?page=news" class="nav-link">News</a>
-                    <a href="?page=faq" class="nav-link">FAQ</a>
-                    <a href="?page=readmesync" class="nav-link">ReadmeSync</a>
+                    <a href="?page=news" class="nav-link"><?= trans('nav_news') ?></a>
+                    <a href="?page=faq" class="nav-link"><?= trans('nav_faq') ?></a>
+                    <a href="?page=readmesync" class="nav-link"><?= trans('nav_readmesync') ?></a>
                     <a href="?page=contact" class="nav-link" data-translate="nav_contact"><?= trans('nav_contact') ?></a>
 
                     <?php if (isset($_SESSION['auth_user'])): ?>
@@ -94,20 +94,20 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
                         <div class="nav-user-menu">
                             <?php if (in_array($authRole, ['owner', 'admin'], true)): ?>
                             <a href="?page=admin" class="nav-user-item">
-                                <i class="fas fa-gauge-high"></i> Dashboard
+                                <i class="fas fa-gauge-high"></i> <?= trans('nav_dashboard') ?>
                             </a>
                             <?php endif; ?>
                             <a href="?page=profile&u=<?= urlencode($authUser['username']) ?>" class="nav-user-item">
-                                <i class="fas fa-user-circle"></i> Mijn profiel
+                                <i class="fas fa-user-circle"></i> <?= trans('nav_my_profile') ?>
                             </a>
                             <div class="nav-user-divider"></div>
                             <a href="?page=logout" class="nav-user-item nav-user-item--danger">
-                                <i class="fas fa-right-from-bracket"></i> Uitloggen
+                                <i class="fas fa-right-from-bracket"></i> <?= trans('nav_logout') ?>
                             </a>
                         </div>
                     </div>
                     <?php else: ?>
-                    <a href="?page=login" class="nav-link nav-link--login"><i class="fas fa-sign-in-alt"></i> Inloggen</a>
+                    <a href="?page=login" class="nav-link nav-link--login"><i class="fas fa-sign-in-alt"></i> <?= trans('nav_login') ?></a>
                     <?php endif; ?>
 
                     <!-- Language Toggle Button -->

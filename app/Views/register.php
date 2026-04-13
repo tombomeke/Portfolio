@@ -3,8 +3,8 @@
         <div class="auth-card">
             <div class="auth-header">
                 <div class="auth-logo"><i class="fas fa-user-plus"></i></div>
-                <h1 class="auth-title">Account aanmaken</h1>
-                <p class="auth-subtitle">Word lid en doe mee aan de community</p>
+                <h1 class="auth-title"><?= trans('auth_register_title') ?></h1>
+                <p class="auth-subtitle"><?= trans('auth_register_subtitle') ?></p>
             </div>
 
             <?php if ($error): ?>
@@ -15,36 +15,36 @@
                 <?= \Auth::csrfField() ?>
 
                 <div class="form-group">
-                    <label for="name">Volledige naam</label>
+                      <label for="name"><?= trans('auth_full_name') ?></label>
                     <input type="text" id="name" name="name"
                            value="<?= htmlspecialchars($old['name'] ?? '') ?>"
-                           placeholder="Jan Jansen"
+                          placeholder="<?= trans('auth_full_name_placeholder') ?>"
                            required autofocus autocomplete="name">
                 </div>
 
                 <div class="form-group">
-                    <label for="email">E-mailadres</label>
+                    <label for="email"><?= trans('contact_email') ?></label>
                     <input type="email" id="email" name="email"
                            value="<?= htmlspecialchars($old['email'] ?? '') ?>"
-                           placeholder="jouw@email.com"
+                           placeholder="<?= trans('contact_email_placeholder') ?>"
                            required autocomplete="email">
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Wachtwoord</label>
+                    <label for="password"><?= trans('auth_password') ?></label>
                     <input type="password" id="password" name="password"
                            placeholder="••••••••"
                            required autocomplete="new-password">
                     <div id="password-requirements" class="pw-requirements">
-                        <div class="pw-req" id="req-length"><span class="pw-icon"></span> Minimaal 8 tekens</div>
-                        <div class="pw-req" id="req-upper"><span class="pw-icon"></span> Een hoofdletter (A-Z)</div>
-                        <div class="pw-req" id="req-number"><span class="pw-icon"></span> Een cijfer (0-9)</div>
-                        <div class="pw-req" id="req-special"><span class="pw-icon"></span> Een speciaal teken (!@#$%)</div>
+                        <div class="pw-req" id="req-length"><span class="pw-icon"></span> <?= trans('auth_pw_req_length') ?></div>
+                        <div class="pw-req" id="req-upper"><span class="pw-icon"></span> <?= trans('auth_pw_req_upper') ?></div>
+                        <div class="pw-req" id="req-number"><span class="pw-icon"></span> <?= trans('auth_pw_req_number') ?></div>
+                        <div class="pw-req" id="req-special"><span class="pw-icon"></span> <?= trans('auth_pw_req_special') ?></div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="password_confirmation">Wachtwoord bevestigen</label>
+                    <label for="password_confirmation"><?= trans('auth_confirm_password') ?></label>
                     <input type="password" id="password_confirmation" name="password_confirmation"
                            placeholder="••••••••"
                            required autocomplete="new-password">
@@ -52,12 +52,12 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary auth-btn">
-                    <i class="fas fa-user-plus"></i> Account aanmaken
+                    <i class="fas fa-user-plus"></i> <?= trans('auth_register_title') ?>
                 </button>
 
                 <div class="auth-links">
                     <a href="?page=login" class="auth-link">
-                        <i class="fas fa-sign-in-alt"></i> Al een account? Inloggen
+                        <i class="fas fa-sign-in-alt"></i> <?= trans('auth_has_account_login') ?>
                     </a>
                 </div>
             </form>
@@ -144,7 +144,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!confirm) { matchDiv.classList.remove('show'); return; }
         matchDiv.classList.add('show');
         var ok = pwInput.value === confirm;
-        matchDiv.textContent = ok ? '✓ Wachtwoorden komen overeen' : '✕ Wachtwoorden komen niet overeen';
+        matchDiv.textContent = ok
+            ? '✓ <?= addslashes(trans('auth_passwords_match')) ?>'
+            : '✕ <?= addslashes(trans('auth_passwords_not_match')) ?>';
         matchDiv.classList.toggle('success', ok);
         matchDiv.classList.toggle('pw-error', !ok);
     }

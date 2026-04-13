@@ -1,7 +1,7 @@
 <section class="news-item-page">
     <div class="container container--narrow">
 
-        <a href="?page=news" class="back-link">&larr; Terug naar News</a>
+        <a href="?page=news" class="back-link">&larr; <?= trans('news_item_back_to_news') ?></a>
 
         <article>
             <header class="news-item-header">
@@ -32,7 +32,7 @@
 
         <!-- Comments -->
         <div class="comments-section">
-            <h2><i class="fas fa-comments"></i> Reacties
+            <h2><i class="fas fa-comments"></i> <?= trans('news_item_comments_title') ?>
                 <?php if (!empty($comments)): ?>
                     <span class="comment-count">(<?= count($comments) ?>)</span>
                 <?php endif; ?>
@@ -53,26 +53,26 @@
                 <form method="POST" action="?page=news-item&id=<?= (int)$item['id'] ?>&action=comment" class="comment-form">
                     <?= \Auth::csrfField() ?>
                     <div class="form-group">
-                        <label for="body">Plaats een reactie</label>
+                        <label for="body"><?= trans('news_item_place_comment') ?></label>
                         <textarea id="body" name="body" rows="4" required minlength="2" maxlength="2000"
-                                  placeholder="Deel je gedachten…"></textarea>
+                                  placeholder="<?= trans('news_item_comment_placeholder') ?>"></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i> Plaatsen
+                        <i class="fas fa-paper-plane"></i> <?= trans('news_item_submit_comment') ?>
                     </button>
                 </form>
                 <hr class="section-divider" style="margin:1.5rem 0;border:none;border-top:1px solid var(--border-color,#e5e7eb)">
                 <?php else: ?>
                 <div class="login-prompt" style="margin-bottom:1.5rem;padding:1rem;background:rgba(59,130,246,.06);border-radius:8px;border:1px solid rgba(59,130,246,.2)">
                     <i class="fas fa-lock"></i>
-                    <a href="?page=login&redirect=<?= urlencode('?page=news-item&id=' . (int)$item['id']) ?>">Log in</a>
-                    of <a href="?page=register">registreer</a> om een reactie te plaatsen.
+                    <a href="?page=login&redirect=<?= urlencode('?page=news-item&id=' . (int)$item['id']) ?>"><?= trans('nav_login') ?></a>
+                    <?= trans('news_item_or_register') ?> <a href="?page=register"><?= trans('readmesync_register_link') ?></a> <?= trans('news_item_to_comment') ?>
                 </div>
                 <?php endif; ?>
 
                 <?php if (empty($comments)): ?>
                     <p style="color:var(--text-muted,#6b7280);text-align:center;padding:2rem 0">
-                        <i class="far fa-comment-dots"></i> Nog geen reacties. Wees de eerste!
+                        <i class="far fa-comment-dots"></i> <?= trans('news_item_no_comments') ?>
                     </p>
                 <?php else: ?>
                 <div class="comment-list">
@@ -81,7 +81,7 @@
                         <div class="comment-header">
                             <span class="comment-author">
                                 <i class="fas fa-user-circle"></i>
-                                <?= htmlspecialchars($c['username'] ?? 'User') ?>
+                                <?= htmlspecialchars($c['username'] ?? trans('admin_table_user')) ?>
                             </span>
                             <span class="comment-date"><?= date('d/m/Y H:i', strtotime($c['created_at'])) ?></span>
                         </div>
@@ -93,7 +93,7 @@
 
             <?php else: ?>
             <div style="padding:1rem;background:rgba(59,130,246,.06);border-radius:8px;font-size:.9rem;color:var(--text-muted,#6b7280)">
-                <i class="fas fa-info-circle"></i> Reacties zijn momenteel uitgeschakeld door de beheerder.
+                <i class="fas fa-info-circle"></i> <?= trans('news_item_comments_disabled') ?>
             </div>
             <?php endif; ?>
         </div>
