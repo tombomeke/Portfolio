@@ -17,7 +17,7 @@
         <div class="form-grid" style="gap:1.25rem">
             <div class="form-group">
                 <label><?= trans('admin_users_username_required') ?></label>
-                <input type="text" name="username" required pattern="[a-zA-Z0-9_]{3,30}" autofocus>
+                <input type="text" name="username" required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" autofocus>
                 <span class="form-hint"><?= trans('admin_users_username_hint') ?></span>
             </div>
             <div class="form-group">

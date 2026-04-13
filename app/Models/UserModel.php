@@ -3,6 +3,18 @@
 require_once __DIR__ . '/../Config/Database.php';
 
 class UserModel {
+    public const USERNAME_MIN_LENGTH = 3;
+    public const USERNAME_MAX_LENGTH = 30;
+
+    public static function normalizeUsername(string $username): string {
+        return trim($username);
+    }
+
+    public static function isValidUsername(string $username): bool {
+        $username = self::normalizeUsername($username);
+        $pattern = '/^[a-z0-9_]{' . self::USERNAME_MIN_LENGTH . ',' . self::USERNAME_MAX_LENGTH . '}$/i';
+        return (bool) preg_match($pattern, $username);
+    }
 
     public function getAll(): array {
         $db = Database::getConnection();
@@ -70,6 +82,11 @@ class UserModel {
     }
 
     public function create(string $username, string $email, string $password, string $role = 'admin'): int {
+        $username = self::normalizeUsername($username);
+        if (!self::isValidUsername($username)) {
+            throw new \InvalidArgumentException('Invalid username format.');
+        }
+
         $db   = Database::getConnection();
         $stmt = $db->prepare(
             "INSERT INTO users (username, email, password, role) VALUES (:username, :email, :password, :role)"
@@ -91,15 +108,17 @@ class UserModel {
     public function generateUsername(string $name): string {
         // Lowercase, keep alphanumerics, replace spaces/special chars with nothing
         $base = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $name));
-        if (empty($base)) {
+        if (empty($base) || strlen($base) < self::USERNAME_MIN_LENGTH) {
             $base = 'user';
         }
-        $base = substr($base, 0, 20);
+        $base = substr($base, 0, self::USERNAME_MAX_LENGTH);
 
         $username = $base;
         $counter  = 1;
         while ($this->usernameExists($username)) {
-            $username = $base . $counter;
+            $suffix = (string) $counter;
+            $prefixLength = max(1, self::USERNAME_MAX_LENGTH - strlen($suffix));
+            $username = substr($base, 0, $prefixLength) . $suffix;
             $counter++;
         }
         return $username;

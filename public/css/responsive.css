@@ -18,7 +18,7 @@
         margin-top: 0.5rem;
     }
     
-    .nav-menu.is-open {
+    .nav-menu.active {
         display: flex !important;
     }
     
@@ -102,23 +102,36 @@
     .contact-content {
         grid-template-columns: 1fr 1fr;
     }
-    
+}
+
+@media (max-width: 1400px) {
+    .nav-menu {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nav-toggle {
+        display: flex;
+    }
+}
+
+@media (min-width: 1401px) {
     .nav-menu {
         display: flex !important;
         flex-direction: row;
         margin-top: 0;
     }
-    
+
     .nav-toggle {
         display: none;
     }
-    
+
     .nav-user-name,
     .nav-user-badge,
     .nav-user-chevron {
         display: inline;
     }
-    
+
     .nav-container {
         flex-direction: row;
         height: 70px;

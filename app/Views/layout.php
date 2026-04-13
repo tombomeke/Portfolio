@@ -73,9 +73,14 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
                             ? $rawAvatarPath
                             : 'public/images/uploads/avatars/' . ltrim($rawAvatarPath, '/');
                     }
+
+                    $fullNavUsername = (string) ($authUser['username'] ?? '');
+                    $displayNavUsername = strlen($fullNavUsername) > 18
+                        ? substr($fullNavUsername, 0, 18) . '...'
+                        : $fullNavUsername;
                     ?>
                     <div class="nav-user-dropdown">
-                        <button class="nav-user-trigger" aria-expanded="false" aria-haspopup="true">
+                        <button class="nav-user-trigger" aria-expanded="false" aria-haspopup="true" title="<?= htmlspecialchars($fullNavUsername) ?>">
                             <span class="nav-user-avatar">
                                 <?php if ($avatarPath): ?>
                                     <img src="<?= htmlspecialchars($avatarPath) ?>" alt="<?= htmlspecialchars($authUser['username']) ?>" class="nav-user-avatar-image">
@@ -83,7 +88,7 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
                                     <?= htmlspecialchars(strtoupper(substr($authUser['username'], 0, 1))) ?>
                                 <?php endif; ?>
                             </span>
-                            <span class="nav-user-name"><?= htmlspecialchars($authUser['username']) ?></span>
+                            <span class="nav-user-name"><?= htmlspecialchars($displayNavUsername) ?></span>
                             <?php if ($authRole === 'owner'): ?>
                                 <span class="nav-user-badge">owner</span>
                             <?php elseif ($authRole === 'admin'): ?>

@@ -529,9 +529,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Prevent body scroll when mobile menu is open
         navToggle.addEventListener('click', function() {
             if (navMenu.classList.contains('active')) {
-                document.body.style.overflow = '';
-            } else {
                 document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
             }
         });
         
@@ -548,6 +548,16 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', function() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(function() {
+            if (navMenu && window.innerWidth > 1400) {
+                navMenu.classList.remove('active');
+                document.body.style.overflow = '';
+                const bars = document.querySelectorAll('.bar');
+                bars.forEach(bar => {
+                    bar.style.transform = 'none';
+                    bar.style.opacity = '1';
+                });
+            }
+
             // Recalculate layouts if needed
             const projectsGrid = document.querySelector('.projects-grid');
             if (projectsGrid) {

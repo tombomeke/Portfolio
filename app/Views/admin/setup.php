@@ -11,7 +11,7 @@
             <div class="form-grid" style="gap:1rem">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" value="tombomeke" autofocus required pattern="[a-zA-Z0-9_]{3,30}">
+                    <input type="text" id="username" name="username" value="tombomeke" autofocus required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}">
                     <span class="form-hint">3–30 characters. Letters, numbers, underscore.</span>
                 </div>
                 <div class="form-group">

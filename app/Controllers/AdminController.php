@@ -164,7 +164,7 @@ class AdminController {
 
             if (empty($username) || empty($email) || empty($password)) {
                 $error = 'All fields are required.';
-            } elseif (!preg_match('/^[a-z0-9_]{3,30}$/i', $username)) {
+            } elseif (!UserModel::isValidUsername($username)) {
                 $error = 'Username: 3–30 characters, letters/numbers/underscore only.';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $error = 'Invalid email address.';
@@ -908,7 +908,7 @@ class AdminController {
         $role     = ($post['role'] ?? 'admin') === 'admin' ? 'admin' : 'admin'; // owners cannot be created here
 
         $errors = [];
-        if (!preg_match('/^[a-z0-9_]{3,30}$/i', $username)) $errors[] = 'Ongeldige gebruikersnaam (3–30 tekens, letters/cijfers/_).';
+        if (!UserModel::isValidUsername($username)) $errors[] = 'Ongeldige gebruikersnaam (3–30 tekens, letters/cijfers/_).';
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Ongeldig e-mailadres.';
         if (strlen($password) < 8) $errors[] = 'Wachtwoord minimaal 8 tekens.';
         if ($password !== $confirm) $errors[] = 'Wachtwoorden komen niet overeen.';

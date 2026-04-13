@@ -113,7 +113,9 @@ $isAuth = isset($authUser);
             <span class="role-badge <?= htmlspecialchars($authUser['role'] ?? 'admin') ?>">
                 <?= htmlspecialchars($authUser['role'] ?? 'admin') ?>
             </span>
-            <?= htmlspecialchars($authUser['username'] ?? '') ?>
+            <span class="topbar-username" title="<?= htmlspecialchars($authUser['username'] ?? '') ?>">
+                <?= htmlspecialchars($authUser['username'] ?? '') ?>
+            </span>
         </div>
     </header>
 
