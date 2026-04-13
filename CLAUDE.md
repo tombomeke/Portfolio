@@ -197,33 +197,33 @@ Geïmplementeerd ✅:
 Open TODO's (volgende iteraties):
 
 **Roadmap / ReadmeSync**
-- [ ] `TODO(roadmap)`: Roadmap items handmatig markeren als done/open in admin (zonder re-sync)
-- [ ] `TODO(roadmap)`: Diff/versiehistoriek per sync — "nieuw vs. verdwenen items" badge → `ProjectRoadmapModel::upsertFromSync()`
-- [ ] `TODO(roadmap)`: Preserve manually-set 'done' status across syncs → `ProjectRoadmapModel::upsertFromSync()`
-- [ ] `TODO(roadmap)`: Retry met exponential backoff bij API-fouten → `ProjectRoadmapService::syncProjectRoadmap()`
-- [ ] `TODO(roadmap)`: Optional "target section" input voor admin roadmap parser → `AdminController.php:~1595`
-- [ ] `TODO(roadmap)`: Keep source line numbers in roadmap UI traceability → `AdminController.php:~2374`
-- [ ] `TODO(cron)`: Last-run timestamp check om te-frequent cron calls te voorkomen → `PortfolioController::cronSyncRoadmaps()`
+- [P2] `TODO(roadmap)`: Roadmap items handmatig markeren als done/open in admin (zonder re-sync)
+- [P2] `TODO(roadmap)`: Diff/versiehistoriek per sync — "nieuw vs. verdwenen items" badge → `ProjectRoadmapModel::upsertFromSync()`
+- [P2] `TODO(roadmap)`: Preserve manually-set 'done' status across syncs → `ProjectRoadmapModel::upsertFromSync()`
+- [P1] `TODO(roadmap)`: Retry met exponential backoff bij API-fouten → `ProjectRoadmapService::syncProjectRoadmap()`
+- [P3] `TODO(roadmap)`: Optional "target section" input voor admin roadmap parser → `AdminController.php:~1595`
+- [P3] `TODO(roadmap)`: Keep source line numbers in roadmap UI traceability → `AdminController.php:~2374`
+- [P2] `TODO(cron)`: Last-run timestamp check om te-frequent cron calls te voorkomen → `PortfolioController::cronSyncRoadmaps()`
 
 **Gallery / Projects**
-- [ ] `TODO(gallery)`: Drag-and-drop sort_order reordering voor gallery images in admin edit view
-- [ ] `TODO(admin)`: Per-project sync resultaat tonen op sync-all completion page
+- [P2] `TODO(gallery)`: Drag-and-drop sort_order reordering voor gallery images in admin edit view
+- [P3] `TODO(admin)`: Per-project sync resultaat tonen op sync-all completion page
 
 **Auth / Security**
-- [ ] `TODO(auth)`: E-mailverificatie flow voor nieuw aangemaakte admin accounts
-- [ ] `TODO(upload)`: Server-side MIME type validatie op image uploads (niet alleen extensie)
-- [ ] `TODO(csrf)`: Audit alle admin POST forms — elk form heeft `Auth::csrfField()` + handler verifieert
+- [P3] `TODO(auth)`: E-mailverificatie flow voor nieuw aangemaakte admin accounts
+- [P1] `TODO(upload)`: Server-side MIME type validatie op image uploads (niet alleen extensie)
+- [P1] `TODO(csrf)`: Audit alle admin POST forms — elk form heeft `Auth::csrfField()` + handler verifieert
 
 **Code kwaliteit / architectuur**
-- [ ] `TODO(cache)`: `GameStatsModel` raakt externe API bij elke pageload — voeg bestandscache toe (10 min TTL)
+- [P2] `TODO(cache)`: `GameStatsModel` raakt externe API bij elke pageload — voeg bestandscache toe (10 min TTL)
 
 **i18n**
-- [ ] `TODO(i18n)`: Volledige audit op hardcoded NL strings in views (bekende locaties: `project-detail.php`, `project-roadmaps.php`, admin views)
-- [ ] `TODO(i18n)`: Ontbrekende vertaalsleutels toevoegen voor roadmap UI labels (open/done/high filters, sync timestamp, progress)
+- [P3] `TODO(i18n)`: Volledige audit op hardcoded NL strings in views (bekende locaties: `project-detail.php`, `project-roadmaps.php`, admin views)
+- [P3] `TODO(i18n)`: Ontbrekende vertaalsleutels toevoegen voor roadmap UI labels (open/done/high filters, sync timestamp, progress)
 
 **Tests**
-- [ ] `TODO(test)`: `tests/ProjectImageTest.php` schrijven (gallery CRUD + sort_order)
-- [ ] `TODO(test)`: `tests/ProjectRoadmapModelTest.php` schrijven (upsertFromSync, logSync, getLastSync)
+- [P2] `TODO(test)`: `tests/ProjectImageTest.php` schrijven (gallery CRUD + sort_order)
+- [P2] `TODO(test)`: `tests/ProjectRoadmapModelTest.php` schrijven (upsertFromSync, logSync, getLastSync)
 
 Documentatie: `docs/architecture.md`, `docs/readmesync-integration.md`, `docs/database-schema.md`
 
