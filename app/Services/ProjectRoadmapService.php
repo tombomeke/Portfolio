@@ -145,12 +145,17 @@ class ProjectRoadmapService {
 
         foreach ($todos as $todo) {
             if (!is_array($todo)) continue;
+
+            $text = trim((string) ($todo['text'] ?? ''));
+            $status = $this->normalizeTodoStatus((string) ($todo['status'] ?? 'open'), $text);
+            $priority = $this->normalizeTodoPriority((string) ($todo['priority'] ?? 'normal'), $text);
+
             $mapped[] = [
                 'file'     => (string) ($todo['file']     ?? ''),
                 'line'     => (int)    ($todo['line']     ?? 0),
-                'text'     => trim((string) ($todo['text'] ?? '')),
-                'status'   => (string) ($todo['status']   ?? 'open'),
-                'priority' => (string) ($todo['priority'] ?? 'normal'),
+                'text'     => $text,
+                'status'   => $status,
+                'priority' => $priority,
             ];
         }
 
@@ -232,17 +237,64 @@ class ProjectRoadmapService {
     /** Normalize DB rows to the shape the views expect (camelCase keys) */
     private function normalizeItemsForView(array $items): array {
         return array_map(function (array $item) {
+            $text = (string) ($item['text'] ?? '');
+            $status = $this->normalizeTodoStatus((string) ($item['status'] ?? 'open'), $text);
+            $priority = $this->normalizeTodoPriority((string) ($item['priority'] ?? 'normal'), $text);
+
             return [
                 'file'                => (string) ($item['file']                ?? ''),
                 'line'                => (int)    ($item['line']                ?? 0),
-                'text'                => (string) ($item['text']                ?? ''),
-                'status'              => (string) ($item['status']              ?? 'open'),
-                'priority'            => (string) ($item['priority']            ?? 'normal'),
+                'text'                => $text,
+                'status'              => $status,
+                'priority'            => $priority,
                 'lastSeenAt'          => (string) ($item['last_seen_at']        ?? ''),
                 'apiContractVersion'  => (string) ($item['api_contract_version'] ?? ''),
                 'id'                  => (int)    ($item['id']                  ?? 0),
             ];
         }, $items);
+    }
+
+    private function normalizeTodoStatus(string $status, string $text): string {
+        $normalized = strtolower(trim($status));
+        if ($normalized === 'done' || $normalized === 'open') {
+            return $normalized;
+        }
+
+        if (preg_match('/\[(done|x|fixed|resolved)\]/i', $text)) {
+            return 'done';
+        }
+
+        if ($normalized === 'completed' || $normalized === 'closed') {
+            return 'done';
+        }
+
+        return 'open';
+    }
+
+    private function normalizeTodoPriority(string $priority, string $text): string {
+        $normalized = strtolower(trim($priority));
+
+        if (in_array($normalized, ['high', 'critical', 'urgent', 'p1', '1'], true)) {
+            return 'high';
+        }
+        if (in_array($normalized, ['medium', 'med', 'p2', '2'], true)) {
+            return 'medium';
+        }
+        if (in_array($normalized, ['low', 'p3', '3'], true)) {
+            return 'low';
+        }
+
+        if (preg_match('/\[P1\]/i', $text)) {
+            return 'high';
+        }
+        if (preg_match('/\[P2\]/i', $text)) {
+            return 'medium';
+        }
+        if (preg_match('/\[P3\]/i', $text)) {
+            return 'low';
+        }
+
+        return 'normal';
     }
 
     private function logSyncFailure(array $project, string $error): void {

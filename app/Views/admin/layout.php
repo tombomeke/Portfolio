@@ -1,5 +1,7 @@
 <?php
 $adminStyleVersion = (string) (@filemtime(__DIR__ . '/../../../public/css/admin.css') ?: time());
+
+// TODO(responsive): [P2][done] Keep admin sidebar navigation scrollable without overlapping footer items.
 ?>
 
 <!DOCTYPE html>

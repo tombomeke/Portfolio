@@ -11,6 +11,8 @@ require_once __DIR__ . '/../Config/translations.php';
 require_once __DIR__ . '/../Models/UserModel.php';
 $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com');
 $styleVersion = (string) (@filemtime(__DIR__ . '/../../public/css/style.css') ?: time());
+
+// TODO(responsive): [P2][done] Prevent long usernames from breaking navbar layout on standard screens.
 ?>
     <!DOCTYPE html>
     <html lang="<?= Translations::getCurrentLang() ?>">

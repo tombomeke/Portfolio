@@ -2,6 +2,9 @@
 $projectImages = (array) ($project['images'] ?? []);
 $activeTab = ($tab ?? 'overview') === 'roadmap' ? 'roadmap' : 'overview';
 $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
+
+// TODO(roadmap-ui): [P2][done] Improve roadmap item readability in dark theme and keep cards fully responsive.
+// TODO(roadmap-ui): [P2][done] Show explicit P2/P3 priority badges in project roadmap detail view.
 ?>
 
 <section class="projects project-detail-page">
@@ -156,6 +159,8 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
                                 <?php
                                 $isDone     = ($item['status'] ?? '') === 'done';
                                 $isHigh     = ($item['priority'] ?? '') === 'high';
+                                $isMedium   = ($item['priority'] ?? '') === 'medium';
+                                $isLow      = ($item['priority'] ?? '') === 'low';
                                 $file       = (string) ($item['file'] ?? '');
                                 $line       = (int) ($item['line'] ?? 0);
                                 $githubLink = '';
@@ -178,6 +183,10 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
                                             <?php endif; ?>
                                             <?php if ($isHigh && !$isDone): ?>
                                                 <span class="roadmap-badge-high"><i class="fas fa-arrow-up"></i> high</span>
+                                            <?php elseif ($isMedium && !$isDone): ?>
+                                                <span class="roadmap-badge-medium"><i class="fas fa-equals"></i> p2</span>
+                                            <?php elseif ($isLow && !$isDone): ?>
+                                                <span class="roadmap-badge-low"><i class="fas fa-arrow-down"></i> p3</span>
                                             <?php endif; ?>
                                         </span>
                                     </span>
@@ -556,6 +565,34 @@ a.roadmap-file-label:hover {
     text-transform: uppercase;
 }
 
+.roadmap-badge-medium {
+    display: inline-flex;
+    align-items: center;
+    gap: .2em;
+    background: rgba(59,130,246,.18);
+    color: #93c5fd;
+    border-radius: 999px;
+    padding: 2px 7px;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+
+.roadmap-badge-low {
+    display: inline-flex;
+    align-items: center;
+    gap: .2em;
+    background: rgba(148,163,184,.2);
+    color: #cbd5e1;
+    border-radius: 999px;
+    padding: 2px 7px;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+
 @media (max-width: 768px) {
     .project-detail-page .project-gallery {
         grid-template-columns: 44px 1fr 44px;
@@ -678,6 +715,12 @@ a.roadmap-file-label:hover {
     }
 
     .roadmap-badge-high {
+        font-size: .6rem;
+        padding: 1px 5px;
+    }
+
+    .roadmap-badge-medium,
+    .roadmap-badge-low {
         font-size: .6rem;
         padding: 1px 5px;
     }
