@@ -2,6 +2,19 @@
 // index.php — Main entry point
 
 if (session_status() === PHP_SESSION_NONE) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+        || ((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+
+    // TODO(security): done - Enforce secure session cookie flags (httponly, secure, samesite).
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
 }
 
@@ -9,6 +22,20 @@ $page = $_GET['page'] ?? 'home';
 
 // ── Admin & setup routes (handled by AdminController) ─────────────────────
 if ($page === 'admin' || $page === 'setup') {
+    require_once 'app/Auth/Auth.php';
+
+    // TODO(auth): done - Added router-level admin guard as defense-in-depth for guessed admin URLs.
+    // Defense-in-depth: block direct access to admin routes for non-admin users.
+    // Allow setup/login/logout routes to pass through to AdminController.
+    if ($page === 'admin') {
+        $section = $_GET['section'] ?? 'dashboard';
+        $publicAdminSections = ['login', 'logout'];
+        if (!in_array($section, $publicAdminSections, true) && !Auth::isAdmin()) {
+            header('Location: ?page=home');
+            exit;
+        }
+    }
+
     require_once 'app/Controllers/AdminController.php';
     (new AdminController())->dispatch($page);
     exit;

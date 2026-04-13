@@ -2,19 +2,19 @@
     <div class="flash <?= htmlspecialchars($flash['type']) ?>"><?= htmlspecialchars($flash['message']) ?></div>
 <?php endif; ?>
 
-<div class="card" style="max-width:500px">
+<div class="card users-create-card">
     <div class="card-header">
         <span class="card-title"><?= trans('admin_users_add_admin') ?></span>
         <a href="?page=admin&section=users" class="btn btn-ghost btn-sm">← <?= trans('admin_back') ?></a>
     </div>
 
-    <p style="font-size:.875rem;color:var(--text-muted);margin-bottom:1.5rem">
+    <p class="users-create-note">
         <?= trans('admin_users_create_note') ?>
     </p>
 
     <form method="POST" action="?page=admin&section=users&action=create">
         <?= \Auth::csrfField() ?>
-        <div class="form-grid" style="gap:1.25rem">
+        <div class="form-grid users-create-grid">
             <div class="form-group">
                 <label><?= trans('admin_users_username_required') ?></label>
                 <input type="text" name="username" required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" autofocus>

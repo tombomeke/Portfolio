@@ -20,7 +20,7 @@ class UserModel {
         $db = Database::getConnection();
         return $db->query(
             "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
-             FROM users ORDER BY FIELD(role,'owner','admin'), created_at ASC"
+             FROM users ORDER BY FIELD(role,'owner','admin','user'), created_at ASC"
         )->fetchAll();
     }
 
@@ -81,7 +81,18 @@ class UserModel {
         )->execute([':pass' => password_hash($password, PASSWORD_DEFAULT), ':id' => $id]);
     }
 
-    public function create(string $username, string $email, string $password, string $role = 'admin'): int {
+    public function updateRole(int $id, string $role): void {
+        $allowed = ['owner', 'admin', 'user'];
+        if (!in_array($role, $allowed, true)) {
+            throw new \InvalidArgumentException('Invalid role provided.');
+        }
+
+        Database::getConnection()->prepare(
+            "UPDATE users SET role=:role, updated_at=NOW() WHERE id=:id"
+        )->execute([':role' => $role, ':id' => $id]);
+    }
+
+    public function create(string $username, string $email, string $password, string $role = 'user'): int {
         $username = self::normalizeUsername($username);
         if (!self::isValidUsername($username)) {
             throw new \InvalidArgumentException('Invalid username format.');

@@ -88,7 +88,9 @@ class AdminController {
             exit;
         }
 
+        // TODO(auth): done - Require admin role for all admin sections except login/logout/setup.
         Auth::requireAuth();
+        Auth::requireAdmin();
 
         switch ($section) {
             case 'news':
@@ -201,15 +203,61 @@ class AdminController {
         $username = trim($post['username'] ?? '');
         $password = $post['password']      ?? '';
 
+        // TODO(security): done - Added basic login throttling for admin login attempts.
+        if (!$this->canAttemptAdminLogin()) {
+            $this->flash('error', 'Te veel loginpogingen. Probeer over enkele minuten opnieuw.');
+            header('Location: ?page=admin&section=login');
+            exit;
+        }
+
         if (Auth::login($username, $password)) {
+            $this->clearAdminLoginFailures();
+            if (!Auth::isAdmin()) {
+                Auth::logout();
+                $this->flash('error', 'Je account heeft geen adminrechten.');
+                header('Location: ?page=admin&section=login');
+                exit;
+            }
             ActivityLogModel::log('login', "User '{$username}' logged in");
             header('Location: ?page=admin');
             exit;
         }
 
+        $this->registerAdminLoginFailure();
+
         $this->flash('error', 'Invalid username or password.');
         header('Location: ?page=admin&section=login');
         exit;
+    }
+
+    private function canAttemptAdminLogin(): bool {
+        $windowSeconds = 300;
+        $maxAttempts = 8;
+        $now = time();
+        $record = $_SESSION['admin_login_attempts'] ?? null;
+
+        if (!is_array($record) || empty($record['first_at']) || ($now - (int) $record['first_at']) > $windowSeconds) {
+            $_SESSION['admin_login_attempts'] = ['count' => 0, 'first_at' => $now];
+            return true;
+        }
+
+        return ((int) ($record['count'] ?? 0)) < $maxAttempts;
+    }
+
+    private function registerAdminLoginFailure(): void {
+        $now = time();
+        $record = $_SESSION['admin_login_attempts'] ?? ['count' => 0, 'first_at' => $now];
+        if (($now - (int) ($record['first_at'] ?? $now)) > 300) {
+            $record = ['count' => 0, 'first_at' => $now];
+        }
+        $record['count'] = (int) ($record['count'] ?? 0) + 1;
+        $_SESSION['admin_login_attempts'] = $record;
+    }
+
+    private function clearAdminLoginFailures(): void {
+        if (isset($_SESSION['admin_login_attempts'])) {
+            unset($_SESSION['admin_login_attempts']);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -419,7 +467,15 @@ class AdminController {
             return null;
         }
 
-        // Explicit publish uses server-side current timestamp.
+        $scheduledRaw = trim((string) ($post['published_at'] ?? ''));
+        if ($scheduledRaw !== '') {
+            $ts = strtotime($scheduledRaw);
+            if ($ts !== false) {
+                return date('Y-m-d H:i:s', $ts);
+            }
+        }
+
+        // Explicit publish defaults to server-side current timestamp.
         return date('Y-m-d H:i:s');
     }
 
@@ -903,6 +959,20 @@ class AdminController {
             case 'create':
                 $isPost ? $this->storeUser($_POST) : $this->createUser();
                 break;
+            case 'promote':
+                if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+                    $this->promoteUser($id);
+                } else {
+                    header('Location: ?page=admin&section=users'); exit;
+                }
+                break;
+            case 'demote':
+                if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+                    $this->demoteUser($id);
+                } else {
+                    header('Location: ?page=admin&section=users'); exit;
+                }
+                break;
             case 'delete':
                 if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
                     $this->deleteUser($id);
@@ -951,6 +1021,57 @@ class AdminController {
 
         $this->users->create($username, $email, $password, 'admin');
         $this->flash('success', "Admin-account '{$username}' aangemaakt.");
+        header('Location: ?page=admin&section=users');
+        exit;
+    }
+
+    private function promoteUser(?int $id): void {
+        if (!$id) { header('Location: ?page=admin&section=users'); exit; }
+
+        $target = $this->users->getById($id);
+        if (!$target) {
+            $this->flash('error', 'Gebruiker niet gevonden.');
+            header('Location: ?page=admin&section=users');
+            exit;
+        }
+
+        if ($target['role'] !== 'user') {
+            $this->flash('error', 'Alleen normale users kunnen gepromoveerd worden.');
+            header('Location: ?page=admin&section=users');
+            exit;
+        }
+
+        $this->users->updateRole((int) $id, 'admin');
+        $this->flash('success', "Gebruiker '{$target['username']}' is nu admin.");
+        header('Location: ?page=admin&section=users');
+        exit;
+    }
+
+    private function demoteUser(?int $id): void {
+        if (!$id) { header('Location: ?page=admin&section=users'); exit; }
+
+        $currentUser = Auth::user();
+        if ($currentUser && (int) $id === (int) ($currentUser['id'] ?? 0)) {
+            $this->flash('error', 'Je kunt je eigen account niet degraderen.');
+            header('Location: ?page=admin&section=users');
+            exit;
+        }
+
+        $target = $this->users->getById($id);
+        if (!$target) {
+            $this->flash('error', 'Gebruiker niet gevonden.');
+            header('Location: ?page=admin&section=users');
+            exit;
+        }
+
+        if ($target['role'] !== 'admin') {
+            $this->flash('error', 'Alleen admins kunnen gedegradeerd worden.');
+            header('Location: ?page=admin&section=users');
+            exit;
+        }
+
+        $this->users->updateRole((int) $id, 'user');
+        $this->flash('success', "Admin '{$target['username']}' is nu user.");
         header('Location: ?page=admin&section=users');
         exit;
     }

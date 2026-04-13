@@ -1,6 +1,19 @@
 <?php
 // /app/Controllers/PortfolioController.php
 if (session_status() === PHP_SESSION_NONE) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+        || ((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+
+    // TODO(security): done - Fallback cookie flags for direct controller entry points.
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
 }
 
@@ -391,7 +404,9 @@ class PortfolioController {
             header('Location: ?page=home');
             exit;
         }
-        $redirect = $_GET['redirect'] ?? '';
+        // TODO(security): done - Validate login redirect as internal-only URL.
+        $requestedRedirect = (string) ($_GET['redirect'] ?? '');
+        $redirect = $this->isSafeInternalRedirect($requestedRedirect) ? $requestedRedirect : '';
         $this->render('login', [
             'title'    => 'Inloggen',
             'redirect' => $redirect,
@@ -409,23 +424,30 @@ class PortfolioController {
 
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
-        $redirect = $_POST['redirect'] ?? '';
+        $redirect = (string) ($_POST['redirect'] ?? '');
 
-        // TODO(security): [P1] add login rate limiting (e.g. max 5 attempts per IP per minute)
+        // TODO(security): done - Added basic login throttling for public login attempts.
+        if (!$this->canAttemptLogin('public')) {
+            $_SESSION['login_error'] = 'Te veel loginpogingen. Probeer over enkele minuten opnieuw.';
+            header('Location: ?page=login');
+            exit;
+        }
+
         if (Auth::loginByEmail($email, $password)) {
+            $this->clearLoginFailures('public');
             $user = Auth::user();
             // Admins/owners go to admin panel, regular users go back or home
             if (in_array($user['role'], ['owner', 'admin'], true)) {
                 header('Location: ?page=admin');
-            } elseif ($redirect && strpos($redirect, 'page=') !== false) {
-                // TODO(security): [P1] open redirect — only check for 'page=' is weak; validate redirect
-                // is a relative internal URL (starts with '?') before using it.
+            } elseif ($this->isSafeInternalRedirect($redirect)) {
                 header('Location: ' . $redirect);
             } else {
                 header('Location: ?page=home');
             }
             exit;
         }
+
+        $this->registerLoginFailure('public');
 
         $_SESSION['login_error'] = 'Ongeldig e-mailadres of wachtwoord.';
         $qs = $redirect ? '&redirect=' . urlencode($redirect) : '';
@@ -805,6 +827,55 @@ class PortfolioController {
 
     private function sanitizeInput($input) {
         return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+    }
+
+    private function isSafeInternalRedirect(string $redirect): bool {
+        if ($redirect === '' || strlen($redirect) > 512) {
+            return false;
+        }
+        if (preg_match('/[\r\n]/', $redirect)) {
+            return false;
+        }
+        if ($redirect[0] !== '?') {
+            return false;
+        }
+        if (preg_match('/^[a-z][a-z0-9+.-]*:/i', $redirect)) {
+            return false;
+        }
+
+        $query = (string) parse_url($redirect, PHP_URL_QUERY);
+        parse_str($query, $params);
+        return !empty($params['page']);
+    }
+
+    private function canAttemptLogin(string $scope): bool {
+        $windowSeconds = 300;
+        $maxAttempts = 8;
+        $now = time();
+        $record = $_SESSION['login_attempts'][$scope] ?? null;
+
+        if (!is_array($record) || empty($record['first_at']) || ($now - (int) $record['first_at']) > $windowSeconds) {
+            $_SESSION['login_attempts'][$scope] = ['count' => 0, 'first_at' => $now];
+            return true;
+        }
+
+        return ((int) ($record['count'] ?? 0)) < $maxAttempts;
+    }
+
+    private function registerLoginFailure(string $scope): void {
+        $now = time();
+        $record = $_SESSION['login_attempts'][$scope] ?? ['count' => 0, 'first_at' => $now];
+        if (($now - (int) ($record['first_at'] ?? $now)) > 300) {
+            $record = ['count' => 0, 'first_at' => $now];
+        }
+        $record['count'] = (int) ($record['count'] ?? 0) + 1;
+        $_SESSION['login_attempts'][$scope] = $record;
+    }
+
+    private function clearLoginFailures(string $scope): void {
+        if (isset($_SESSION['login_attempts'][$scope])) {
+            unset($_SESSION['login_attempts'][$scope]);
+        }
     }
 
     private function getPageLabel($page) {

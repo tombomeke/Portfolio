@@ -18,11 +18,20 @@
                 <p class="form-hint" style="margin:0">
                     <?= trans('admin_news_publish_mode_hint') ?>
                 </p>
+                <div class="admin-inline-alert admin-inline-alert--info">
+                    <i class="fas fa-circle-info"></i>
+                    <span><?= trans('admin_news_schedule_optional_hint') ?></span>
+                </div>
             </div>
 
             <div class="form-group">
+                <label><?= trans('admin_news_publish_date_hint') ?></label>
+                <input type="datetime-local" name="published_at">
+            </div>
+
+            <div class="form-group news-image-upload">
                 <label><?= trans('admin_news_image_optional') ?></label>
-                <input type="file" name="image" accept="image/*">
+                <input type="file" name="image" accept="image/*" class="news-file-input">
             </div>
 
             <div>

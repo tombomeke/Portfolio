@@ -69,6 +69,16 @@ class Auth {
         }
     }
 
+    // TODO(auth): done - Enforce admin/owner-only access for admin routes.
+    /** Redirect to home page if logged in but not owner/admin. */
+    public static function requireAdmin(): void {
+        self::requireAuth();
+        if (!self::isAdmin()) {
+            header('Location: ?page=home');
+            exit;
+        }
+    }
+
     /**
      * Attempt login by username + password.
      * Regenerates the session ID on success to prevent session fixation.

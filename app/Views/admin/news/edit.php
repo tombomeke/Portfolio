@@ -18,6 +18,10 @@
                 <p class="form-hint" style="margin:0">
                     <?= trans('admin_news_publish_mode_hint') ?>
                 </p>
+                <div class="admin-inline-alert admin-inline-alert--info">
+                    <i class="fas fa-clock"></i>
+                    <span><?= trans('admin_news_schedule_optional_hint') ?></span>
+                </div>
                 <?php if (!empty($item['published_at'])): ?>
                     <small class="text-muted" style="display:block;margin-top:.35rem">
                         <?= trans('admin_news_published_at') ?>: <?= htmlspecialchars(date('d-m-Y H:i', strtotime($item['published_at']))) ?>
@@ -26,14 +30,20 @@
             </div>
 
             <div class="form-group">
+                <label><?= trans('admin_news_publish_date_hint') ?></label>
+                <input type="datetime-local" name="published_at"
+                       value="<?= $item['published_at'] ? date('Y-m-d\TH:i', strtotime($item['published_at'])) : '' ?>">
+            </div>
+
+            <div class="form-group news-image-upload">
                 <label><?= trans('admin_news_image') ?></label>
                 <?php if ($item['image_path']): ?>
                     <img src="<?= htmlspecialchars($item['image_path']) ?>" class="img-preview" alt="<?= trans('admin_news_current_image') ?>">
-                    <label style="margin-top:.5rem;display:flex;align-items:center;gap:.4rem;font-size:.8rem">
+                    <label class="news-remove-image-label">
                         <input type="checkbox" name="remove_image" value="1"> <?= trans('admin_news_remove_image') ?>
                     </label>
                 <?php endif; ?>
-                <input type="file" name="image" accept="image/*" style="margin-top:.5rem">
+                <input type="file" name="image" accept="image/*" class="news-file-input" style="margin-top:.5rem">
             </div>
 
             <div>

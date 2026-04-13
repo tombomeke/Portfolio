@@ -130,6 +130,16 @@ Session-based auth met twee rollen: `owner` (tombomeke) en `admin` (vertrouwde v
 
 Session payload bevat naast role/username ook profieldata (zoals `profile_photo_path` en `preferred_language`) voor correcte navbar-weergave.
 
+Recent auth hardening:
+- `?page=admin` vereist nu expliciet admin/owner (`Auth::requireAdmin()`), niet enkel ingelogd zijn.
+- Owner kan bestaande `user`-accounts promoveren naar `admin` en admins terugzetten naar `user` via `?page=admin&section=users`.
+- Login hardening: publieke en admin login hebben nu basale session-based rate limiting (tijdvenster) tegen brute-force.
+- Redirect hardening: login `redirect` wordt nu gevalideerd als interne URL (`?page=...`) om open redirect te voorkomen.
+
+Migratie hardening:
+- `database/migrate_v2.sql` profile-column migratie is nu idempotent via een procedure met `information_schema` checks,
+  zodat reruns niet meer falen op duplicate-column errors.
+
 ## Gepland voor later (nog niet gebouwd)
 - E-mailverificatie voor admins
 - Publieke gebruikersprofielen uitbreiden (bio/links/activity)
@@ -195,6 +205,15 @@ Geïmplementeerd ✅:
 6. ✅ ReadmeSync pagina: loading spinner, copy-to-clipboard, betere quicklinks
 
 Open TODO's (volgende iteraties):
+
+**Recent afgerond ✅**
+- [x] `TODO(auth)`: Admin route hardening — `?page=admin` vereist nu admin/owner (`Auth::requireAdmin()` + extra guard in `index.php`)
+- [x] `TODO(auth)`: Owner kan bestaande users promoten naar admin en admins degraderen naar user (`?page=admin&section=users`)
+- [x] `TODO(security)`: Login redirect hardening — alleen interne `?page=...` redirects toegestaan
+- [x] `TODO(security)`: Basale login rate limiting toegevoegd op publieke en admin login
+- [x] `TODO(security)`: Session cookie flags afgedwongen (`httponly`, `secure`, `samesite`) in bootstrap/controller
+- [x] `TODO(db)`: `migrate_v2.sql` idempotent gemaakt + schema reconcile voor bestaande `readmesync_scan_logs`
+- [x] `TODO(ui)`: Admin login UI/CSS verbeterd voor leesbaarheid en responsive layout
 
 **Roadmap / ReadmeSync**
 - [P2] `TODO(roadmap)`: Roadmap items handmatig markeren als done/open in admin (zonder re-sync)

@@ -65,16 +65,58 @@ CREATE TABLE IF NOT EXISTS site_settings (
     INDEX idx_group (`group`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- User profile fields (split into separate statements for MySQL 5.7 compatibility)
--- Run each statement individually; skip any that fail with "Duplicate column name"
-ALTER TABLE users ADD COLUMN birthday           DATE         NULL          AFTER email;
-ALTER TABLE users ADD COLUMN profile_photo_path VARCHAR(255) NULL          AFTER birthday;
-ALTER TABLE users ADD COLUMN about              TEXT         NULL          AFTER profile_photo_path;
-ALTER TABLE users ADD COLUMN public_profile     TINYINT(1)   NOT NULL DEFAULT 1 AFTER about;
-ALTER TABLE users ADD COLUMN preferred_language VARCHAR(2)   NOT NULL DEFAULT 'nl' AFTER public_profile;
+-- User profile fields (MySQL 5.7-safe and idempotent)
+-- This block can be run multiple times without failing on duplicate columns.
+DROP PROCEDURE IF EXISTS ensure_user_profile_columns;
+DELIMITER $$
+CREATE PROCEDURE ensure_user_profile_columns()
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'birthday'
+    ) THEN
+        ALTER TABLE users ADD COLUMN birthday DATE NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'profile_photo_path'
+    ) THEN
+        ALTER TABLE users ADD COLUMN profile_photo_path VARCHAR(255) NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'about'
+    ) THEN
+        ALTER TABLE users ADD COLUMN about TEXT NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'public_profile'
+    ) THEN
+        ALTER TABLE users ADD COLUMN public_profile TINYINT(1) NOT NULL DEFAULT 1;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'preferred_language'
+    ) THEN
+        ALTER TABLE users ADD COLUMN preferred_language VARCHAR(2) NOT NULL DEFAULT 'nl';
+    END IF;
+END$$
+DELIMITER ;
+CALL ensure_user_profile_columns();
+DROP PROCEDURE IF EXISTS ensure_user_profile_columns;
 
 -- Add 'user' role for public registrations (owner/admin unchanged)
-ALTER TABLE users MODIFY COLUMN role ENUM('owner','admin','user') NOT NULL DEFAULT 'admin';
+ALTER TABLE users MODIFY COLUMN role ENUM('owner','admin','user') NOT NULL DEFAULT 'user';
 
 -- Local ReadmeSync scan log (website-side audit/debug)
 CREATE TABLE IF NOT EXISTS readmesync_scan_logs (
@@ -99,3 +141,61 @@ CREATE TABLE IF NOT EXISTS readmesync_scan_logs (
     INDEX idx_user (user_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Reconcile existing readmesync_scan_logs schema (for older installs)
+DROP PROCEDURE IF EXISTS ensure_readmesync_scan_log_schema;
+DELIMITER $$
+CREATE PROCEDURE ensure_readmesync_scan_log_schema()
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'readmesync_scan_logs' AND COLUMN_NAME = 'source_user_id'
+    ) THEN
+        ALTER TABLE readmesync_scan_logs ADD COLUMN source_user_id VARCHAR(128) NULL AFTER source_client;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'readmesync_scan_logs' AND COLUMN_NAME = 'source_user_name'
+    ) THEN
+        ALTER TABLE readmesync_scan_logs ADD COLUMN source_user_name VARCHAR(128) NULL AFTER source_user_id;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'readmesync_scan_logs' AND COLUMN_NAME = 'api_contract_version'
+    ) THEN
+        ALTER TABLE readmesync_scan_logs ADD COLUMN api_contract_version VARCHAR(80) NULL AFTER todo_count;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'readmesync_scan_logs' AND COLUMN_NAME = 'response_keys'
+    ) THEN
+        ALTER TABLE readmesync_scan_logs ADD COLUMN response_keys VARCHAR(500) NULL AFTER api_contract_version;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'readmesync_scan_logs' AND INDEX_NAME = 'idx_created_at'
+    ) THEN
+        ALTER TABLE readmesync_scan_logs ADD INDEX idx_created_at (created_at);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'readmesync_scan_logs' AND INDEX_NAME = 'idx_repo'
+    ) THEN
+        ALTER TABLE readmesync_scan_logs ADD INDEX idx_repo (repo_url(191));
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'readmesync_scan_logs' AND INDEX_NAME = 'idx_user'
+    ) THEN
+        ALTER TABLE readmesync_scan_logs ADD INDEX idx_user (user_id);
+    END IF;
+END$$
+DELIMITER ;
+CALL ensure_readmesync_scan_log_schema();
+DROP PROCEDURE IF EXISTS ensure_readmesync_scan_log_schema;
