@@ -1,8 +1,26 @@
 <?php
 // app/Auth/Auth.php
 
+/**
+ * Session-based authentication helper.
+ *
+ * Two roles exist:
+ *   - 'owner' — full access (can manage users, settings, all content)
+ *   - 'admin' — content management (news, FAQ, projects, contact)
+ *
+ * The session key $_SESSION['auth_user'] holds a minimal user snapshot
+ * built by makeSessionUser(). It is NOT automatically refreshed when the
+ * user row changes in the DB — call Auth::refreshSession() after profile updates.
+ *
+ * CSRF tokens are stored in $_SESSION['csrf_token'] and verified on every
+ * state-changing POST. Use csrfField() in forms and verifyCsrf() in handlers.
+ */
 class Auth {
 
+    /**
+     * Build the session payload from a full DB user row.
+     * Only stores the fields the layout/navbar actually needs.
+     */
     private static function makeSessionUser(array $user): array {
         return [
             'id'                 => $user['id'],
@@ -14,22 +32,27 @@ class Auth {
         ];
     }
 
+    /** Returns true if a user is logged in (session key exists). */
     public static function check(): bool {
         return isset($_SESSION['auth_user']);
     }
 
+    /** Returns the current session user array, or null if not logged in. */
     public static function user(): ?array {
         return $_SESSION['auth_user'] ?? null;
     }
 
+    /** Returns true only for role=owner. */
     public static function isOwner(): bool {
         return (self::user()['role'] ?? '') === 'owner';
     }
 
+    /** Returns true for both role=owner and role=admin. */
     public static function isAdmin(): bool {
         return in_array(self::user()['role'] ?? '', ['owner', 'admin'], true);
     }
 
+    /** Redirect to login page if no session. Call at the top of every protected handler. */
     public static function requireAuth(): void {
         if (!self::check()) {
             header('Location: ?page=admin&section=login');
@@ -37,6 +60,7 @@ class Auth {
         }
     }
 
+    /** Redirect to admin dashboard if logged in but not owner. */
     public static function requireOwner(): void {
         self::requireAuth();
         if (!self::isOwner()) {
@@ -45,6 +69,11 @@ class Auth {
         }
     }
 
+    /**
+     * Attempt login by username + password.
+     * Regenerates the session ID on success to prevent session fixation.
+     * Returns true on success, false on wrong credentials.
+     */
     public static function login(string $username, string $password): bool {
         require_once __DIR__ . '/../Config/Database.php';
         $db   = Database::getConnection();
@@ -61,6 +90,10 @@ class Auth {
         return true;
     }
 
+    /**
+     * Attempt login by email + password (alternative to username login).
+     * Same session-regeneration behaviour as login().
+     */
     public static function loginByEmail(string $email, string $password): bool {
         require_once __DIR__ . '/../Config/Database.php';
         $db   = Database::getConnection();
@@ -77,11 +110,16 @@ class Auth {
         return true;
     }
 
+    /** Destroy the auth session and regenerate the session ID. */
     public static function logout(): void {
         unset($_SESSION['auth_user']);
         session_regenerate_id(true);
     }
 
+    /**
+     * Return the current CSRF token, generating one if it doesn't exist yet.
+     * Token is 64 hex characters (32 random bytes).
+     */
     public static function csrfToken(): string {
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -89,10 +127,15 @@ class Auth {
         return $_SESSION['csrf_token'];
     }
 
+    /**
+     * Constant-time comparison to verify a submitted CSRF token.
+     * Always returns false if the session token is missing.
+     */
     public static function verifyCsrf(string $token): bool {
         return !empty($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
     }
 
+    /** Render a hidden <input> with the current CSRF token. Use inside every POST form. */
     public static function csrfField(): string {
         return '<input type="hidden" name="_csrf" value="' . htmlspecialchars(self::csrfToken(), ENT_QUOTES, 'UTF-8') . '">';
     }

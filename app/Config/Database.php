@@ -1,9 +1,26 @@
 <?php
 require_once __DIR__ . '/db.php';
 
+/**
+ * PDO singleton — one connection per request, shared by all models.
+ *
+ * Configuration comes from constants defined in db.php:
+ *   DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_CHARSET
+ * Those constants are populated from environment variables
+ * (PORTFOLIO_DB_HOST / _NAME / _USER / _PASS).
+ *
+ * PDO is configured with:
+ *   - ERRMODE_EXCEPTION — all errors throw PDOException
+ *   - FETCH_ASSOC       — rows returned as associative arrays
+ *   - EMULATE_PREPARES false — use real prepared statements
+ */
 class Database {
     private static $connection = null;
 
+    /**
+     * Return the shared PDO connection, creating it on first call.
+     * Throws RuntimeException if credentials are missing.
+     */
     public static function getConnection() {
         if (self::$connection === null) {
             if (DB_HOST === '' || DB_NAME === '' || DB_USER === '' || DB_PASS === '') {
