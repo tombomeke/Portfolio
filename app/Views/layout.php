@@ -10,6 +10,7 @@ require_once __DIR__ . '/../Config/env.php';
 require_once __DIR__ . '/../Config/translations.php';
 require_once __DIR__ . '/../Models/UserModel.php';
 $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com');
+$styleVersion = (string) (@filemtime(__DIR__ . '/../../public/css/style.css') ?: time());
 ?>
     <!DOCTYPE html>
     <html lang="<?= Translations::getCurrentLang() ?>">
@@ -23,7 +24,7 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
         <title><?= htmlspecialchars($title ?? 'Portfolio') ?> - Tom Dekoning</title>
 
         <!-- Stylesheets -->
-        <link rel="stylesheet" href="public/css/style.css">
+        <link rel="stylesheet" href="public/css/style.css?v=<?= htmlspecialchars($styleVersion, ENT_QUOTES, 'UTF-8') ?>">
         <link rel="stylesheet" href="public/css/modal.css">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     </head>

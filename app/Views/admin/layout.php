@@ -1,10 +1,14 @@
+<?php
+$adminStyleVersion = (string) (@filemtime(__DIR__ . '/../../../public/css/admin.css') ?: time());
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle ?? 'Admin') ?> – tombomeke admin</title>
-    <link rel="stylesheet" href="public/css/admin.css">
+    <link rel="stylesheet" href="public/css/admin.css?v=<?= htmlspecialchars($adminStyleVersion ?? '', ENT_QUOTES, 'UTF-8') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta name="robots" content="noindex,nofollow">
 </head>
@@ -131,7 +135,6 @@ $isAuth = isset($authUser);
 <?php if ($isAuth): ?>
 <div class="admin-backdrop" aria-hidden="true"></div>
 <?php endif; ?>
-
 <script>
 // Language tab switcher (used on create/edit forms)
 document.querySelectorAll('.lang-tab').forEach(tab => {
