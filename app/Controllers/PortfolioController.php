@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../Config/translations.php';
+require_once __DIR__ . '/../Config/env.php';
 require_once __DIR__ . '/../Models/ContactMessageModel.php';
 require_once __DIR__ . '/../Models/ProjectModels.php';
 require_once __DIR__ . '/../Models/SkillModel.php';
@@ -29,7 +30,7 @@ class PortfolioController {
     private $userModel;
     private $readmeSyncScanLogModel;
     private $projectRoadmapService;
-    private $contactRecipient = 'tom1dekoning@gmail.com';
+    private $contactRecipient;
 
     public function __construct() {
         $this->projectModel   = new ProjectModel();
@@ -42,13 +43,14 @@ class PortfolioController {
         $this->userModel      = new UserModel();
         $this->readmeSyncScanLogModel = new ReadmeSyncScanLogModel();
         $this->projectRoadmapService = new ProjectRoadmapService();
+        $this->contactRecipient = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com');
     }
 
     public function showAbout() {
         $data = [
             'title' => trans('nav_about'),
             'name' => 'Tom Dekoning',
-            'email' => 'tom1dekoning@gmail.com',
+            'email' => $this->contactRecipient,
             'linkedin' => 'https://www.linkedin.com/in/tom-dekoning-567523352/',
             'github' => 'https://github.com/tombomeke'
         ];
@@ -115,6 +117,8 @@ class PortfolioController {
         }
         unset($p);
 
+        // TODO(i18n): [P3] page titles in showProjects/showProjectRoadmaps/showGames/showNews/showFaq/showContact
+        // are hardcoded strings — replace with trans() calls once keys are added to translations.php.
         $data = [
             'title'        => 'Projecten',
             'projects'     => $projects,
@@ -199,7 +203,10 @@ class PortfolioController {
     }
 
     public function handleContact($postData) {
-        // Validate input
+        // TODO(security): [P2] add rate limiting / honeypot field to prevent contact form spam
+        // TODO(input): [P2] sanitizeInput() applies htmlspecialchars() before storage, causing double-encoding
+        // when data is displayed later (view would encode again). Use trim() here for storage,
+        // htmlspecialchars() only at display time in the view.
         $name = $this->sanitizeInput($postData['name'] ?? '');
         $email = $this->sanitizeInput($postData['email'] ?? '');
         $message = $this->sanitizeInput($postData['message'] ?? '');
@@ -404,12 +411,15 @@ class PortfolioController {
         $password = $_POST['password'] ?? '';
         $redirect = $_POST['redirect'] ?? '';
 
+        // TODO(security): [P1] add login rate limiting (e.g. max 5 attempts per IP per minute)
         if (Auth::loginByEmail($email, $password)) {
             $user = Auth::user();
             // Admins/owners go to admin panel, regular users go back or home
             if (in_array($user['role'], ['owner', 'admin'], true)) {
                 header('Location: ?page=admin');
             } elseif ($redirect && strpos($redirect, 'page=') !== false) {
+                // TODO(security): [P1] open redirect — only check for 'page=' is weak; validate redirect
+                // is a relative internal URL (starts with '?') before using it.
                 header('Location: ' . $redirect);
             } else {
                 header('Location: ?page=home');
@@ -509,6 +519,9 @@ class PortfolioController {
             $id = $this->userModel->createPublicUser($name, $email, $password);
             $user = $this->userModel->getById($id);
             session_regenerate_id(true);
+            // TODO(auth): [P3] use Auth::makeSessionUser($user) here instead of manually building the
+            // session payload — keeps session shape consistent with login() and avoids missing
+            // fields (profile_photo_path, preferred_language) that the navbar expects.
             $_SESSION['auth_user'] = [
                 'id'       => $user['id'],
                 'username' => $user['username'],
@@ -813,7 +826,7 @@ class PortfolioController {
         return trans('wip_default_page_name');
     }
 
-    // TODO(cron): add last-run timestamp check to prevent too-frequent external calls
+    // TODO(cron): [P2] add last-run timestamp check to prevent too-frequent external calls
     /**
      * Token-protected cron endpoint for periodic roadmap sync.
      * Call via: GET ?page=cron-sync-roadmaps&token=SECRET

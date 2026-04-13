@@ -1,5 +1,21 @@
 <?php
 // app/Services/ProjectRoadmapService.php — sync roadmap TODOs from ReadmeSync.API
+
+/**
+ * Coordinates syncing and reading of per-project roadmap TODO items.
+ *
+ * Primary flow:
+ *   syncProjectRoadmap($project) → callApi() → ProjectRoadmapModel::upsertFromSync()
+ *
+ * Fallback flow (when migrate_v3.sql hasn't been run):
+ *   Any DB operation that throws is caught silently and the service
+ *   reads/writes app/Config/project_roadmaps.json instead.
+ *
+ * API contract: the ReadmeSync.API response must contain a 'todos' key.
+ * If it's missing, syncProjectRoadmap() returns ok=false with an explanation.
+ * See docs/readmesync-integration.md for the full contract check procedure.
+ */
+
 require_once __DIR__ . '/../Models/ProjectRoadmapModel.php';
 
 class ProjectRoadmapService {
@@ -7,11 +23,26 @@ class ProjectRoadmapService {
     private string $storagePath; // JSON fallback path
     private ?ProjectRoadmapModel $roadmapModel = null;
 
+    /**
+     * @param string|null $apiUrl       Override the ReadmeSync API URL (useful in tests).
+     * @param string|null $storagePath  Override the JSON fallback file path (useful in tests).
+     */
     public function __construct(?string $apiUrl = null, ?string $storagePath = null) {
         $this->apiUrl      = $apiUrl ?: ((string) (getenv('READMESYNC_API_URL') ?: 'https://tombomekestudio.com/api/readmesync/generate'));
         $this->storagePath = $storagePath ?: (__DIR__ . '/../Config/project_roadmaps.json');
     }
 
+    /**
+     * Return roadmap data for a single project, reading from DB (or JSON fallback).
+     *
+     * Returns an array with keys: projectId, slug, title, repoUrl, lastSyncAt,
+     * openCount, totalCount, items[].
+     * Returns [] if the project has no id.
+     *
+     * @param array       $project       Project row (must contain 'id').
+     * @param string|null $filterStatus  'open' | 'done' | null (no filter).
+     * @param string|null $filterPriority 'high' | 'normal' | null (no filter).
+     */
     public function getProjectRoadmap(array $project, ?string $filterStatus = null, ?string $filterPriority = null): array {
         $projectId = (int) ($project['id'] ?? 0);
         if ($projectId <= 0) return [];
@@ -65,25 +96,37 @@ class ProjectRoadmapService {
     public function getSyncSummary(array $projectIds): array {
         if (empty($projectIds)) return [];
         try {
-            $model   = $this->getModel();
-            $summary = [];
-            foreach ($projectIds as $id) {
-                $id         = (int) $id;
-                $lastSync   = $model->getLastSync($id);
-                $summary[$id] = [
-                    'lastSyncAt'  => $lastSync ? $lastSync['created_at'] : null,
-                    'openCount'   => $model->getOpenCountByProjectId($id),
-                    'doneCount'   => $model->getDoneCountByProjectId($id),
-                    'totalCount'  => $model->getTotalCountByProjectId($id),
-                ];
-            }
-            return $summary;
+            return $this->getModel()->getSyncSummaryByProjectIds($projectIds);
         } catch (\Throwable $e) {
             return [];
         }
     }
 
-    // TODO(roadmap): add retry with exponential backoff when API returns non-200
+    /**
+     * Returns the most recent sync log entries across all projects.
+     * Used by the admin panel to show sync activity without a dedicated model import.
+     */
+    public function getRecentSyncLogs(int $limit = 20): array {
+        try {
+            return $this->getModel()->getRecentSyncLogs($limit);
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    // TODO(roadmap): [P1] add retry with exponential backoff when API returns non-200
+    /**
+     * Trigger a full sync for one project: call the ReadmeSync API and persist results.
+     *
+     * Returns ['ok' => true, 'itemCount' => N, 'apiContractVersion' => '...'] on success.
+     * Returns ['ok' => false, 'error' => '...'] on failure (no repo_url, API error, bad contract).
+     *
+     * On DB failure the data is written to the JSON fallback file instead.
+     * On API failure the error is logged to project_sync_log (if DB is available).
+     *
+     * @param array      $project   Project row (must contain 'id' and 'repo_url').
+     * @param array|null $authUser  Current admin user (passed to API for telemetry).
+     */
     public function syncProjectRoadmap(array $project, ?array $authUser = null): array {
         $repoUrl = trim((string) ($project['repo_url'] ?? ''));
         if ($repoUrl === '') {
@@ -179,7 +222,7 @@ class ProjectRoadmapService {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function getModel(): ProjectRoadmapModel {
+    protected function getModel(): ProjectRoadmapModel {
         if ($this->roadmapModel === null) {
             $this->roadmapModel = new ProjectRoadmapModel();
         }

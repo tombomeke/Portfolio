@@ -1,5 +1,20 @@
 <?php
 // app/Models/ProjectModels.php — DB-driven (migrated from static array)
+
+/**
+ * Manages projects, their bilingual translations, and gallery images.
+ *
+ * Database tables:
+ *   - projects               — language-neutral fields (slug, category, status, repo_url, …)
+ *   - project_translations   — one row per project per language (title, description, features)
+ *   - project_images         — gallery images (many per project, ordered by sort_order)
+ *
+ * Translations are joined on the current language (Translations::getCurrentLang()).
+ * Admin methods fetch both NL and EN at once (no language join — separate LEFT JOINs).
+ *
+ * decodeRow() decodes JSON columns (tech, features) and optionally merges gallery images.
+ */
+
 require_once __DIR__ . '/../Config/Database.php';
 
 class ProjectModel {
@@ -243,7 +258,7 @@ class ProjectModel {
         return $stmt->fetchAll();
     }
 
-    // TODO(gallery): add drag-and-drop sort_order reordering in admin edit view
+    // TODO(gallery): [P2] add drag-and-drop sort_order reordering in admin edit view
     public function addImage(int $projectId, string $imagePath, int $sortOrder = 0): int {
         $db   = Database::getConnection();
         $stmt = $db->prepare(

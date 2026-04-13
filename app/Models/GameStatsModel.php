@@ -9,6 +9,8 @@ class GameStatsModel {
         $this->cacheFile = __DIR__ . '/../../cache/game_stats.json';
     }
 
+    // TODO(cache): [P2] replace in-memory mock data with a real external API call (e.g. mcsrvstat.us)
+    // and add a file-based cache with ~10 min TTL so the page doesn't hit the API on every load.
     /**
      * Get Minecraft server statistics
      * Uses caching to avoid hitting API rate limits
