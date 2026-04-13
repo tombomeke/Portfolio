@@ -366,8 +366,8 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
 
 .roadmap-panel {
     border: 1px solid rgba(99,102,241,.12);
-    box-shadow: 0 10px 30px rgba(15,23,42,.06);
-    background: linear-gradient(180deg, rgba(99,102,241,.04), rgba(255,255,255,0));
+    box-shadow: 0 10px 30px rgba(15,23,42,.18);
+    background: linear-gradient(180deg, rgba(59,130,246,.08), rgba(15,23,42,.24));
 }
 
 .roadmap-header {
@@ -435,7 +435,7 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
     color: var(--text-muted, #94a3b8);
     border: 1px dashed rgba(148,163,184,.35);
     border-radius: 14px;
-    background: rgba(255,255,255,.55);
+    background: rgba(15,23,42,.36);
 }
 .roadmap-empty p { margin: 0; }
 
@@ -456,9 +456,9 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
 .roadmap-file-label {
     font-family: 'Courier New', monospace;
     font-size: .72rem;
-    color: #334155;
-    background: rgba(99,102,241,.10);
-    border: 1px solid rgba(99,102,241,.14);
+    color: #c7d2fe;
+    background: rgba(99,102,241,.16);
+    border: 1px solid rgba(99,102,241,.26);
     border-radius: 999px;
     padding: 3px 8px;
     text-decoration: none;
@@ -474,30 +474,30 @@ a.roadmap-file-label:hover {
     align-items: flex-start;
     padding: .7rem .8rem;
     border-radius: 12px;
-    border: 1px solid rgba(148,163,184,.18);
-    background: rgba(255,255,255,.78);
+    border: 1px solid rgba(148,163,184,.24);
+    background: rgba(15,23,42,.54);
     transition: background .12s, border-color .12s, transform .12s, box-shadow .12s;
 }
 .roadmap-todo-item:hover {
-    background: rgba(255,255,255,.96);
-    border-color: rgba(99,102,241,.22);
+    background: rgba(15,23,42,.72);
+    border-color: rgba(99,102,241,.36);
     transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(15,23,42,.04);
+    box-shadow: 0 8px 20px rgba(15,23,42,.22);
 }
 .roadmap-todo-item--done {
-    opacity: .52;
-    background: rgba(34,197,94,.05);
+    opacity: .8;
+    background: rgba(34,197,94,.10);
     border-color: rgba(34,197,94,.18);
 }
 .roadmap-todo-item--done:hover {
-    background: rgba(34,197,94,.07);
+    background: rgba(34,197,94,.14);
 }
 .roadmap-todo-item--high:not(.roadmap-todo-item--done) {
     border-color: rgba(245,158,11,.25);
-    background: rgba(245,158,11,.05);
+    background: rgba(245,158,11,.11);
 }
 .roadmap-todo-item--high:not(.roadmap-todo-item--done):hover {
-    background: rgba(245,158,11,.08);
+    background: rgba(245,158,11,.16);
 }
 .roadmap-todo-status {
     font-size: .82rem;
@@ -520,16 +520,16 @@ a.roadmap-file-label:hover {
 .roadmap-todo-text {
     font-size: .875rem;
     line-height: 1.45;
-    color: var(--text-primary);
+    color: #e2e8f0;
     word-break: break-word;
 }
 .roadmap-todo-item--done .roadmap-todo-text {
     text-decoration: line-through;
-    color: var(--text-muted, #94a3b8);
+    color: #94a3b8;
 }
 .roadmap-todo-meta {
     font-size: .72rem;
-    color: var(--text-muted, #94a3b8);
+    color: #cbd5e1;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -537,7 +537,7 @@ a.roadmap-file-label:hover {
     margin-top: .05rem;
 }
 .roadmap-todo-meta a {
-    color: var(--primary-color, #6366f1);
+    color: #93c5fd;
     text-decoration: none;
     font-family: 'Courier New', monospace;
 }

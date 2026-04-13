@@ -35,17 +35,15 @@ body {
 /* ── Sidebar ─────────────────────────────────────── */
 .admin-sidebar {
     width: var(--sidebar-w);
-    height: 100vh;
+    height: 100dvh;
     background: var(--bg-sidebar);
     border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     position: fixed;
     top: 0; left: 0;
     z-index: 100;
-    overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior: contain;
+    overflow: hidden;
 }
 
 .sidebar-brand {
@@ -61,10 +59,11 @@ body {
 .sidebar-brand span { color: var(--text-muted); font-weight: 400; font-size: .85rem; display: block; }
 
 .sidebar-nav {
-    flex: 1;
     min-height: 0;
-    padding: .75rem 0;
-    overflow: visible;
+    padding: .75rem 0 1rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
 }
 
 .nav-section-label {
@@ -111,6 +110,9 @@ body {
     font-size: .8rem;
     color: var(--text-muted);
     flex-shrink: 0;
+    background: var(--bg-sidebar);
+    position: relative;
+    z-index: 2;
 }
 .sidebar-footer strong {
     display: inline-block;
@@ -699,12 +701,17 @@ textarea.tall { min-height: 240px; }
     
     .admin-sidebar.is-open {
         transform: translateY(0);
-        max-height: 100vh;
-        overflow-y: auto;
+        max-height: 100dvh;
+        overflow: hidden;
     }
     
     .sidebar-nav {
-        padding: .5rem 0;
+        padding: .5rem 0 .75rem;
+        overflow-y: auto;
+    }
+
+    .sidebar-footer {
+        position: static;
     }
     
     .admin-main { 
