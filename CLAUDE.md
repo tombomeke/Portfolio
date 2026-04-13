@@ -214,6 +214,8 @@ Open TODO's (volgende iteraties):
 - [x] `TODO(security)`: Session cookie flags afgedwongen (`httponly`, `secure`, `samesite`) in bootstrap/controller
 - [x] `TODO(db)`: `migrate_v2.sql` idempotent gemaakt + schema reconcile voor bestaande `readmesync_scan_logs`
 - [x] `TODO(ui)`: Admin login UI/CSS verbeterd voor leesbaarheid en responsive layout
+- [x] `TODO(ui)`: Comment author names in news-item linken nu naar publieke profielen (`?page=profile&u=<username>`)
+- [x] `TODO(ui)`: Usernames in admin users tabel linken nu naar publieke profielen
 
 **Roadmap / ReadmeSync**
 - [P2] `TODO(roadmap)`: Roadmap items handmatig markeren als done/open in admin (zonder re-sync)

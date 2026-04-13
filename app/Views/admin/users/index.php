@@ -26,7 +26,12 @@
                 <?php foreach ($userList as $u): ?>
                 <tr>
                     <td><?= $u['id'] ?></td>
-                    <td><strong><?= htmlspecialchars($u['username']) ?></strong></td>
+                    <td>
+                        <!-- TODO(ui): done - Link users in admin table to their public profile page. -->
+                        <a href="?page=profile&u=<?= urlencode($u['username']) ?>" style="font-weight:700;color:var(--primary);text-decoration:none">
+                            <?= htmlspecialchars($u['username']) ?>
+                        </a>
+                    </td>
                     <td><?= htmlspecialchars($u['email']) ?></td>
                     <td>
                         <span class="badge-status <?= $u['role'] ?>">

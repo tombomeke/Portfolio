@@ -81,7 +81,14 @@
                         <div class="comment-header">
                             <span class="comment-author">
                                 <i class="fas fa-user-circle"></i>
-                                <?= htmlspecialchars($c['username'] ?? trans('admin_table_user')) ?>
+                                <?php if (!empty($c['username'])): ?>
+                                    <!-- TODO(ui): done - Make comment authors clickable to public profile pages. -->
+                                    <a href="?page=profile&u=<?= urlencode($c['username']) ?>" class="comment-author-link">
+                                        <?= htmlspecialchars($c['username']) ?>
+                                    </a>
+                                <?php else: ?>
+                                    <?= htmlspecialchars(trans('admin_table_user')) ?>
+                                <?php endif; ?>
                             </span>
                             <span class="comment-date"><?= date('d/m/Y H:i', strtotime($c['created_at'])) ?></span>
                         </div>
@@ -123,6 +130,8 @@
 .comment-item { padding:1rem;background:rgba(255,255,255,.03);border:1px solid var(--border-color,#e5e7eb);border-radius:8px; }
 .comment-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem; }
 .comment-author { font-weight:600;font-size:.9rem;display:flex;align-items:center;gap:.35rem; }
+.comment-author-link { color: inherit; text-decoration: none; border-bottom: 1px dashed rgba(148,163,184,.55); }
+.comment-author-link:hover { color: var(--primary-color,#3b82f6); border-bottom-color: currentColor; }
 .comment-date { font-size:.78rem;color:var(--text-muted,#6b7280); }
 .comment-body { font-size:.95rem;line-height:1.6; }
 </style>
