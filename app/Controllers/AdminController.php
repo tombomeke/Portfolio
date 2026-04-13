@@ -93,6 +93,9 @@ class AdminController {
         Auth::requireAdmin();
 
         switch ($section) {
+            case 'language':
+                $this->handleLanguageSwitch();
+                break;
             case 'news':
                 $this->routeNews($action, $id, $isPost);
                 break;
@@ -1008,7 +1011,7 @@ class AdminController {
 
         $errors = [];
         if (!UserModel::isValidUsername($username)) $errors[] = 'Ongeldige gebruikersnaam (3–30 tekens, letters/cijfers/_).';
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Ongeldig e-mailadres.';
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = trans('form_email_invalid');
         if (strlen($password) < 8) $errors[] = 'Wachtwoord minimaal 8 tekens.';
         if ($password !== $confirm) $errors[] = 'Wachtwoorden komen niet overeen.';
         if ($this->users->usernameExists($username)) $errors[] = 'Gebruikersnaam al in gebruik.';
@@ -1446,6 +1449,29 @@ class AdminController {
         $settings = $this->settings->getAllGrouped();
         $flash    = $this->popFlash();
         $this->renderAdmin('settings/index', compact('settings', 'flash'), 'Site Instellingen');
+    }
+
+    private function handleLanguageSwitch(): void {
+        $lang = strtolower(trim((string) ($_GET['lang'] ?? '')));
+        if (!in_array($lang, ['nl', 'en'], true)) {
+            header('Location: ?page=admin');
+            exit;
+        }
+
+        Translations::setLang($lang);
+
+        if (Auth::check()) {
+            $_SESSION['auth_user']['preferred_language'] = $lang;
+        }
+
+        $back = trim((string) ($_GET['back'] ?? ''));
+        if ($back !== '' && str_starts_with($back, '?page=admin')) {
+            header('Location: ' . $back);
+            exit;
+        }
+
+        header('Location: ?page=admin');
+        exit;
     }
 
     // ═══════════════════════════════════════════════════════════════════════

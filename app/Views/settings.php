@@ -156,7 +156,7 @@
     </div>
 </section>
 
-<div class="confirm-modal" id="settingsConfirmModal" aria-hidden="true">
+<div class="confirm-modal" id="settingsConfirmModal" hidden aria-hidden="true">
     <div class="confirm-modal__backdrop" data-modal-close="1"></div>
     <div class="confirm-modal__panel" role="dialog" aria-modal="true" aria-labelledby="settingsConfirmTitle">
         <h3 id="settingsConfirmTitle"><?= trans('settings_skill_delete_confirm') ?></h3>
@@ -169,19 +169,63 @@
 </div>
 
 <style>
-.settings-page { padding: 3.2rem 0; }
-.settings-title { margin-bottom: 1rem; font-size: 1.4rem; display:flex; align-items:center; gap:.55rem; }
-.settings-hint { color: var(--text-muted,#94a3b8); font-size: .9rem; margin-bottom: .9rem; }
-.settings-skill-list { display: grid; gap: .7rem; margin-bottom: 1rem; }
-.settings-skill-item { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:.8rem .9rem; border:1px solid var(--border-color,#334155); border-radius:8px; background: rgba(255,255,255,.02); }
-.settings-skill-meta { margin-top:.15rem; color: var(--text-muted,#94a3b8); font-size:.83rem; }
-.settings-skill-edit { margin-top: .5rem; }
-.settings-skill-edit summary { cursor: pointer; color: var(--primary-color,#3b82f6); font-size: .85rem; }
-.settings-skill-edit-form { margin-top: .65rem; padding: .7rem; border:1px solid var(--border-color,#334155); border-radius:8px; background: rgba(15,23,42,.32); }
-.settings-delete-btn { background:none; border:1px solid rgba(239,68,68,.35); color:#fca5a5; border-radius:6px; padding:.35rem .55rem; cursor:pointer; }
-.settings-delete-btn:hover { background: rgba(239,68,68,.15); }
-.settings-skill-form { margin-top: .8rem; }
-.checkbox-inline { display:inline-flex; align-items:center; gap:.55rem; }
+.settings-page { padding: 3.5rem 0 4rem; }
+.settings-page .container--narrow { display: grid; gap: 1.25rem; }
+.settings-title { margin-bottom: .2rem; font-size: 1.45rem; display:flex; align-items:center; gap:.55rem; letter-spacing: -.02em; }
+.settings-hint { color: var(--text-muted,#94a3b8); font-size: .92rem; margin-bottom: 1rem; line-height: 1.6; }
+.settings-page .profile-card {
+    background: linear-gradient(180deg, rgba(30,41,59,.96), rgba(15,23,42,.96));
+    border: 1px solid rgba(71, 85, 105, .55);
+    box-shadow: 0 18px 42px rgba(2, 6, 23, .28);
+    border-radius: 16px;
+    padding: 1.35rem 1.35rem 1.25rem;
+}
+.settings-page .profile-card h2 {
+    margin-bottom: .95rem;
+    font-size: 1.05rem;
+    letter-spacing: -.01em;
+}
+.settings-page .form-group label { color: var(--text-primary, #f8fafc); font-weight: 600; }
+.settings-page select,
+.settings-page input[type="text"],
+.settings-page input[type="number"] {
+    min-height: 48px;
+}
+.settings-skill-list { display: grid; gap: .8rem; margin-bottom: 1rem; }
+.settings-skill-item {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:1rem;
+    padding: .95rem 1rem;
+    border:1px solid rgba(71, 85, 105, .55);
+    border-radius:12px;
+    background: rgba(255,255,255,.03);
+}
+.settings-skill-item:hover { border-color: rgba(59,130,246,.45); background: rgba(59,130,246,.06); }
+.settings-skill-item > div:first-child { min-width: 0; }
+.settings-skill-meta { margin-top:.2rem; color: var(--text-muted,#94a3b8); font-size:.83rem; line-height: 1.5; }
+.settings-skill-edit { margin-top: .55rem; }
+.settings-skill-edit summary { cursor: pointer; color: #93c5fd; font-size: .86rem; font-weight: 600; }
+.settings-skill-edit-form {
+    margin-top: .75rem;
+    padding: .85rem;
+    border:1px solid rgba(71, 85, 105, .55);
+    border-radius:12px;
+    background: rgba(15,23,42,.48);
+}
+.settings-delete-btn {
+    background:none;
+    border:1px solid rgba(239,68,68,.35);
+    color:#fca5a5;
+    border-radius:10px;
+    padding:.5rem .7rem;
+    cursor:pointer;
+    white-space: nowrap;
+}
+.settings-delete-btn:hover { background: rgba(239,68,68,.15); border-color: rgba(248,113,113,.55); }
+.settings-skill-form { margin-top: .9rem; }
+.checkbox-inline { display:inline-flex; align-items:flex-start; gap:.6rem; line-height: 1.45; }
 .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
 .confirm-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 1.5rem; z-index: 1200; }
 .confirm-modal.is-open { display: flex; }
@@ -193,6 +237,7 @@
 @media (max-width: 720px) {
   .form-grid-2 { grid-template-columns: 1fr; }
   .settings-skill-item { flex-direction: column; align-items: flex-start; }
+    .settings-page .profile-card { padding: 1.1rem; }
 }
 </style>
 
@@ -212,6 +257,7 @@
     function closeModal() {
         modal.classList.remove('is-open');
         modal.setAttribute('aria-hidden', 'true');
+        modal.hidden = true;
         pendingForm = null;
     }
 
@@ -226,6 +272,7 @@
         if (messageEl) {
             messageEl.textContent = form.getAttribute('data-confirm-submit') || '';
         }
+        modal.hidden = false;
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
     });

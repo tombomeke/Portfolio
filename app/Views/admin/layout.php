@@ -1,11 +1,22 @@
 <?php
 $adminStyleVersion = (string) (@filemtime(__DIR__ . '/../../../public/css/admin.css') ?: time());
+$currentLang = Translations::getCurrentLang();
+$currentAdminUrl = '?page=admin';
+if (!empty($_GET['section']) && $_GET['section'] !== 'dashboard') {
+    $currentAdminUrl .= '&section=' . urlencode((string) $_GET['section']);
+}
+if (!empty($_GET['action'])) {
+    $currentAdminUrl .= '&action=' . urlencode((string) $_GET['action']);
+}
+if (!empty($_GET['id'])) {
+    $currentAdminUrl .= '&id=' . urlencode((string) $_GET['id']);
+}
 
 // TODO(responsive): [P2][done] Keep admin sidebar navigation scrollable without overlapping footer items.
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= htmlspecialchars($currentLang, ENT_QUOTES, 'UTF-8') ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -119,6 +130,10 @@ $isAuth = isset($authUser);
             <h1><?= htmlspecialchars($pageTitle ?? 'Admin') ?></h1>
         </div>
         <div class="topbar-right">
+            <div class="topbar-lang-switch" role="group" aria-label="<?= htmlspecialchars(trans('admin_language_switch')) ?>">
+                <a href="?page=admin&section=language&lang=nl&back=<?= urlencode($currentAdminUrl) ?>" class="topbar-lang-link <?= $currentLang === 'nl' ? 'active' : '' ?>">NL</a>
+                <a href="?page=admin&section=language&lang=en&back=<?= urlencode($currentAdminUrl) ?>" class="topbar-lang-link <?= $currentLang === 'en' ? 'active' : '' ?>">EN</a>
+            </div>
             <a href="?page=profile&u=<?= urlencode((string) ($authUser['username'] ?? '')) ?>" class="topbar-profile-link" target="_blank" rel="noopener" title="<?= htmlspecialchars(trans('admin_open_public_profile')) ?>">
                 <i class="fas fa-id-badge"></i>
             </a>
@@ -142,13 +157,13 @@ $isAuth = isset($authUser);
 
 <?php if ($isAuth): ?>
 <div class="admin-backdrop" aria-hidden="true"></div>
-<div class="confirm-modal" id="confirmModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+<div class="confirm-modal" id="confirmModal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
     <div class="confirm-modal__panel">
-        <h3 id="confirmModalTitle" class="confirm-modal__title">Confirm action</h3>
-        <p class="confirm-modal__message" id="confirmModalMessage">Are you sure?</p>
+        <h3 id="confirmModalTitle" class="confirm-modal__title"><?= htmlspecialchars(trans('admin_confirm_title')) ?></h3>
+        <p class="confirm-modal__message" id="confirmModalMessage"><?= htmlspecialchars(trans('admin_confirm_message')) ?></p>
         <div class="confirm-modal__actions">
-            <button type="button" class="btn btn-ghost" id="confirmModalCancel">Cancel</button>
-            <button type="button" class="btn btn-danger" id="confirmModalOk">Confirm</button>
+            <button type="button" class="btn btn-ghost" id="confirmModalCancel"><?= htmlspecialchars(trans('admin_cancel')) ?></button>
+            <button type="button" class="btn btn-danger" id="confirmModalOk"><?= htmlspecialchars(trans('admin_confirm')) ?></button>
         </div>
     </div>
 </div>
@@ -178,14 +193,16 @@ const closeConfirmModal = () => {
     if (!confirmModal) return;
     confirmModal.classList.remove('is-open');
     confirmModal.setAttribute('aria-hidden', 'true');
+    confirmModal.hidden = true;
     document.body.style.overflow = '';
     confirmAction = null;
 };
 
 const openConfirmModal = (message, action) => {
     if (!confirmModal || !confirmModalMessage) return;
-    confirmModalMessage.textContent = message || 'Are you sure?';
+    confirmModalMessage.textContent = message || <?= json_encode(trans('admin_confirm_message')) ?>;
     confirmAction = action;
+    confirmModal.hidden = false;
     confirmModal.classList.add('is-open');
     confirmModal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
@@ -195,7 +212,7 @@ if (confirmModal && confirmModalOk && confirmModalCancel) {
     document.querySelectorAll('[data-confirm]').forEach(el => {
         el.addEventListener('click', e => {
             e.preventDefault();
-            const message = el.dataset.confirm || 'Are you sure?';
+            const message = el.dataset.confirm || <?= json_encode(trans('admin_confirm_message')) ?>;
             openConfirmModal(message, () => {
                 const form = el.closest('form');
                 if (form) {

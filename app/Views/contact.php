@@ -49,6 +49,7 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
                                name="email"
                                required
                                placeholder="<?= trans('contact_email_placeholder') ?>"
+                               data-email-invalid="<?= htmlspecialchars(trans('form_email_invalid'), ENT_QUOTES, 'UTF-8') ?>"
                                value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                     </div>
                     <div class="form-group">
@@ -113,3 +114,17 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
         </div>
     </div>
 </section>
+
+<script>
+(function () {
+    document.querySelectorAll('input[type="email"][data-email-invalid]').forEach(function (input) {
+        var message = input.dataset.emailInvalid || '';
+        input.addEventListener('invalid', function () {
+            this.setCustomValidity(message);
+        });
+        input.addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+    });
+})();
+</script>

@@ -35,7 +35,9 @@ $styleVersion = (string) (@filemtime(__DIR__ . '/../../public/css/style.css') ?:
         <nav class="navbar">
             <div class="nav-container">
                 <div class="nav-logo">
-                    <a href="?page=home">Portfolio</a>
+                    <a href="?page=home" aria-label="<?= htmlspecialchars(trans('nav_home')) ?>">
+                        <i class="fas fa-house"></i> <?= trans('nav_home') ?>
+                    </a>
                 </div>
                 <div class="nav-menu">
                     <a href="?page=home" class="nav-link" data-translate="nav_about"><?= trans('nav_about') ?></a>

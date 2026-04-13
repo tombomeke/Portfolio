@@ -154,6 +154,42 @@ Migratie hardening:
 - Vertalingen: gebruik overal `trans('key')` i.p.v. hardcoded strings in views (zeker voor empty states).
 - Zonder `migrate_v2.sql` blijven profielpagina's bruikbaar door fallback-queries in `UserModel`, maar profielvelden/tags/comments/settings ontbreken functioneel totdat migratie draait.
 
+## QA Feedback (friend test, April 2026)
+Dit is externe feedback uit een gebruikers-test. Sommige punten zijn al opgelost in code, andere moeten nog getriaged of bewust afgewezen worden.
+
+- Login/register kleuren: de koppen en sommige inputvelden mogen visueel rustiger/consistenter worden gemaakt.
+- Login validatiefout: invalid email toont nog Nederlands in sommige flows terwijl de site in English staat.
+- Admin/profile flow: profielinstellingen moeten niet leiden tot admin-only routes voor non-admins; edit-profile is inmiddels terug naar de publieke/home flow.
+- Settings page: layout van checkboxes en buttons oogt nog rommelig; eigen settings-styling kan strakker.
+- Settings overlap: settings hebben deels dezelfde profielopties als admin profiel; dubbeling moet nog expliciet gekozen of opgeschoond worden.
+- News comments: opmerkingen lijken soms niet direct zichtbaar na posten; comment flow en refresh-gedrag moeten nog geverifieerd worden.
+- Projects demo link: portfolio website-project heeft een irrelevante demo-link naar een externe site; mogelijk verwijderen voor dat project.
+- Dev Life duplicatie: sommige skills/entries lijken dubbel te staan; data-cleanup of deduping is nodig.
+- Dev Life niveau-labels: beschrijvingen zoals HTML/CSS als alleen "advanced" worden als te optimistisch ervaren; inhoudelijke herziening gewenst.
+- Contact page translation: enkele teksten vertalen nog niet correct naar English op de contactpagina.
+- CV download: downloadknop levert mogelijk een lege PDF; bestand/route controleren.
+- Footer mail button: mail-link in de footer lijkt niet te reageren; target/href controleren.
+- FAQ content: FAQ toont momenteel "Test"; echte content of verwijdering nodig.
+- ReadmeSync label: het groene "Live" label naast de titel voelt optioneel en kan misschien weg.
+- Projects imagery: portfolio-project afbeelding zou beter een screenshot van de website moeten zijn in plaats van Minecraft.
+- Navigation: Games sectie is nog WIP en kan uit de navigatie zolang die nog niet af is.
+- Dev Life sections: Education & Certificates en Current Learning Goals zijn leeg; invullen of verwijderen.
+- Account UX: full-name registratie voelt voor sommige gebruikers onnodig; username input kan beter, eventueel met forgot-password en delete-account-data als accounts behouden blijven.
+- Preferred language: profieltaal wordt nu te vroeg/automatisch gekozen; bij account-aanmaak of via huidige site-taal vragen kan beter zijn.
+- Content framing: News kan eventueel beter als blog/articles worden gepositioneerd.
+- Product rationale: de account/community-ideeën zijn bewust gehouden voor comments, nieuws-updates via e-mail en mogelijke forum-uitbreiding later.
+- Top-left brand/home link: het portfolio-label linksboven voelt te specifiek; Home als knop is een beter algemeen startpunt.
+- Image upload security: profielafbeeldingen verdienen extra audit op file-type validatie, metadata strippen, en mogelijke steganography / payload-risico's.
+- All feedback stays captured: ook persoonlijke voorkeuren en suggesties blijven in deze QA-sectie, niet alleen harde bugs.
+
+**Al opgelost / eerder afgerond**
+- Admin dashboard/admin route hardening en role checks.
+- Taalwissel in admin/publieke shell.
+- Custom confirm modal-flash in admin/settings.
+- Admin users teller op owner+admin.
+- Settings en publieke skills/profile basis.
+- Top-left brand link omgezet naar een Home-knop.
+
 ## ReadmeSync integratie
 `?page=readmesync` → cURL call naar `https://tombomekestudio.com/api/readmesync/generate`
 Toont live code-overzicht van elke publieke GitHub repo.

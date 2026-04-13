@@ -27,6 +27,7 @@
                     <input type="email" id="email" name="email"
                            value="<?= htmlspecialchars($old['email'] ?? '') ?>"
                            placeholder="<?= trans('contact_email_placeholder') ?>"
+                           data-email-invalid="<?= htmlspecialchars(trans('form_email_invalid'), ENT_QUOTES, 'UTF-8') ?>"
                            required autocomplete="email">
                 </div>
 
@@ -71,19 +72,20 @@
 .auth-card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; padding: 2.5rem; box-shadow: 0 4px 24px rgba(0,0,0,.06); }
 .auth-header { text-align: center; margin-bottom: 2rem; }
 .auth-logo { font-size: 2.5rem; color: var(--primary-color, #3b82f6); margin-bottom: .75rem; }
-.auth-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 .4rem; }
-.auth-subtitle { color: var(--text-muted, #6b7280); font-size: .9rem; margin: 0; }
+.auth-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 .4rem; color: #0f172a; }
+.auth-subtitle { color: #475569; font-size: .9rem; margin: 0; }
 .auth-form-inner .form-group { margin-bottom: 1.25rem; }
-.auth-form-inner label { display: block; margin-bottom: .4rem; font-size: .85rem; font-weight: 500; }
+.auth-form-inner label { display: block; margin-bottom: .4rem; font-size: .85rem; font-weight: 600; color: #334155; }
 .auth-form-inner input[type="email"],
 .auth-form-inner input[type="password"],
 .auth-form-inner input[type="text"] {
-    width: 100%; padding: .65rem .9rem; border: 1px solid var(--border-color, #e5e7eb);
-    border-radius: 6px; font-size: .95rem; background: transparent;
+    width: 100%; padding: .75rem .95rem; border: 1px solid #cbd5e1;
+    border-radius: 8px; font-size: .95rem; background: #fff; color: #0f172a;
     transition: border-color .15s;
     box-sizing: border-box;
 }
-.auth-form-inner input:focus { outline: none; border-color: var(--primary-color, #3b82f6); }
+.auth-form-inner input::placeholder { color: #94a3b8; }
+.auth-form-inner input:focus { outline: none; border-color: var(--primary-color, #3b82f6); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
 .auth-form-inner input.valid { border-color: #22c55e; }
 .auth-form-inner input.pw-error { border-color: #ef4444; }
 .auth-btn { width: 100%; justify-content: center; padding: .75rem; font-size: 1rem; margin-top: .5rem; }
@@ -152,4 +154,16 @@ document.addEventListener('DOMContentLoaded', function () {
     pwInput.addEventListener('input', checkPw);
     confirmInput.addEventListener('input', checkMatch);
 });
+
+(function () {
+    document.querySelectorAll('input[type="email"][data-email-invalid]').forEach(function (input) {
+        var message = input.dataset.emailInvalid || '';
+        input.addEventListener('invalid', function () {
+            this.setCustomValidity(message);
+        });
+        input.addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+    });
+})();
 </script>

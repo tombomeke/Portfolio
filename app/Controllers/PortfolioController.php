@@ -234,7 +234,7 @@ class PortfolioController {
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['contact_error'] = 'Ongeldig e-mailadres.';
+            $_SESSION['contact_error'] = trans('form_email_invalid');
             header('Location: ?page=contact');
             exit;
         }
@@ -564,7 +564,7 @@ class PortfolioController {
 
         $this->registerLoginFailure('public');
 
-        $_SESSION['login_error'] = 'Ongeldig e-mailadres of wachtwoord.';
+        $_SESSION['login_error'] = trans('auth_invalid_credentials');
         $qs = $redirect ? '&redirect=' . urlencode($redirect) : '';
         header('Location: ?page=login' . $qs);
         exit;
@@ -632,7 +632,7 @@ class PortfolioController {
             exit;
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['register_error'] = 'Ongeldig e-mailadres.';
+            $_SESSION['register_error'] = trans('form_email_invalid');
             header('Location: ?page=register');
             exit;
         }

@@ -167,6 +167,28 @@ body {
 
 .admin-topbar h1 { font-size: 1.1rem; font-weight: 600; }
 .admin-topbar .topbar-right { display: flex; align-items: center; gap: 1rem; font-size: .85rem; color: var(--text-muted); min-width: 0; max-width: 55%; }
+.topbar-lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .18rem;
+    border: 1px solid rgba(71, 85, 105, .6);
+    border-radius: 999px;
+    background: rgba(255,255,255,.03);
+}
+.topbar-lang-link {
+    min-width: 34px;
+    padding: .28rem .55rem;
+    border-radius: 999px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-align: center;
+}
+.topbar-lang-link:hover { background: rgba(59,130,246,.12); color: var(--text); }
+.topbar-lang-link.active { background: var(--primary); color: #fff; }
 .topbar-profile-link {
     width: 30px;
     height: 30px;

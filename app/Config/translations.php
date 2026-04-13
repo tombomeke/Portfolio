@@ -25,6 +25,7 @@ class Translations {
         'nl' => [
             // Navigation
             'nav_about' => 'About',
+            'nav_home' => 'Home',
             'nav_devlife' => 'Dev Life',
             'nav_games' => 'Games',
             'nav_projects' => 'Projecten',
@@ -63,6 +64,12 @@ class Translations {
             'admin_logged_in_as' => 'Ingelogd als',
             'admin_tags' => 'Tags',
             'admin_open_menu' => 'Open menu',
+            'admin_confirm' => 'Bevestigen',
+            'admin_confirm_title' => 'Actie bevestigen',
+            'admin_confirm_message' => 'Weet je het zeker?',
+            'admin_language_switch' => 'Taal wisselen',
+            'admin_language_nl' => 'NL',
+            'admin_language_en' => 'EN',
 
             // Admin dashboard
             'admin_dashboard_overview' => 'Admin overzicht',
@@ -479,6 +486,7 @@ class Translations {
             'auth_login_welcome' => 'Welkom terug',
             'auth_login_subtitle' => 'Log in om door te gaan',
             'auth_password' => 'Wachtwoord',
+            'auth_invalid_credentials' => 'Ongeldig e-mailadres of wachtwoord',
             'auth_no_account_register' => 'Nog geen account? Registreer',
             'auth_register_title' => 'Account aanmaken',
             'auth_register_subtitle' => 'Word lid en doe mee aan de community',
@@ -697,6 +705,7 @@ class Translations {
         'en' => [
             // Navigation
             'nav_about' => 'About',
+            'nav_home' => 'Home',
             'nav_devlife' => 'Dev Life',
             'nav_games' => 'Games',
             'nav_projects' => 'Projects',
@@ -735,6 +744,12 @@ class Translations {
             'admin_logged_in_as' => 'Logged in as',
             'admin_tags' => 'Tags',
             'admin_open_menu' => 'Open menu',
+            'admin_confirm' => 'Confirm',
+            'admin_confirm_title' => 'Confirm action',
+            'admin_confirm_message' => 'Are you sure?',
+            'admin_language_switch' => 'Switch language',
+            'admin_language_nl' => 'NL',
+            'admin_language_en' => 'EN',
 
             // Admin dashboard
             'admin_dashboard_overview' => 'Admin overview',
@@ -1145,6 +1160,7 @@ class Translations {
             'auth_login_welcome' => 'Welcome back',
             'auth_login_subtitle' => 'Log in to continue',
             'auth_password' => 'Password',
+            'auth_invalid_credentials' => 'Invalid email address or password',
             'auth_no_account_register' => 'No account yet? Register',
             'auth_register_title' => 'Create account',
             'auth_register_subtitle' => 'Join and be part of the community',
