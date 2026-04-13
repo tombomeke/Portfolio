@@ -6,14 +6,19 @@ BESTAND: /app/Views/layout.php (UPDATED)
 */
 
 // Include translations
+require_once __DIR__ . '/../Config/env.php';
 require_once __DIR__ . '/../Config/translations.php';
 require_once __DIR__ . '/../Models/UserModel.php';
+$contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com');
 ?>
     <!DOCTYPE html>
     <html lang="<?= Translations::getCurrentLang() ?>">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+           <!-- TODO(seo): [P3] add Open Graph meta tags (og:title, og:description, og:image, og:url)
+             for better social sharing previews on LinkedIn/Discord/Twitter. -->
+           <!-- TODO(seo): [P3] add a favicon (<link rel="icon">) — currently none is set. -->
         <meta name="description" content="Portfolio van <?= htmlspecialchars($name ?? 'Tom Dekoning') ?> - Full-stack Developer">
         <title><?= htmlspecialchars($title ?? 'Portfolio') ?> - Tom Dekoning</title>
 
@@ -34,6 +39,7 @@ require_once __DIR__ . '/../Models/UserModel.php';
                     <a href="?page=dev-life" class="nav-link" data-translate="nav_devlife"><?= trans('nav_devlife') ?></a>
                     <a href="?page=games" class="nav-link" data-translate="nav_games"><?= trans('nav_games') ?></a>
                     <a href="?page=projects" class="nav-link" data-translate="nav_projects"><?= trans('nav_projects') ?></a>
+                    <!-- TODO(i18n): [P3] 'News', 'FAQ', 'ReadmeSync' are hardcoded — add trans() keys -->
                     <a href="?page=news" class="nav-link">News</a>
                     <a href="?page=faq" class="nav-link">FAQ</a>
                     <a href="?page=readmesync" class="nav-link">ReadmeSync</a>
@@ -44,6 +50,8 @@ require_once __DIR__ . '/../Models/UserModel.php';
                     $authUser = $_SESSION['auth_user'];
                     $authRole = $authUser['role'] ?? 'user';
 
+                    // TODO(arch): [P2] this DB query runs inside the view on every page load for logged-in users.
+                    // Move avatar refresh logic to a middleware step or controller base method instead.
                     // Session can lag behind profile updates from older login sessions.
                     if (empty($authUser['profile_photo_path']) && !empty($authUser['id'])) {
                         try {
@@ -127,7 +135,7 @@ require_once __DIR__ . '/../Models/UserModel.php';
             <div class="social-links">
                 <a href="https://github.com/tombomeke" target="_blank" aria-label="GitHub"><i class="fab fa-github"></i></a>
                 <a href="https://www.linkedin.com/in/tom-dekoning-567523352/" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                <a href="mailto:tom1dekoning@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                <a href="mailto:<?= htmlspecialchars($contactEmail) ?>" aria-label="Email"><i class="fas fa-envelope"></i></a>
             </div>
         </div>
     </footer>

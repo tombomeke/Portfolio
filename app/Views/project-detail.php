@@ -104,16 +104,49 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
                     </div>
 
                     <?php if (empty($roadmapItems)): ?>
-                        <p style="color:var(--text-muted)">
+                        <div class="roadmap-empty">
+                            <i class="fas fa-list-check" style="font-size:2rem;opacity:.25;margin-bottom:.5rem"></i>
                             <?php if ($activeFilter !== ''): ?>
-                                Geen items gevonden voor dit filter. <a href="<?= $filterBase ?>">Alle tonen</a>
+                                <p>Geen items gevonden voor dit filter.</p>
+                                <a href="<?= $filterBase ?>" class="btn btn-ghost btn-sm">Alle tonen</a>
                             <?php else: ?>
-                                Nog geen roadmap items gesynchroniseerd voor dit project.
+                                <p>Nog geen roadmap items gesynchroniseerd voor dit project.</p>
+                                <?php if (!empty($canSyncRoadmap) && $repoUrl !== ''): ?>
+                                    <a href="?page=project&amp;slug=<?= urlencode((string) $project['slug']) ?>&amp;tab=roadmap&amp;sync=1"
+                                       class="btn btn-ghost btn-sm">Nu synchroniseren</a>
+                                <?php endif; ?>
                             <?php endif; ?>
-                        </p>
+                        </div>
                     <?php else: ?>
-                        <ul class="roadmap-todo-list">
-                            <?php foreach ($roadmapItems as $item): ?>
+                        <?php
+                        // Group items by file for better readability
+                        $grouped = [];
+                        foreach ($roadmapItems as $item) {
+                            $key = (string) ($item['file'] ?? '');
+                            $grouped[$key][] = $item;
+                        }
+                        ?>
+                        <div class="roadmap-todo-list">
+                        <?php foreach ($grouped as $fileKey => $fileItems): ?>
+                            <?php if ($fileKey !== '' && count($grouped) > 1): ?>
+                                <div class="roadmap-file-group">
+                                    <?php
+                                    // TODO(ux): [P3] '/blob/main/' is hardcoded — repos may use 'master' or
+                                    // another default branch. Store default_branch on the project record.
+                                    $fileGithubLink = '';
+                                    if ($repoUrl !== '') {
+                                        $fileGithubLink = rtrim($repoUrl, '/') . '/blob/main/' . ltrim($fileKey, '/');
+                                    }
+                                    ?>
+                                    <?php if ($fileGithubLink !== ''): ?>
+                                        <a href="<?= htmlspecialchars($fileGithubLink) ?>" target="_blank" rel="noopener"
+                                           class="roadmap-file-label"><?= htmlspecialchars($fileKey) ?></a>
+                                    <?php else: ?>
+                                        <span class="roadmap-file-label"><?= htmlspecialchars($fileKey) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php foreach ($fileItems as $item): ?>
                                 <?php
                                 $isDone     = ($item['status'] ?? '') === 'done';
                                 $isHigh     = ($item['priority'] ?? '') === 'high';
@@ -124,25 +157,28 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
                                     $githubLink = rtrim($repoUrl, '/') . '/blob/main/' . ltrim($file, '/') . ($line > 0 ? "#L{$line}" : '');
                                 }
                                 ?>
-                                <li class="roadmap-todo-item <?= $isDone ? 'roadmap-todo-item--done' : '' ?> <?= $isHigh ? 'roadmap-todo-item--high' : '' ?>">
+                                <div class="roadmap-todo-item <?= $isDone ? 'roadmap-todo-item--done' : '' ?> <?= $isHigh ? 'roadmap-todo-item--high' : '' ?>">
                                     <span class="roadmap-todo-status"><?= $isDone ? '✓' : '○' ?></span>
                                     <span class="roadmap-todo-body">
                                         <span class="roadmap-todo-text"><?= htmlspecialchars((string) ($item['text'] ?? '')) ?></span>
-                                        <?php if ($file !== ''): ?>
-                                            <span class="roadmap-todo-meta">
+                                        <span class="roadmap-todo-meta">
+                                            <?php if ($file !== '' && $line > 0): ?>
                                                 <?php if ($githubLink !== ''): ?>
                                                     <a href="<?= htmlspecialchars($githubLink) ?>" target="_blank" rel="noopener"
-                                                       title="Bekijk op GitHub"><?= htmlspecialchars($file) ?><?= $line > 0 ? ":{$line}" : '' ?></a>
+                                                       title="Open op GitHub">:<?= $line ?></a>
                                                 <?php else: ?>
-                                                    <?= htmlspecialchars($file) ?><?= $line > 0 ? ":{$line}" : '' ?>
+                                                    <span>:<?= $line ?></span>
                                                 <?php endif; ?>
-                                                <?php if ($isHigh): ?> <span class="roadmap-badge-high">high</span><?php endif; ?>
-                                            </span>
-                                        <?php endif; ?>
+                                            <?php endif; ?>
+                                            <?php if ($isHigh && !$isDone): ?>
+                                                <span class="roadmap-badge-high"><i class="fas fa-arrow-up"></i> high</span>
+                                            <?php endif; ?>
+                                        </span>
                                     </span>
-                                </li>
+                                </div>
                             <?php endforeach; ?>
-                        </ul>
+                        <?php endforeach; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
             </article>
@@ -253,54 +289,97 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
     flex-wrap: wrap;
 }
 
-/* Roadmap TODO list */
-.roadmap-todo-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+/* Roadmap empty state */
+.roadmap-empty {
     display: flex;
     flex-direction: column;
-    gap: .4rem;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--text-muted, #94a3b8);
+}
+.roadmap-empty p { margin: 0; }
+
+/* Roadmap TODO list */
+.roadmap-todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.roadmap-file-group {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem 0 .2rem;
+    margin-top: .6rem;
+}
+.roadmap-file-group:first-child { margin-top: 0; }
+.roadmap-file-label {
+    font-family: 'Courier New', monospace;
+    font-size: .72rem;
+    color: var(--text-muted, #94a3b8);
+    background: var(--border-color, #e2e8f0);
+    border-radius: 4px;
+    padding: 2px 7px;
+    text-decoration: none;
+    transition: color .1s, background .1s;
+}
+a.roadmap-file-label:hover {
+    color: var(--primary, #4f46e5);
+    background: rgba(99,102,241,.12);
 }
 .roadmap-todo-item {
     display: flex;
     gap: .65rem;
     align-items: flex-start;
-    padding: .55rem .75rem;
-    border-radius: 8px;
-    border-left: 3px solid var(--border-color, #e2e8f0);
+    padding: .5rem .5rem;
+    border-radius: 6px;
+    border-left: 2px solid transparent;
     background: transparent;
-    transition: background .1s;
+    transition: background .1s, border-color .1s;
 }
 .roadmap-todo-item:hover {
     background: rgba(99,102,241,.05);
+    border-left-color: var(--primary, #4f46e5);
 }
 .roadmap-todo-item--done {
-    opacity: .5;
-    border-left-color: #22c55e;
+    opacity: .45;
+    border-left-color: #22c55e !important;
+}
+.roadmap-todo-item--done:hover {
+    background: rgba(34,197,94,.04);
 }
 .roadmap-todo-item--high:not(.roadmap-todo-item--done) {
     border-left-color: #f59e0b;
-    background: rgba(245,158,11,.04);
+}
+.roadmap-todo-item--high:not(.roadmap-todo-item--done):hover {
+    background: rgba(245,158,11,.06);
 }
 .roadmap-todo-status {
-    font-size: .85rem;
+    font-size: .8rem;
     color: var(--text-muted, #94a3b8);
     flex-shrink: 0;
-    margin-top: .15rem;
+    margin-top: .18rem;
     line-height: 1;
+    width: 1em;
+    text-align: center;
 }
 .roadmap-todo-item--done .roadmap-todo-status { color: #22c55e; }
+.roadmap-todo-item--high:not(.roadmap-todo-item--done) .roadmap-todo-status { color: #f59e0b; }
 .roadmap-todo-body {
     display: flex;
     flex-direction: column;
     gap: .1rem;
     min-width: 0;
+    flex: 1;
 }
 .roadmap-todo-text {
     font-size: .875rem;
     line-height: 1.45;
     color: var(--text-primary);
+    word-break: break-word;
 }
 .roadmap-todo-item--done .roadmap-todo-text {
     text-decoration: line-through;
@@ -309,11 +388,11 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
 .roadmap-todo-meta {
     font-size: .72rem;
     color: var(--text-muted, #94a3b8);
-    word-break: break-all;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: .25rem;
+    gap: .3rem;
+    margin-top: .05rem;
 }
 .roadmap-todo-meta a {
     color: var(--primary-color, #6366f1);
@@ -324,10 +403,11 @@ $roadmapItems = (array) (($projectRoadmap['items'] ?? []));
 .roadmap-badge-high {
     display: inline-flex;
     align-items: center;
+    gap: .2em;
     background: rgba(245,158,11,.15);
     color: #d97706;
     border-radius: 4px;
-    padding: 1px 5px;
+    padding: 1px 6px;
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .02em;

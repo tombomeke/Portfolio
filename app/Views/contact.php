@@ -4,6 +4,10 @@
 BESTAND: /app/Views/contact.php
 ================================================================================
 */
+
+require_once __DIR__ . '/../Config/env.php';
+
+$contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com');
 ?>
 <section class="contact">
     <div class="container">
@@ -70,7 +74,7 @@ BESTAND: /app/Views/contact.php
                         <div class="contact-method-icon"><i class="fas fa-envelope"></i></div>
                         <div class="contact-method-content">
                             <h3>E-mail</h3>
-                            <a href="mailto:tom1dekoning@gmail.com">tom1dekoning@gmail.com</a>
+                            <a href="mailto:<?= htmlspecialchars($contactEmail) ?>"><?= htmlspecialchars($contactEmail) ?></a>
                         </div>
                     </div>
                     <div class="contact-method">
