@@ -322,9 +322,12 @@ class AdminController {
 
         $imagePath = $this->handleImageUpload($files['image'] ?? null, 'news');
 
+        $publishAction = $this->resolveNewsPublishAction($post);
+        $publishedAt = $this->resolveNewsPublishedAt($post, $publishAction);
+
         $id = $this->news->create([
             'image_path'   => $imagePath,
-            'published_at' => $post['published_at'] ?? null,
+            'published_at' => $publishedAt,
             'title_nl'     => trim($post['title_nl']),
             'title_en'     => trim($post['title_en']),
             'content_nl'   => trim($post['content_nl']),
@@ -335,7 +338,11 @@ class AdminController {
         $this->tags->syncForNewsItem($id, $tagIds);
 
         ActivityLogModel::log('created', "Created news: " . trim($post['title_nl']), 'news_items', $id);
-        $this->flash('success', 'Nieuwsbericht aangemaakt.');
+        if ($publishAction === 'save_draft') {
+            $this->flash('success', 'Nieuwsbericht opgeslagen als concept.');
+        } else {
+            $this->flash('success', 'Nieuwsbericht gepubliceerd.');
+        }
         header('Location: ?page=admin&section=news');
         exit;
     }
@@ -377,9 +384,12 @@ class AdminController {
         $newImage = $this->handleImageUpload($files['image'] ?? null, 'news');
         if ($newImage) $imagePath = $newImage;
 
+        $publishAction = $this->resolveNewsPublishAction($post);
+        $publishedAt = $this->resolveNewsPublishedAt($post, $publishAction);
+
         $this->news->update($id, [
             'image_path'   => $imagePath,
-            'published_at' => $post['published_at'] ?? null,
+            'published_at' => $publishedAt,
             'title_nl'     => trim($post['title_nl']),
             'title_en'     => trim($post['title_en']),
             'content_nl'   => trim($post['content_nl']),
@@ -390,9 +400,27 @@ class AdminController {
         $this->tags->syncForNewsItem($id, $tagIds);
 
         ActivityLogModel::log('updated', "Updated news: " . trim($post['title_nl']), 'news_items', $id);
-        $this->flash('success', 'Nieuwsbericht bijgewerkt.');
+        if ($publishAction === 'save_draft') {
+            $this->flash('success', 'Nieuwsbericht bijgewerkt en als concept opgeslagen.');
+        } else {
+            $this->flash('success', 'Nieuwsbericht bijgewerkt en gepubliceerd.');
+        }
         header('Location: ?page=admin&section=news');
         exit;
+    }
+
+    private function resolveNewsPublishAction(array $post): string {
+        $action = strtolower(trim((string) ($post['publish_action'] ?? 'publish_now')));
+        return $action === 'save_draft' ? 'save_draft' : 'publish_now';
+    }
+
+    private function resolveNewsPublishedAt(array $post, string $publishAction): ?string {
+        if ($publishAction === 'save_draft') {
+            return null;
+        }
+
+        // Explicit publish uses server-side current timestamp.
+        return date('Y-m-d H:i:s');
     }
 
     private function deleteNews(?int $id): void {

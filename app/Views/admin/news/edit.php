@@ -14,9 +14,15 @@
         <div class="form-grid" style="gap:1.5rem">
 
             <div class="form-group">
-                <label><?= trans('admin_news_publish_date_hint') ?></label>
-                <input type="datetime-local" name="published_at"
-                       value="<?= $item['published_at'] ? date('Y-m-d\TH:i', strtotime($item['published_at'])) : '' ?>">
+                <label><?= trans('admin_news_publish_mode_label') ?></label>
+                <p class="form-hint" style="margin:0">
+                    <?= trans('admin_news_publish_mode_hint') ?>
+                </p>
+                <?php if (!empty($item['published_at'])): ?>
+                    <small class="text-muted" style="display:block;margin-top:.35rem">
+                        <?= trans('admin_news_published_at') ?>: <?= htmlspecialchars(date('d-m-Y H:i', strtotime($item['published_at']))) ?>
+                    </small>
+                <?php endif; ?>
             </div>
 
             <div class="form-group">
@@ -64,7 +70,8 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <?= trans('admin_save') ?></button>
+                <button type="submit" name="publish_action" value="publish_now" class="btn btn-primary"><i class="fas fa-paper-plane"></i> <?= trans('admin_news_publish_now') ?></button>
+                <button type="submit" name="publish_action" value="save_draft" class="btn btn-ghost"><i class="fas fa-floppy-disk"></i> <?= trans('admin_news_save_draft') ?></button>
                 <a href="?page=admin&section=news" class="btn btn-ghost"><?= trans('admin_cancel') ?></a>
             </div>
             <?php if (!empty($allTags)): ?>
