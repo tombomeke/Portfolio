@@ -216,6 +216,14 @@ Open TODO's (volgende iteraties):
 - [x] `TODO(ui)`: Admin login UI/CSS verbeterd voor leesbaarheid en responsive layout
 - [x] `TODO(ui)`: Comment author names in news-item linken nu naar publieke profielen (`?page=profile&u=<username>`)
 - [x] `TODO(ui)`: Usernames in admin users tabel linken nu naar publieke profielen
+- [x] `TODO(ui)`: Alerts/flash meldingen gestandaardiseerd via eigen CSS + custom admin confirm modal (i.p.v. browser confirm)
+- [x] `TODO(profile)`: Basis user settings pagina opnieuw toegevoegd (`?page=settings`) met voorkeurstaal + public profile toggle
+- [x] `TODO(profile)`: Basis user skills toegevoegd (DB `user_skills`, add/remove in settings, zichtbaar op publiek profiel)
+- [x] `TODO(profile)`: User skills bewerken (edit/update flow) toegevoegd op `?page=settings`
+- [x] `TODO(profile)`: Extra settings-features uit legacy app gemigreerd (e-mail notificatievoorkeur)
+- [x] `TODO(profile)`: Verdere settings parity-check gedaan met legacy app; ontbrekende of irrelevante opties opgeschoond/gedocumenteerd
+- [x] `TODO(ui)`: Admin profile form controls verbeterd voor `date`/`file` inputs (eigen styling)
+- [x] `TODO(ui)`: Snelle admin-link toegevoegd naar eigen publieke profiel (sidebar account sectie)
 
 **Roadmap / ReadmeSync**
 - [P2] `TODO(roadmap)`: Roadmap items handmatig markeren als done/open in admin (zonder re-sync)

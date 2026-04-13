@@ -94,6 +94,9 @@ $isAuth = isset($authUser);
         <a href="?page=admin&section=profile" class="sidebar-link <?= ($currentSection === 'profile') ? 'active' : '' ?>">
             <i class="fas fa-user-circle fa-fw"></i> <?= trans('admin_my_profile') ?>
         </a>
+        <a href="?page=profile&u=<?= urlencode((string) ($authUser['username'] ?? '')) ?>" target="_blank" rel="noopener" class="sidebar-link">
+            <i class="fas fa-id-badge fa-fw"></i> <?= trans('admin_open_public_profile') ?>
+        </a>
 
         <div class="nav-section-label" style="margin-top:.75rem"><?= trans('admin_nav_site') ?></div>
         <a href="?page=home" target="_blank" class="sidebar-link">
@@ -116,6 +119,9 @@ $isAuth = isset($authUser);
             <h1><?= htmlspecialchars($pageTitle ?? 'Admin') ?></h1>
         </div>
         <div class="topbar-right">
+            <a href="?page=profile&u=<?= urlencode((string) ($authUser['username'] ?? '')) ?>" class="topbar-profile-link" target="_blank" rel="noopener" title="<?= htmlspecialchars(trans('admin_open_public_profile')) ?>">
+                <i class="fas fa-id-badge"></i>
+            </a>
             <span class="role-badge <?= htmlspecialchars($authUser['role'] ?? 'admin') ?>">
                 <?= htmlspecialchars($authUser['role'] ?? 'admin') ?>
             </span>
@@ -136,6 +142,16 @@ $isAuth = isset($authUser);
 
 <?php if ($isAuth): ?>
 <div class="admin-backdrop" aria-hidden="true"></div>
+<div class="confirm-modal" id="confirmModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+    <div class="confirm-modal__panel">
+        <h3 id="confirmModalTitle" class="confirm-modal__title">Confirm action</h3>
+        <p class="confirm-modal__message" id="confirmModalMessage">Are you sure?</p>
+        <div class="confirm-modal__actions">
+            <button type="button" class="btn btn-ghost" id="confirmModalCancel">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmModalOk">Confirm</button>
+        </div>
+    </div>
+</div>
 <?php endif; ?>
 <script>
 // Language tab switcher (used on create/edit forms)
@@ -151,12 +167,70 @@ document.querySelectorAll('.lang-tab').forEach(tab => {
     });
 });
 
-// Confirm delete
-document.querySelectorAll('[data-confirm]').forEach(el => {
-    el.addEventListener('click', e => {
-        if (!confirm(el.dataset.confirm || 'Are you sure?')) e.preventDefault();
+// Confirm actions (custom modal)
+const confirmModal = document.getElementById('confirmModal');
+const confirmModalMessage = document.getElementById('confirmModalMessage');
+const confirmModalOk = document.getElementById('confirmModalOk');
+const confirmModalCancel = document.getElementById('confirmModalCancel');
+let confirmAction = null;
+
+const closeConfirmModal = () => {
+    if (!confirmModal) return;
+    confirmModal.classList.remove('is-open');
+    confirmModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    confirmAction = null;
+};
+
+const openConfirmModal = (message, action) => {
+    if (!confirmModal || !confirmModalMessage) return;
+    confirmModalMessage.textContent = message || 'Are you sure?';
+    confirmAction = action;
+    confirmModal.classList.add('is-open');
+    confirmModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+};
+
+if (confirmModal && confirmModalOk && confirmModalCancel) {
+    document.querySelectorAll('[data-confirm]').forEach(el => {
+        el.addEventListener('click', e => {
+            e.preventDefault();
+            const message = el.dataset.confirm || 'Are you sure?';
+            openConfirmModal(message, () => {
+                const form = el.closest('form');
+                if (form) {
+                    form.submit();
+                    return;
+                }
+                if (el.tagName === 'A' && el.href) {
+                    window.location.href = el.href;
+                }
+            });
+        });
     });
-});
+
+    confirmModalOk.addEventListener('click', () => {
+        const action = confirmAction;
+        closeConfirmModal();
+        if (typeof action === 'function') {
+            action();
+        }
+    });
+
+    confirmModalCancel.addEventListener('click', closeConfirmModal);
+
+    confirmModal.addEventListener('click', (e) => {
+        if (e.target === confirmModal) {
+            closeConfirmModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && confirmModal.classList.contains('is-open')) {
+            closeConfirmModal();
+        }
+    });
+}
 
 // Mobile sidebar toggle
 const sidebar = document.querySelector('.admin-sidebar');

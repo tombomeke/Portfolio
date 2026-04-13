@@ -20,16 +20,23 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $page = $_GET['page'] ?? 'home';
 
+require_once 'app/Auth/Auth.php';
+if (Auth::check()) {
+    // Keep navbar/admin guards in sync with DB role changes (promote/demote).
+    Auth::refreshSession();
+}
+
 // ── Admin & setup routes (handled by AdminController) ─────────────────────
 if ($page === 'admin' || $page === 'setup') {
-    require_once 'app/Auth/Auth.php';
-
     // TODO(auth): done - Added router-level admin guard as defense-in-depth for guessed admin URLs.
     // Defense-in-depth: block direct access to admin routes for non-admin users.
     // Allow setup/login/logout routes to pass through to AdminController.
     if ($page === 'admin') {
         $section = $_GET['section'] ?? 'dashboard';
         $publicAdminSections = ['login', 'logout'];
+        if (Auth::check()) {
+            Auth::refreshSession();
+        }
         if (!in_array($section, $publicAdminSections, true) && !Auth::isAdmin()) {
             header('Location: ?page=home');
             exit;
@@ -120,6 +127,12 @@ switch ($page) {
         break;
     case 'profile':
         $controller->showProfile($_GET['u'] ?? '');
+        break;
+    case 'settings':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->handleSettings($_POST);
+        }
+        $controller->showSettings();
         break;
     default:
         $controller->show404();

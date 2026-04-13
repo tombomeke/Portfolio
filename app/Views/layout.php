@@ -50,6 +50,7 @@ $styleVersion = (string) (@filemtime(__DIR__ . '/../../public/css/style.css') ?:
 
                     <?php if (isset($_SESSION['auth_user'])): ?>
                     <?php
+                    \Auth::refreshSession();
                     $authUser = $_SESSION['auth_user'];
                     $authRole = $authUser['role'] ?? 'user';
 
@@ -107,6 +108,9 @@ $styleVersion = (string) (@filemtime(__DIR__ . '/../../public/css/style.css') ?:
                             <?php endif; ?>
                             <a href="?page=profile&u=<?= urlencode($authUser['username']) ?>" class="nav-user-item">
                                 <i class="fas fa-user-circle"></i> <?= trans('nav_my_profile') ?>
+                            </a>
+                            <a href="?page=settings" class="nav-user-item">
+                                <i class="fas fa-sliders-h"></i> <?= trans('nav_settings') ?>
                             </a>
                             <div class="nav-user-divider"></div>
                             <a href="?page=logout" class="nav-user-item nav-user-item--danger">

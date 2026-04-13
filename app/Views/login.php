@@ -68,7 +68,4 @@
 .auth-links { text-align: center; margin-top: 1.25rem; }
 .auth-link { color: var(--primary-color, #3b82f6); text-decoration: none; font-size: .875rem; }
 .auth-link:hover { text-decoration: underline; }
-.flash { padding: .75rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; font-size: .9rem; }
-.flash.error { background: rgba(239,68,68,.1); color: #dc2626; border: 1px solid rgba(239,68,68,.3); }
-.flash.success { background: rgba(34,197,94,.1); color: #16a34a; border: 1px solid rgba(34,197,94,.3); }
 </style>

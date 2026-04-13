@@ -84,7 +84,7 @@
             <div class="stat-label"><?= trans('admin_stats_admin_users') ?></div>
             <div class="stat-icon"><i class="fas fa-users"></i></div>
         </div>
-        <div class="stat-value"><?= $stats['users'] ?? 0 ?></div>
+        <div class="stat-value"><?= $stats['admin_users'] ?? 0 ?></div>
     </a>
     <?php endif; ?>
 </div>

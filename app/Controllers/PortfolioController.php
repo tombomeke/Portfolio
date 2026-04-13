@@ -28,6 +28,7 @@ require_once __DIR__ . '/../Models/FaqModel.php';
 require_once __DIR__ . '/../Models/NewsCommentModel.php';
 require_once __DIR__ . '/../Models/SiteSettingModel.php';
 require_once __DIR__ . '/../Models/UserModel.php';
+require_once __DIR__ . '/../Models/UserSkillModel.php';
 require_once __DIR__ . '/../Models/ReadmeSyncScanLogModel.php';
 require_once __DIR__ . '/../Services/ProjectRoadmapService.php';
 require_once __DIR__ . '/../Auth/Auth.php';
@@ -41,6 +42,7 @@ class PortfolioController {
     private $contactModel;
     private $commentModel;
     private $userModel;
+    private $userSkillModel;
     private $readmeSyncScanLogModel;
     private $projectRoadmapService;
     private $contactRecipient;
@@ -54,6 +56,7 @@ class PortfolioController {
         $this->contactModel   = new ContactMessageModel();
         $this->commentModel   = new NewsCommentModel();
         $this->userModel      = new UserModel();
+        $this->userSkillModel = new UserSkillModel();
         $this->readmeSyncScanLogModel = new ReadmeSyncScanLogModel();
         $this->projectRoadmapService = new ProjectRoadmapService();
         $this->contactRecipient = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com');
@@ -393,10 +396,122 @@ class PortfolioController {
             return;
         }
 
+        $skills = [];
+        try {
+            $skills = $this->userSkillModel->getPublicByUserId((int) $user['id']);
+        } catch (\Throwable $e) {
+            $skills = [];
+        }
+
         $this->render('profile', [
             'title'       => htmlspecialchars($user['username']) . '\'s profiel',
             'profileUser' => $user,
+            'profileSkills' => $skills,
         ]);
+    }
+
+    public function showSettings(): void {
+        if (!Auth::check()) {
+            header('Location: ?page=login&redirect=' . urlencode('?page=settings'));
+            exit;
+        }
+
+        $authUser = Auth::user();
+        $user = $this->userModel->getById((int) $authUser['id']);
+        if (!$user) {
+            header('Location: ?page=home');
+            exit;
+        }
+
+        $skills = $this->userSkillModel->getByUserId((int) $authUser['id']);
+        $flash = $_SESSION['settings_flash'] ?? null;
+        unset($_SESSION['settings_flash']);
+
+        // TODO(profile): done - Reintroduced user settings page (language/public profile + skills management).
+        $this->render('settings', [
+            'title' => trans('nav_settings'),
+            'user' => $user,
+            'skills' => $skills,
+            'flash' => $flash,
+        ]);
+    }
+
+    public function handleSettings(array $post): void {
+        if (!Auth::check()) {
+            header('Location: ?page=login&redirect=' . urlencode('?page=settings'));
+            exit;
+        }
+
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) {
+            $_SESSION['settings_flash'] = ['type' => 'error', 'message' => 'Ongeldig beveiligingstoken.'];
+            header('Location: ?page=settings');
+            exit;
+        }
+
+        $authUser = Auth::user();
+        $action = (string) ($post['settings_action'] ?? 'profile');
+
+        if ($action === 'add_skill') {
+            $name = trim((string) ($post['skill_name'] ?? ''));
+            $category = trim((string) ($post['skill_category'] ?? ''));
+            $level = (int) ($post['skill_level'] ?? 1);
+            $yearsExperience = trim((string) ($post['skill_years_experience'] ?? ''));
+            $isPublic = isset($post['skill_is_public']) && $post['skill_is_public'] === '1';
+
+            if ($name === '' || $category === '') {
+                $_SESSION['settings_flash'] = ['type' => 'error', 'message' => 'Skill name en category zijn verplicht.'];
+                header('Location: ?page=settings');
+                exit;
+            }
+
+            $yearsValue = $yearsExperience === '' ? null : max(0, min(60, (int) $yearsExperience));
+            $this->userSkillModel->create((int) $authUser['id'], $name, $category, $level, $yearsValue, $isPublic);
+            $_SESSION['settings_flash'] = ['type' => 'success', 'message' => 'Skill toegevoegd.'];
+            header('Location: ?page=settings');
+            exit;
+        }
+
+        if ($action === 'delete_skill') {
+            $skillId = (int) ($post['skill_id'] ?? 0);
+            if ($skillId > 0) {
+                $this->userSkillModel->deleteForUser($skillId, (int) $authUser['id']);
+            }
+            $_SESSION['settings_flash'] = ['type' => 'success', 'message' => 'Skill verwijderd.'];
+            header('Location: ?page=settings');
+            exit;
+        }
+
+        if ($action === 'update_skill') {
+            $skillId = (int) ($post['skill_id'] ?? 0);
+            $name = trim((string) ($post['skill_name'] ?? ''));
+            $category = trim((string) ($post['skill_category'] ?? ''));
+            $level = (int) ($post['skill_level'] ?? 1);
+            $yearsExperience = trim((string) ($post['skill_years_experience'] ?? ''));
+            $isPublic = isset($post['skill_is_public']) && $post['skill_is_public'] === '1';
+
+            if ($skillId <= 0 || $name === '' || $category === '') {
+                $_SESSION['settings_flash'] = ['type' => 'error', 'message' => 'Skill update mislukt: ontbrekende velden.'];
+                header('Location: ?page=settings');
+                exit;
+            }
+
+            $yearsValue = $yearsExperience === '' ? null : max(0, min(60, (int) $yearsExperience));
+            $this->userSkillModel->updateForUser((int) $skillId, (int) $authUser['id'], $name, $category, $level, $yearsValue, $isPublic);
+            $_SESSION['settings_flash'] = ['type' => 'success', 'message' => 'Skill bijgewerkt.'];
+            header('Location: ?page=settings');
+            exit;
+        }
+
+        // TODO(profile): done - Added missing email notification preference in user settings migration.
+        $preferredLanguage = (string) ($post['preferred_language'] ?? 'nl');
+        $publicProfile = isset($post['public_profile']) && $post['public_profile'] === '1';
+        $emailNotifications = isset($post['email_notifications']) && $post['email_notifications'] === '1';
+        $this->userModel->updateSettings((int) $authUser['id'], $preferredLanguage, $publicProfile, $emailNotifications);
+
+        $_SESSION['auth_user']['preferred_language'] = $preferredLanguage === 'en' ? 'en' : 'nl';
+        $_SESSION['settings_flash'] = ['type' => 'success', 'message' => 'Settings opgeslagen.'];
+        header('Location: ?page=settings');
+        exit;
     }
 
     public function showLogin(): void {

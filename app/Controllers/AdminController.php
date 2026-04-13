@@ -273,7 +273,7 @@ class AdminController {
                 'projects'         => $this->projects->count(),
                 'messages'         => $this->contact->count(),
                 'unread_messages'  => $this->contact->countUnread(),
-                'users'            => $this->users->count(),
+                'admin_users'      => $this->users->countAdminUsers(),
                 'skills'           => $this->skills->countSkills(),
                 'education'        => $this->skills->countEducation(),
                 'goals'            => $this->skills->countGoals(),
@@ -302,7 +302,8 @@ class AdminController {
             ];
         } catch (\Throwable $e) {
             $stats = array_fill_keys(
-                ['news','faq_categories','faq_items','projects','messages','unread_messages','users','skills','education','goals'], 0
+                ['news','faq_categories','faq_items','projects','messages','unread_messages','admin_users','skills','education','goals','tags','pending_comments'],
+                0
             );
             $recentNews = $recentMessages = [];
             $roadmapItems = $this->getDefaultRoadmapItems();

@@ -110,6 +110,14 @@ BEGIN
     ) THEN
         ALTER TABLE users ADD COLUMN preferred_language VARCHAR(2) NOT NULL DEFAULT 'nl';
     END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'email_notifications'
+    ) THEN
+        ALTER TABLE users ADD COLUMN email_notifications TINYINT(1) NOT NULL DEFAULT 1;
+    END IF;
 END$$
 DELIMITER ;
 CALL ensure_user_profile_columns();
@@ -117,6 +125,22 @@ DROP PROCEDURE IF EXISTS ensure_user_profile_columns;
 
 -- Add 'user' role for public registrations (owner/admin unchanged)
 ALTER TABLE users MODIFY COLUMN role ENUM('owner','admin','user') NOT NULL DEFAULT 'user';
+
+-- User skills (public profile feature)
+CREATE TABLE IF NOT EXISTS user_skills (
+    id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id          INT UNSIGNED NOT NULL,
+    name             VARCHAR(120) NOT NULL,
+    category         VARCHAR(80)  NOT NULL,
+    level            TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    years_experience TINYINT UNSIGNED NULL,
+    is_public        TINYINT(1)   NOT NULL DEFAULT 1,
+    created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_public (user_id, is_public),
+    INDEX idx_category (category),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Local ReadmeSync scan log (website-side audit/debug)
 CREATE TABLE IF NOT EXISTS readmesync_scan_logs (

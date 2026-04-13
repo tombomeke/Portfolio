@@ -35,6 +35,7 @@ class Translations {
             'nav_login' => 'Inloggen',
             'nav_dashboard' => 'Dashboard',
             'nav_my_profile' => 'Mijn profiel',
+            'nav_settings' => 'Instellingen',
             'nav_logout' => 'Uitloggen',
 
             // Admin shell
@@ -57,6 +58,7 @@ class Translations {
             'admin_telemetry' => 'Telemetry',
             'admin_activity_log' => 'Activity Log',
             'admin_my_profile' => 'Mijn profiel',
+            'admin_open_public_profile' => 'Open publiek profiel',
             'admin_view_site' => 'Bekijk site',
             'admin_logged_in_as' => 'Ingelogd als',
             'admin_tags' => 'Tags',
@@ -181,6 +183,29 @@ class Translations {
             'admin_news_image' => 'Afbeelding',
             'admin_news_current_image' => 'Huidige afbeelding',
             'admin_news_remove_image' => 'Afbeelding verwijderen',
+
+            // User settings / skills
+            'settings_title' => 'Instellingen',
+            'settings_profile_title' => 'Profielinstellingen',
+            'settings_preferred_language' => 'Voorkeurstaal',
+            'settings_public_profile' => 'Publiek profiel',
+            'settings_public_profile_hint' => 'Toon mijn profiel publiek op de website',
+            'settings_email_notifications' => 'E-mail notificaties',
+            'settings_email_notifications_hint' => 'Stuur mij e-mail updates voor account-gerelateerde meldingen',
+            'settings_save' => 'Instellingen opslaan',
+            'settings_skills_title' => 'Skills',
+            'settings_skills_hint' => 'Beheer je publieke skills zodat bezoekers zien waar je sterk in bent.',
+            'settings_skills_empty' => 'Nog geen skills toegevoegd.',
+            'settings_skill_name' => 'Skillnaam',
+            'settings_skill_category' => 'Categorie',
+            'settings_skill_level' => 'Niveau (1-5)',
+            'settings_skill_years_experience' => 'Jaren ervaring (optioneel)',
+            'settings_skill_public' => 'Publiek zichtbaar',
+            'settings_skill_private' => 'Privé',
+            'settings_skill_add' => 'Skill toevoegen',
+            'settings_skill_edit' => 'Skill bewerken',
+            'settings_skill_update' => 'Skill opslaan',
+            'settings_skill_delete_confirm' => 'Skill verwijderen?',
 
             // News item page
             'news_item_back_to_news' => 'Terug naar News',
@@ -682,6 +707,7 @@ class Translations {
             'nav_login' => 'Login',
             'nav_dashboard' => 'Dashboard',
             'nav_my_profile' => 'My profile',
+            'nav_settings' => 'Settings',
             'nav_logout' => 'Logout',
 
             // Admin shell
@@ -704,6 +730,7 @@ class Translations {
             'admin_telemetry' => 'Telemetry',
             'admin_activity_log' => 'Activity Log',
             'admin_my_profile' => 'My profile',
+            'admin_open_public_profile' => 'Open public profile',
             'admin_view_site' => 'View site',
             'admin_logged_in_as' => 'Logged in as',
             'admin_tags' => 'Tags',
@@ -828,6 +855,29 @@ class Translations {
             'admin_news_image' => 'Image',
             'admin_news_current_image' => 'Current image',
             'admin_news_remove_image' => 'Remove image',
+
+            // User settings / skills
+            'settings_title' => 'Settings',
+            'settings_profile_title' => 'Profile settings',
+            'settings_preferred_language' => 'Preferred language',
+            'settings_public_profile' => 'Public profile',
+            'settings_public_profile_hint' => 'Show my profile publicly on the website',
+            'settings_email_notifications' => 'Email notifications',
+            'settings_email_notifications_hint' => 'Send me email updates for account-related notifications',
+            'settings_save' => 'Save settings',
+            'settings_skills_title' => 'Skills',
+            'settings_skills_hint' => 'Manage your public skills so visitors can see your strengths.',
+            'settings_skills_empty' => 'No skills added yet.',
+            'settings_skill_name' => 'Skill name',
+            'settings_skill_category' => 'Category',
+            'settings_skill_level' => 'Level (1-5)',
+            'settings_skill_years_experience' => 'Years of experience (optional)',
+            'settings_skill_public' => 'Publicly visible',
+            'settings_skill_private' => 'Private',
+            'settings_skill_add' => 'Add skill',
+            'settings_skill_edit' => 'Edit skill',
+            'settings_skill_update' => 'Save skill',
+            'settings_skill_delete_confirm' => 'Delete this skill?',
 
             // News item page
             'news_item_back_to_news' => 'Back to News',

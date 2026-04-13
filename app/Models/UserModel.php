@@ -28,7 +28,7 @@ class UserModel {
         $db = Database::getConnection();
         try {
             $stmt = $db->prepare(
-                "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
+                "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, email_notifications, created_at
                  FROM users WHERE id = :id LIMIT 1"
             );
             $stmt->execute([':id' => $id]);
@@ -43,7 +43,7 @@ class UserModel {
         $db = Database::getConnection();
         try {
             $stmt = $db->prepare(
-                "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, created_at
+                "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, email_notifications, created_at
                  FROM users WHERE username = :u LIMIT 1"
             );
             $stmt->execute([':u' => $username]);
@@ -73,6 +73,22 @@ class UserModel {
         Database::getConnection()->prepare(
             "UPDATE users SET profile_photo_path=:path, updated_at=NOW() WHERE id=:id"
         )->execute([':path' => $path, ':id' => $id]);
+    }
+
+    public function updateSettings(int $id, string $preferredLanguage, bool $publicProfile, bool $emailNotifications): void {
+        Database::getConnection()->prepare(
+            "UPDATE users
+             SET preferred_language = :preferred_language,
+                 public_profile = :public_profile,
+                 email_notifications = :email_notifications,
+                 updated_at = NOW()
+             WHERE id = :id"
+        )->execute([
+            ':preferred_language' => $preferredLanguage === 'en' ? 'en' : 'nl',
+            ':public_profile' => $publicProfile ? 1 : 0,
+            ':email_notifications' => $emailNotifications ? 1 : 0,
+            ':id' => $id,
+        ]);
     }
 
     public function updatePassword(int $id, string $password): void {
@@ -143,6 +159,11 @@ class UserModel {
 
     public function count(): int {
         return (int) Database::getConnection()->query("SELECT COUNT(*) FROM users")->fetchColumn();
+    }
+
+    public function countAdminUsers(): int {
+        $stmt = Database::getConnection()->query("SELECT COUNT(*) FROM users WHERE role IN ('owner', 'admin')");
+        return (int) $stmt->fetchColumn();
     }
 
     public function usernameExists(string $username, int $excludeId = 0): bool {

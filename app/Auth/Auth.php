@@ -9,8 +9,8 @@
  *   - 'admin' — content management (news, FAQ, projects, contact)
  *
  * The session key $_SESSION['auth_user'] holds a minimal user snapshot
- * built by makeSessionUser(). It is NOT automatically refreshed when the
- * user row changes in the DB — call Auth::refreshSession() after profile updates.
+ * built by makeSessionUser(). It is refreshed per request through index.php
+ * and protected auth checks so role/profile changes become visible quickly.
  *
  * CSRF tokens are stored in $_SESSION['csrf_token'] and verified on every
  * state-changing POST. Use csrfField() in forms and verifyCsrf() in handlers.
@@ -37,6 +37,43 @@ class Auth {
         return isset($_SESSION['auth_user']);
     }
 
+    /**
+     * Refresh the session user snapshot from the database.
+     * This keeps role/profile fields in sync after promotions/demotions/profile edits.
+     */
+    public static function refreshSession(): void {
+        if (!self::check()) {
+            return;
+        }
+
+        $sessionUser = self::user();
+        $userId = (int) ($sessionUser['id'] ?? 0);
+        if ($userId <= 0) {
+            self::logout();
+            return;
+        }
+
+        try {
+            require_once __DIR__ . '/../Config/Database.php';
+            $stmt = Database::getConnection()->prepare(
+                "SELECT id, username, email, role, profile_photo_path, preferred_language
+                 FROM users WHERE id = :id LIMIT 1"
+            );
+            $stmt->execute([':id' => $userId]);
+            $freshUser = $stmt->fetch();
+        } catch (\Throwable $e) {
+            // Keep existing session snapshot when DB is temporarily unavailable.
+            return;
+        }
+
+        if (!$freshUser) {
+            self::logout();
+            return;
+        }
+
+        $_SESSION['auth_user'] = self::makeSessionUser($freshUser);
+    }
+
     /** Returns the current session user array, or null if not logged in. */
     public static function user(): ?array {
         return $_SESSION['auth_user'] ?? null;
@@ -54,6 +91,13 @@ class Auth {
 
     /** Redirect to login page if no session. Call at the top of every protected handler. */
     public static function requireAuth(): void {
+        if (!self::check()) {
+            header('Location: ?page=admin&section=login');
+            exit;
+        }
+
+        self::refreshSession();
+
         if (!self::check()) {
             header('Location: ?page=admin&section=login');
             exit;

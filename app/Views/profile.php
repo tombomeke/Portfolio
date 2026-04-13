@@ -44,6 +44,9 @@
                     <a href="?page=admin&section=profile" class="btn btn-outline btn-sm">
                         <i class="fas fa-user-edit"></i> <?= trans('profile_edit') ?>
                     </a>
+                    <a href="?page=settings" class="btn btn-outline btn-sm">
+                        <i class="fas fa-sliders-h"></i> <?= trans('nav_settings') ?>
+                    </a>
                 </div>
                 <?php endif; ?>
             </div>
@@ -70,6 +73,24 @@
             </dl>
         </div>
 
+        <?php if (!empty($profileSkills)): ?>
+        <!-- TODO(profile): done - Show user-managed public skills on public profile page. -->
+        <div class="profile-card">
+            <h2><i class="fas fa-code"></i> <?= trans('settings_skills_title') ?></h2>
+            <div class="profile-skill-grid">
+                <?php foreach ($profileSkills as $skill): ?>
+                    <div class="profile-skill-item">
+                        <strong><?= htmlspecialchars((string) $skill['name']) ?></strong>
+                        <div class="profile-skill-meta">
+                            <?= htmlspecialchars((string) $skill['category']) ?> · L<?= (int) $skill['level'] ?>
+                            <?php if (!empty($skill['years_experience'])): ?> · <?= (int) $skill['years_experience'] ?>y<?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
     </div>
 </section>
 
@@ -92,6 +113,9 @@
 .profile-dl { display: grid; grid-template-columns: 140px 1fr; gap: .5rem 1rem; margin: 0; }
 .profile-dl dt { font-weight: 600; font-size: .85rem; color: var(--text-muted, #6b7280); align-self: start; padding-top: .15rem; }
 .profile-dl dd { margin: 0; font-size: .95rem; color: var(--text-primary, #f8fafc); }
+.profile-skill-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .7rem; }
+.profile-skill-item { border: 1px solid var(--border-color, #334155); border-radius: 8px; padding: .65rem .75rem; background: rgba(255,255,255,.02); }
+.profile-skill-meta { margin-top: .2rem; font-size: .8rem; color: var(--text-muted, #94a3b8); }
 @media (max-width: 680px) {
     .profile-hero { gap: 1rem; }
     .profile-dl { grid-template-columns: 1fr; gap: .2rem; }
