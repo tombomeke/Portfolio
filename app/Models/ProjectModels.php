@@ -16,6 +16,7 @@
  */
 
 require_once __DIR__ . '/../Config/Database.php';
+require_once __DIR__ . '/../Support/Uploads.php';
 
 class ProjectModel {
 
@@ -207,10 +208,8 @@ class ProjectModel {
         $row = $stmt->fetch();
 
         if ($row && $row['image_path']) {
-            $fullPath = __DIR__ . '/../../' . $row['image_path'];
-            if (file_exists($fullPath)) {
-                unlink($fullPath);
-            }
+            // TODO(security): done - safeDelete() verifies realpath stays inside uploads/projects/ before unlink.
+            Uploads::safeDelete($row['image_path'], 'projects');
         }
 
         $db->prepare("DELETE FROM projects WHERE id = :id")->execute([':id' => $id]);
@@ -280,10 +279,8 @@ class ProjectModel {
         $row = $stmt->fetch();
 
         if ($row && $row['image_path']) {
-            $fullPath = __DIR__ . '/../../' . $row['image_path'];
-            if (file_exists($fullPath)) {
-                unlink($fullPath);
-            }
+            // TODO(security): done - safeDelete() verifies realpath stays inside uploads/projects/ before unlink.
+            Uploads::safeDelete($row['image_path'], 'projects');
         }
 
         $db->prepare("DELETE FROM project_images WHERE id = :id")->execute([':id' => $imageId]);

@@ -209,6 +209,7 @@ class PortfolioController {
     }
 
     public function showContact() {
+        // TODO(settings): [P2] respect contact_form_enabled site setting and show a disabled-state message when contact is turned off.
         $data = [
             'title' => 'Contact',
             'success' => $_SESSION['contact_success'] ?? false,
@@ -221,6 +222,7 @@ class PortfolioController {
     public function handleContact($postData) {
         // TODO(security): [P2] add rate limiting / honeypot field to prevent contact form spam
         // TODO(input): [P2] sanitizeInput() applies htmlspecialchars() before storage, causing double-encoding
+        // TODO(i18n): [P2] replace remaining Dutch validation/error strings in this handler with trans() keys.
         // when data is displayed later (view would encode again). Use trim() here for storage,
         // htmlspecialchars() only at display time in the view.
         $name = $this->sanitizeInput($postData['name'] ?? '');
@@ -450,6 +452,11 @@ class PortfolioController {
             exit;
         }
 
+        // TODO(security): [P2] require current password confirmation before sensitive settings updates (email/password/profile security fields).
+        // Rotate CSRF token on every successful settings POST to shrink the replay window.
+        Auth::rotateCsrf();
+
+
         $authUser = Auth::user();
         $action = (string) ($post['settings_action'] ?? 'profile');
 
@@ -505,6 +512,7 @@ class PortfolioController {
         }
 
         // TODO(profile): done - Added missing email notification preference in user settings migration.
+        // TODO(profile): [P3] add optional timezone setting support (users.timezone) and persist it in updateSettings().
         $preferredLanguage = (string) ($post['preferred_language'] ?? 'nl');
         $publicProfile = isset($post['public_profile']) && $post['public_profile'] === '1';
         $emailNotifications = isset($post['email_notifications']) && $post['email_notifications'] === '1';

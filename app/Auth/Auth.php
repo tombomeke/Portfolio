@@ -189,6 +189,16 @@ class Auth {
         return !empty($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
     }
 
+    /**
+     * Rotate the CSRF token. Call after a successful sensitive POST action
+     * (password change, profile update, security settings) so the old token
+     * cannot be replayed.
+     * TODO(csrf): done - rotateCsrf() implemented; wire into each sensitive handler.
+     */
+    public static function rotateCsrf(): void {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
     /** Render a hidden <input> with the current CSRF token. Use inside every POST form. */
     public static function csrfField(): string {
         return '<input type="hidden" name="_csrf" value="' . htmlspecialchars(self::csrfToken(), ENT_QUOTES, 'UTF-8') . '">';

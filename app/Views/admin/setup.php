@@ -8,6 +8,7 @@
         <?php endif; ?>
 
         <form method="POST" action="?page=setup" style="margin-top:1.5rem">
+            <?= \Auth::csrfField() ?>
             <div class="form-grid" style="gap:1rem">
                 <div class="form-group">
                     <label for="username">Username</label>

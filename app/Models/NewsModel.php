@@ -1,6 +1,7 @@
 <?php
 // app/Models/NewsModel.php
 require_once __DIR__ . '/../Config/Database.php';
+require_once __DIR__ . '/../Support/Uploads.php';
 
 class NewsModel {
 
@@ -33,6 +34,7 @@ class NewsModel {
         $stmt->execute();
         $rows = $stmt->fetchAll();
 
+        // TODO(performance): [P2] remove this N+1 loop by loading tags in one grouped query for listed news IDs.
         // Attach tags to each item
         foreach ($rows as &$row) {
             $row['tags'] = $this->getTagsForItem($row['id']);
@@ -188,10 +190,8 @@ class NewsModel {
         $row = $stmt->fetch();
 
         if ($row && $row['image_path']) {
-            $fullPath = __DIR__ . '/../../' . $row['image_path'];
-            if (file_exists($fullPath)) {
-                unlink($fullPath);
-            }
+            // TODO(security): done - safeDelete() verifies realpath stays inside uploads/news/ before unlink.
+            Uploads::safeDelete($row['image_path'], 'news');
         }
 
         $db->prepare("DELETE FROM news_items WHERE id = :id")->execute([':id' => $id]);

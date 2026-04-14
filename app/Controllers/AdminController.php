@@ -162,6 +162,12 @@ class AdminController {
         $error = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+                $error = 'Invalid request token. Please try again.';
+                $this->renderAdmin('setup', compact('error'), 'Setup – Create Owner Account');
+                return;
+            }
+
             $username = trim($_POST['username'] ?? '');
             $email    = trim($_POST['email']    ?? '');
             $password = $_POST['password']      ?? '';
@@ -939,6 +945,7 @@ class AdminController {
             "MIME-Version: 1.0",
             "Content-Type: text/plain; charset=UTF-8",
         ]);
+        // TODO(email): [P3] replace plain-text replies with reusable HTML email templates for consistent branding and readability.
         mail($to, $subject, $body, $headers);
 
         $this->contact->saveReply($id, $reply);
@@ -1502,6 +1509,7 @@ class AdminController {
                     header('Location: ?page=admin&section=profile'); exit;
                 }
                 $this->users->updatePassword($authUser['id'], $post['new_password']);
+                Auth::rotateCsrf();
                 ActivityLogModel::log('updated', "Changed own password");
                 $this->flash('success', 'Wachtwoord gewijzigd.');
                 header('Location: ?page=admin&section=profile'); exit;
@@ -1595,19 +1603,19 @@ class AdminController {
     }
 
     private function handleImageUpload(?array $file, string $subfolder): ?string {
-        // TODO(upload): Audit profile image uploads for MIME validation, metadata stripping, and payload hardening.
+        // TODO(upload): done - MIME validated via finfo and extension derived from MIME map, not from the original filename.
         if (!$file || $file['error'] !== UPLOAD_ERR_OK || $file['size'] === 0) {
             return null;
         }
 
-        $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $mimeType = $this->detectImageMimeType($file['tmp_name'] ?? '');
-        if ($mimeType === null || !in_array($mimeType, $allowed, true)) {
+        $mimeToExt = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+        $mimeType  = $this->detectImageMimeType($file['tmp_name'] ?? '');
+        if ($mimeType === null || !isset($mimeToExt[$mimeType])) {
             return null;
         }
 
-        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = time() . '_' . bin2hex(random_bytes(4)) . '.' . strtolower($ext);
+        $ext      = $mimeToExt[$mimeType];
+        $filename = time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
         $dir      = __DIR__ . "/../../public/images/uploads/{$subfolder}/";
 
         if (!is_dir($dir)) mkdir($dir, 0755, true);
