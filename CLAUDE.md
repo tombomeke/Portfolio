@@ -211,12 +211,18 @@ Dit is externe feedback uit een gebruikers-test. Sommige punten zijn al opgelost
 - [P2] `TODO(download)`: Replace the placeholder CV PDF with the real file and verify the download route.
 - [P2] `TODO(dev-life)`: Fill or remove the blank Education & Certificates and Current Learning Goals sections.
 - [P2] `TODO(content)`: Replace the placeholder FAQ content or remove the FAQ section entirely.
-- [P3] `TODO(profile)`: Ask for preferred language during signup or derive it from the current site language instead of defaulting to Dutch.
+- [x] `TODO(profile)`: Preferred language is now derived from the current site language during signup instead of defaulting to Dutch.
 - [P3] `TODO(content)`: Reframe News as blog/articles if that matches the site direction better.
 
 **Opgelost in TODO sweep (April 2026)**
 - [x] `TODO(upload)`: Audit profile image uploads for MIME validation — extension now derived from validated MIME map; Uploads::safeDelete() blocks path traversal deletes.
 - [x] `TODO(i18n)`: Finish the English audit on the contact page — E-mail/LinkedIn/GitHub headings + PDF suffix use trans() keys.
+- [x] `TODO(i18n)`: Replace contact form validation strings with trans() keys.
+- [x] `TODO(security)`: Require current-password confirmation before saving sensitive profile settings.
+- [x] `TODO(auth)`: Add forgot-password and reset-password flow for user accounts.
+- [x] `TODO(config)`: Validate `wip_pages.json` and log malformed JSON instead of silently accepting it.
+- [x] `TODO(security)`: Add SRI + crossorigin to external CDN assets in the public layout.
+- [x] `TODO(security)`: Add contact form CSRF + anti-spam guard (honeypot + rate limiting).
 - [x] `TODO(ui)`: Footer mail button guarded on empty PORTFOLIO_CONTACT_EMAIL env var.
 - [x] `TODO(ui)`: Green Live badge removed from ReadmeSync header.
 - [x] `TODO(nav)`: Games removed from public nav while section is WIP.
@@ -308,13 +314,14 @@ Open TODO's (volgende iteraties):
 - [x] `TODO(roadmap)`: Retry met exponential backoff bij API-fouten — 3 attempts, 0/400/1200ms, bails on 4xx
 - [P3] `TODO(roadmap)`: Optional "target section" input voor admin roadmap parser → `AdminController.php:~1595`
 - [P3] `TODO(roadmap)`: Keep source line numbers in roadmap UI traceability → `AdminController.php:~2374`
-- [x] `TODO(cron)`: Last-run guard in `cronSyncRoadmaps()` — queries MAX(created_at) from project_sync_log; 429 if < 60 min
+- [x] `TODO(cron)`: Last-run guard in `cronSyncRoadmaps()` — interval now configurable via admin setting `cron_sync_min_interval_seconds`
+- [x] `TODO(cron)`: Cron trigger logging toegevoegd in `activity_logs` (action `cron_sync`, with run_id/status/counts/errors properties)
 
 **Migratiekansen uit backend-web-portfolio**
 - [x] `TODO(settings)`: `contact_form_enabled` gate in `showContact()` + `handleContact()`; disabled-state block in contact.php
 - [x] `TODO(ops)`: `maintenance_mode` gate in `index.php` → renders `app/Views/maintenance.php` (503); admins bypass
-- [P2] `TODO(security)`: Voeg current-password confirm stap toe voor gevoelige settings-updates in `PortfolioController::handleSettings()` — `UserModel::verifyPassword()` now available
-- [P2] `TODO(auth)`: Implementeer token-based forgot-password flow (`password_reset_tokens`) voor self-service account recovery
+- [x] `TODO(security)`: Voeg current-password confirm stap toe voor gevoelige settings-updates in `PortfolioController::handleSettings()` — `UserModel::verifyPassword()` now available
+- [x] `TODO(auth)`: Implementeer token-based forgot-password flow (`password_reset_tokens`) voor self-service account recovery
 - [P3] `TODO(profile)`: Voeg `users.timezone` veld + settings input toe en gebruik het voor toekomstige tijdsweergave
 - [P3] `TODO(email)`: Migreer admin contact replies van plain-text `mail()` naar herbruikbare HTML e-mail templates
 - [P3] `TODO(i18n)`: Overweeg SetLocale-achtige centrale locale resolver i.p.v. verspreide taalchecks in controllers/views
@@ -329,17 +336,17 @@ Open TODO's (volgende iteraties):
 - [x] `TODO(csrf)`: Audit alle admin POST forms — setup.php gap fixed; all other forms audited and compliant
 - [x] `TODO(csrf)`: Rotate CSRF token na succesvolle gevoelige POST-acties — `Auth::rotateCsrf()` added; wired into admin password change + settings POST
 - [x] `TODO(security)`: Valideer `realpath()` bij `unlink()` — `Uploads::safeDelete()` in `app/Support/Uploads.php`
-- [P2] `TODO(security)`: Voeg SRI (`integrity` + `crossorigin`) toe voor externe CDN assets in publieke layout
+- [x] `TODO(security)`: Voeg SRI (`integrity` + `crossorigin`) toe voor externe CDN assets in publieke layout
 
 **Code kwaliteit / architectuur**
-- [P2] `TODO(cache)`: `GameStatsModel` raakt externe API bij elke pageload — voeg bestandscache toe (10 min TTL)
-- [P2] `TODO(config)`: Valideer `wip_pages.json` schema en log parsefouten i.p.v. stil fallbackgedrag
+- [x] `TODO(cache)`: `GameStatsModel` probeert nu live API-data (`MINECRAFT_SERVER_IP`, `R6_USERNAME`) met 10 min bestandscache en veilige mock fallback
+- [x] `TODO(config)`: Valideer `wip_pages.json` schema en log parsefouten i.p.v. stil fallbackgedrag
 - [x] `TODO(performance)`: News tags N+1 fixed — `getTagsForItems()` batch loads tags in one IN query
 
 **i18n**
 - [P3] `TODO(i18n)`: Volledige audit op hardcoded NL strings in views (bekende locaties: `project-detail.php`, `project-roadmaps.php`, admin views)
 - [P3] `TODO(i18n)`: Ontbrekende vertaalsleutels toevoegen voor roadmap UI labels (open/done/high filters, sync timestamp, progress)
-- [P2] `TODO(i18n)`: Vervang hardcoded NL validatie- en foutmeldingen in `PortfolioController::handleContact()` door `trans()` keys
+- [x] `TODO(i18n)`: Vervang hardcoded NL validatie- en foutmeldingen in `PortfolioController::handleContact()` door `trans()` keys
 
 **Tests**
 - [P2] `TODO(test)`: `tests/ProjectImageTest.php` schrijven (gallery CRUD + sort_order)

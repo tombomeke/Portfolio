@@ -3,14 +3,12 @@
 
 class GameStatsModel {
     private $cacheFile;
-    private $cacheExpiry = 300; // 5 minutes
+    private $cacheExpiry = 600; // 10 minutes
 
     public function __construct() {
         $this->cacheFile = __DIR__ . '/../../cache/game_stats.json';
     }
 
-    // TODO(cache): [P2] replace in-memory mock data with a real external API call (e.g. mcsrvstat.us)
-    // and add a file-based cache with ~10 min TTL so the page doesn't hit the API on every load.
     /**
      * Get Minecraft server statistics
      * Uses caching to avoid hitting API rate limits
@@ -21,8 +19,16 @@ class GameStatsModel {
             return $cached;
         }
 
-        // Mock data voor MVP - later echte API integratie
-        // Voor echte data: https://api.mcsrvstat.us/2/jouwserver.nl
+        $serverIp = getenv('MINECRAFT_SERVER_IP') ?: ($_ENV['MINECRAFT_SERVER_IP'] ?? '');
+        if (!empty($serverIp)) {
+            $liveStats = $this->fetchLiveMinecraftStats((string) $serverIp);
+            if ($liveStats) {
+                $this->cacheData('minecraft', $liveStats);
+                return $liveStats;
+            }
+        }
+
+        // Fallback mock data when no server is configured or API is unavailable.
         $stats = [
             'server_name' => 'JouwServer.nl',
             'server_ip' => 'play.jouwserver.nl',
@@ -56,8 +62,17 @@ class GameStatsModel {
             return $cached;
         }
 
-        // Mock data voor MVP
-        // Voor echte data: R6Stats API of Ubisoft API
+        $username = getenv('R6_USERNAME') ?: ($_ENV['R6_USERNAME'] ?? '');
+        $platform = getenv('R6_PLATFORM') ?: ($_ENV['R6_PLATFORM'] ?? 'uplay');
+        if (!empty($username)) {
+            $liveStats = $this->fetchLiveR6Stats((string) $username, (string) $platform);
+            if ($liveStats) {
+                $this->cacheData('r6siege', $liveStats);
+                return $liveStats;
+            }
+        }
+
+        // Fallback mock data when no API credentials are configured or API is unavailable.
         $stats = [
             'username' => 'JouwGamertag',
             'platform' => 'PC',

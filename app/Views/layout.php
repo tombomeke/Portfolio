@@ -26,10 +26,9 @@ $styleVersion = (string) (@filemtime(__DIR__ . '/../../public/css/style.css') ?:
         <title><?= htmlspecialchars($title ?? 'Portfolio') ?> - Tom Dekoning</title>
 
         <!-- Stylesheets -->
-        <!-- TODO(security): [P2] add Subresource Integrity and crossorigin attrs for external CDN assets. -->
         <link rel="stylesheet" href="public/css/style.css?v=<?= htmlspecialchars($styleVersion, ENT_QUOTES, 'UTF-8') ?>">
         <link rel="stylesheet" href="public/css/modal.css">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous">
     </head>
     <body>
     <header>
@@ -45,7 +44,6 @@ $styleVersion = (string) (@filemtime(__DIR__ . '/../../public/css/style.css') ?:
                     <a href="?page=dev-life" class="nav-link" data-translate="nav_devlife"><?= trans('nav_devlife') ?></a>
                     <?php // TODO(nav): done - Games removed from nav while section is WIP; route still works for direct access. ?>
                     <a href="?page=projects" class="nav-link" data-translate="nav_projects"><?= trans('nav_projects') ?></a>
-                    <!-- TODO(i18n): [P3] 'News', 'FAQ', 'ReadmeSync' are hardcoded — add trans() keys -->
                     <a href="?page=news" class="nav-link"><?= trans('nav_news') ?></a>
                     <a href="?page=faq" class="nav-link"><?= trans('nav_faq') ?></a>
                     <a href="?page=readmesync" class="nav-link"><?= trans('nav_readmesync') ?></a>
