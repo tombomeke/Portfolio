@@ -114,7 +114,7 @@ class ProjectRoadmapService {
         }
     }
 
-    // TODO(roadmap): [P1] add retry with exponential backoff when API returns non-200
+    // TODO(roadmap): done - callApi() retries up to 3 times with exponential backoff (0/400/1200 ms) on HTTP ≥500 or transport errors; bails immediately on 4xx.
     /**
      * Trigger a full sync for one project: call the ReadmeSync API and persist results.
      *
@@ -178,6 +178,13 @@ class ProjectRoadmapService {
         ];
     }
 
+    /**
+     * Call the ReadmeSync API with exponential backoff.
+     * Retries up to 3 attempts (delays: 0ms, 400ms, 1200ms) on:
+     *   - cURL transport errors
+     *   - HTTP 500–599 (server-side errors, likely transient)
+     * Bails immediately on HTTP 4xx (client errors — retrying won't help).
+     */
     protected function callApi(string $repoUrl, ?array $authUser = null): array {
         if (!function_exists('curl_init')) {
             return ['ok' => false, 'error' => 'cURL is niet beschikbaar op deze server.'];
@@ -190,39 +197,66 @@ class ProjectRoadmapService {
             'userName'      => isset($authUser['username']) ? (string) $authUser['username'] : null,
         ]);
 
-        $ch = curl_init($this->apiUrl);
-        curl_setopt_array($ch, [
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $payload,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT        => 40,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Accept: application/json'],
-            CURLOPT_SSL_VERIFYPEER => true,
-        ]);
+        $maxAttempts  = 3;
+        $retryDelaysMs = [0, 400, 1200]; // milliseconds before each attempt
+        $lastError    = 'Onbekende API-fout.';
 
-        $raw      = curl_exec($ch);
-        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlErr  = curl_error($ch);
-        curl_close($ch);
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            if ($retryDelaysMs[$attempt] > 0) {
+                usleep($retryDelaysMs[$attempt] * 1000);
+            }
 
-        if ($curlErr !== '') {
-            return ['ok' => false, 'error' => 'API niet bereikbaar: ' . $curlErr];
-        }
-        if ($httpCode !== 200) {
-            return ['ok' => false, 'error' => 'API gaf HTTP ' . $httpCode];
+            $ch = curl_init($this->apiUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => $payload,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT        => 40,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Accept: application/json'],
+                CURLOPT_SSL_VERIFYPEER => true,
+            ]);
+
+            $raw      = curl_exec($ch);
+            $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErr  = curl_error($ch);
+            curl_close($ch);
+
+            // Transport error — retry
+            if ($curlErr !== '') {
+                $lastError = 'API niet bereikbaar: ' . $curlErr;
+                continue;
+            }
+
+            // 4xx — client error, do not retry
+            if ($httpCode >= 400 && $httpCode < 500) {
+                return ['ok' => false, 'error' => 'API gaf HTTP ' . $httpCode];
+            }
+
+            // 5xx — server error, retry
+            if ($httpCode >= 500) {
+                $lastError = 'API gaf HTTP ' . $httpCode;
+                continue;
+            }
+
+            // Success path
+            if ($httpCode !== 200) {
+                return ['ok' => false, 'error' => 'API gaf HTTP ' . $httpCode];
+            }
+
+            $decoded = json_decode((string) $raw, true);
+            if (!is_array($decoded)) {
+                return ['ok' => false, 'error' => 'Ongeldige JSON van API.'];
+            }
+            if (!array_key_exists('todos', $decoded)) {
+                return ['ok' => false, 'error' => 'API response bevat geen todos key.'];
+            }
+
+            return ['ok' => true, 'data' => $decoded];
         }
 
-        $decoded = json_decode((string) $raw, true);
-        if (!is_array($decoded)) {
-            return ['ok' => false, 'error' => 'Ongeldige JSON van API.'];
-        }
-        if (!array_key_exists('todos', $decoded)) {
-            return ['ok' => false, 'error' => 'API response bevat geen todos key.'];
-        }
-
-        return ['ok' => true, 'data' => $decoded];
+        return ['ok' => false, 'error' => $lastError];
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

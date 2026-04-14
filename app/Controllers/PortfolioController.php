@@ -1025,7 +1025,7 @@ class PortfolioController {
         return trans('wip_default_page_name');
     }
 
-    // TODO(cron): [P2] add last-run timestamp check to prevent too-frequent external calls
+    // TODO(cron): done - last-run guard queries MAX(created_at) from project_sync_log; refuses if < 60 min ago.
     /**
      * Token-protected cron endpoint for periodic roadmap sync.
      * Call via: GET ?page=cron-sync-roadmaps&token=SECRET
@@ -1042,6 +1042,27 @@ class PortfolioController {
             http_response_code(403);
             echo json_encode(['ok' => false, 'error' => 'Unauthorized']);
             exit;
+        }
+
+        // Rate-limit: refuse if the last successful global sync was less than 60 minutes ago.
+        try {
+            $db     = \Database::getConnection();
+            $lastRun = $db->query(
+                "SELECT MAX(created_at) FROM project_sync_log WHERE success = 1"
+            )->fetchColumn();
+
+            if ($lastRun && (time() - strtotime((string) $lastRun)) < 3600) {
+                http_response_code(429);
+                echo json_encode([
+                    'ok'     => false,
+                    'status' => 'skipped',
+                    'reason' => 'too_soon',
+                    'last_run' => $lastRun,
+                ]);
+                exit;
+            }
+        } catch (\Throwable $e) {
+            // DB unavailable — skip the check and let sync proceed
         }
 
         @set_time_limit(120);

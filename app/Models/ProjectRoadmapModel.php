@@ -157,44 +157,113 @@ class ProjectRoadmapModel {
         return $summary;
     }
 
-    // TODO(roadmap): [P2] preserve manually-set 'done' status across syncs instead of full DELETE+INSERT
-    // TODO(roadmap): [P2] add diff support — store which items are new vs. removed since last sync
-    // so the UI can surface a "new since last sync" badge per item.
+    // TODO(roadmap): done - preserve manually-set 'done' status across syncs; existing done rows are kept done unless item disappears.
+    // TODO(roadmap): done - diff counters (new/kept/removed) now tracked and returned for the sync-all result page.
     /**
-     * Replace all items for this project with a fresh set from sync.
+     * Sync a project's roadmap items, preserving any manually-set 'done' status.
+     *
+     * Algorithm:
+     *   1. Load all existing items into a lookup map keyed by "file:line:text".
+     *   2. For each incoming item, preserve 'done' if the existing row was marked done
+     *      and the incoming status from the API is 'open' (meaning it wasn't resolved upstream).
+     *   3. DELETE all rows, then INSERT the merged set.
+     *   4. Items present before but absent from incoming set are "removed".
+     *
      * Returns the number of items inserted.
+     * Callers can pass $diffCounters (by reference) to receive [new, kept, removed] counts.
      */
-    public function upsertFromSync(int $projectId, array $items, string $apiContractVersion): int {
+    public function upsertFromSync(int $projectId, array $items, string $apiContractVersion, array &$diffCounters = []): int {
         $db = Database::getConnection();
-        $db->prepare("DELETE FROM project_roadmap_items WHERE project_id = :id")->execute([':id' => $projectId]);
 
-        $stmt = $db->prepare(
-            "INSERT INTO project_roadmap_items
-                (project_id, file, line, text, status, priority, last_seen_at, api_contract_version)
-             VALUES
-                (:project_id, :file, :line, :text, :status, :priority, :last_seen_at, :api_contract_version)"
-        );
+        // 1. Load existing items — key = "file:line:text"
+        $existing = [];
+        $stmt = $db->prepare("SELECT file, line, text, status FROM project_roadmap_items WHERE project_id = :id");
+        $stmt->execute([':id' => $projectId]);
+        foreach ($stmt->fetchAll() as $row) {
+            $key = $row['file'] . ':' . $row['line'] . ':' . trim((string) $row['text']);
+            $existing[$key] = (string) $row['status'];
+        }
 
-        $now   = gmdate('Y-m-d H:i:s');
-        $count = 0;
+        // 2. Build merged list
+        $now    = gmdate('Y-m-d H:i:s');
+        $merged = [];
+        $newCount  = 0;
+        $keptCount = 0;
+
         foreach ($items as $item) {
             $file = (string) ($item['file'] ?? '');
             $text = trim((string) ($item['text'] ?? ''));
             if ($file === '' && $text === '') continue;
 
-            $stmt->execute([
-                ':project_id'           => $projectId,
-                ':file'                 => $file,
-                ':line'                 => (int) ($item['line'] ?? 0),
-                ':text'                 => $text,
-                ':status'               => (string) ($item['status']   ?? 'open'),
-                ':priority'             => (string) ($item['priority'] ?? 'normal'),
-                ':last_seen_at'         => $now,
-                ':api_contract_version' => $apiContractVersion,
-            ]);
-            $count++;
+            $key            = $file . ':' . (int) ($item['line'] ?? 0) . ':' . $text;
+            $incomingStatus = (string) ($item['status'] ?? 'open');
+
+            if (isset($existing[$key])) {
+                // Preserve manual done — only override if the API explicitly marks it done too
+                $effectiveStatus = ($existing[$key] === 'done') ? 'done' : $incomingStatus;
+                $keptCount++;
+            } else {
+                $effectiveStatus = $incomingStatus;
+                $newCount++;
+            }
+
+            $merged[] = [
+                'file'     => $file,
+                'line'     => (int) ($item['line'] ?? 0),
+                'text'     => $text,
+                'status'   => $effectiveStatus,
+                'priority' => (string) ($item['priority'] ?? 'normal'),
+            ];
         }
-        return $count;
+
+        $removedCount = max(0, count($existing) - $keptCount);
+
+        // 3. Replace all rows inside a transaction
+        $db->beginTransaction();
+        try {
+            $db->prepare("DELETE FROM project_roadmap_items WHERE project_id = :id")->execute([':id' => $projectId]);
+
+            $insertStmt = $db->prepare(
+                "INSERT INTO project_roadmap_items
+                    (project_id, file, line, text, status, priority, last_seen_at, api_contract_version)
+                 VALUES
+                    (:project_id, :file, :line, :text, :status, :priority, :last_seen_at, :api_contract_version)"
+            );
+
+            foreach ($merged as $m) {
+                $insertStmt->execute([
+                    ':project_id'           => $projectId,
+                    ':file'                 => $m['file'],
+                    ':line'                 => $m['line'],
+                    ':text'                 => $m['text'],
+                    ':status'               => $m['status'],
+                    ':priority'             => $m['priority'],
+                    ':last_seen_at'         => $now,
+                    ':api_contract_version' => $apiContractVersion,
+                ]);
+            }
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
+
+        $diffCounters = ['new' => $newCount, 'kept' => $keptCount, 'removed' => $removedCount];
+        return count($merged);
+    }
+
+    /**
+     * Manually set the status of a single roadmap item.
+     * Used by the admin toggle to mark items done/open without triggering a re-sync.
+     */
+    public function setStatus(int $itemId, string $status): bool {
+        $status = in_array($status, ['open', 'done'], true) ? $status : 'open';
+        $stmt   = Database::getConnection()->prepare(
+            "UPDATE project_roadmap_items SET status = :status WHERE id = :id"
+        );
+        $stmt->execute([':status' => $status, ':id' => $itemId]);
+        return $stmt->rowCount() > 0;
     }
 
     public function logSync(int $projectId, int $itemCount, string $apiContractVersion, bool $success, ?string $error = null): void {

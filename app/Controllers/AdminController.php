@@ -140,6 +140,9 @@ class AdminController {
                 Auth::requireOwner();
                 $this->routeRoadmap($isPost);
                 break;
+            case 'project-roadmap-items':
+                $this->routeProjectRoadmapItems($action, $id, $isPost);
+                break;
             case 'telemetry':
                 Auth::requireOwner();
                 $this->routeTelemetry();
@@ -671,6 +674,55 @@ class AdminController {
     // ═══════════════════════════════════════════════════════════════════════
     // PROJECTS
     // ═══════════════════════════════════════════════════════════════════════
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PROJECT ROADMAP ITEMS (manual status toggle, admin-only)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function routeProjectRoadmapItems(string $action, ?int $id, bool $isPost): void {
+        $projectId = isset($_GET['project_id']) ? (int) $_GET['project_id'] : 0;
+
+        // POST toggle: set a single item open or done
+        if ($action === 'toggle' && $isPost && $id !== null) {
+            if (!Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
+                $this->csrfFail('?page=admin&section=project-roadmap-items&project_id=' . $projectId);
+                return;
+            }
+            $newStatus = ($_POST['status'] ?? '') === 'done' ? 'done' : 'open';
+            (new \ProjectRoadmapModel())->setStatus($id, $newStatus);
+            $this->flash('success', 'Roadmap item bijgewerkt.');
+            header('Location: ?page=admin&section=project-roadmap-items&project_id=' . $projectId);
+            exit;
+        }
+
+        // Default: list items for the given project
+        if ($projectId <= 0) {
+            $this->flash('error', 'Geen geldig project_id opgegeven.');
+            header('Location: ?page=admin&section=projects');
+            exit;
+        }
+
+        $project = $this->projects->getById($projectId);
+        if (!$project) {
+            $this->flash('error', 'Project niet gevonden.');
+            header('Location: ?page=admin&section=projects');
+            exit;
+        }
+
+        try {
+            $model = new \ProjectRoadmapModel();
+            $items = $model->getByProjectId($projectId);
+        } catch (\Throwable $e) {
+            $items = [];
+        }
+
+        $flash = $this->popFlash();
+        $this->renderAdmin(
+            'projects/roadmap-items',
+            compact('project', 'items', 'flash', 'projectId'),
+            'Roadmap items — ' . htmlspecialchars((string) ($project['title_nl'] ?? $project['slug']))
+        );
+    }
 
     private function routeProjects(string $action, ?int $id, bool $isPost): void {
         switch ($action) {
