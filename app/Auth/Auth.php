@@ -164,6 +164,11 @@ class Auth {
         return true;
     }
 
+    /** Store a DB user row in session using the canonical auth payload shape. */
+    public static function setSessionUser(array $user): void {
+        $_SESSION['auth_user'] = self::makeSessionUser($user);
+    }
+
     /** Destroy the auth session and regenerate the session ID. */
     public static function logout(): void {
         unset($_SESSION['auth_user']);

@@ -11,6 +11,10 @@
                 <div class="flash error"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
 
+            <?php if (!empty($flash)): ?>
+                <div class="flash success"><?= htmlspecialchars((string) $flash) ?></div>
+            <?php endif; ?>
+
             <form method="POST" action="?page=login" class="auth-form-inner">
                 <?= \Auth::csrfField() ?>
                 <?php if ($redirect): ?>
@@ -37,6 +41,9 @@
                 </button>
 
                 <div class="auth-links">
+                    <a href="?page=forgot-password" class="auth-link">
+                        <i class="fas fa-key"></i> <?= trans('auth_forgot_password') ?>
+                    </a>
                     <a href="?page=register" class="auth-link">
                         <i class="fas fa-user-plus"></i> <?= trans('auth_no_account_register') ?>
                     </a>

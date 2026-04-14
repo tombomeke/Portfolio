@@ -56,6 +56,21 @@ class UserModel {
         return $stmt->fetch() ?: null;
     }
 
+    public function getByEmail(string $email): ?array {
+        $db = Database::getConnection();
+        try {
+            $stmt = $db->prepare(
+                "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, email_notifications, created_at
+                 FROM users WHERE email = :email LIMIT 1"
+            );
+            $stmt->execute([':email' => $email]);
+        } catch (\PDOException $e) {
+            $stmt = $db->prepare("SELECT id, username, email, role, created_at FROM users WHERE email = :email LIMIT 1");
+            $stmt->execute([':email' => $email]);
+        }
+        return $stmt->fetch() ?: null;
+    }
+
     public function updateProfile(int $id, array $data): void {
         $db = Database::getConnection();
         $db->prepare(
@@ -91,6 +106,19 @@ class UserModel {
             ':email_notifications' => $emailNotifications ? 1 : 0,
             ':id' => $id,
         ]);
+    }
+
+    public function setPreferredLanguage(int $id, string $preferredLanguage): void {
+        try {
+            Database::getConnection()->prepare(
+                "UPDATE users SET preferred_language = :preferred_language, updated_at = NOW() WHERE id = :id"
+            )->execute([
+                ':preferred_language' => $preferredLanguage === 'en' ? 'en' : 'nl',
+                ':id' => $id,
+            ]);
+        } catch (\PDOException $e) {
+            // Older databases without preferred_language should keep working.
+        }
     }
 
     public function updatePassword(int $id, string $password): void {

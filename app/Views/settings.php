@@ -39,6 +39,12 @@
                             <span><?= trans('settings_email_notifications_hint') ?></span>
                         </label>
                     </div>
+
+                    <div class="form-group" style="grid-column:1/-1">
+                        <label for="current_password"><?= trans('settings_current_password') ?></label>
+                        <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
+                        <small class="settings-hint"><?= trans('settings_current_password_hint') ?></small>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <?= trans('settings_save') ?></button>

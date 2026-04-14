@@ -36,6 +36,12 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
                 </div>
                 <?php else: ?>
                 <form method="POST" action="index.php?page=contact" class="contact-form">
+                    <?= \Auth::csrfField() ?>
+                    <input type="hidden" name="contact_ts" value="<?= time() ?>">
+                    <div style="display:none !important;" aria-hidden="true">
+                        <label for="company">Company</label>
+                        <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+                    </div>
                     <div class="form-group">
                         <label for="name">
                             <i class="fas fa-user"></i> <span data-translate="contact_name"><?= trans('contact_name') ?></span> *

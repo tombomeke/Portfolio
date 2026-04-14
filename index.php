@@ -68,8 +68,14 @@ try {
 $wipPages = [];
 $wipConfig = __DIR__ . '/app/Config/wip_pages.json';
 if (file_exists($wipConfig)) {
-    // TODO(config): [P2] validate wip_pages.json schema and log malformed JSON instead of silently falling back.
-    $wipPages = json_decode(file_get_contents($wipConfig), true) ?? [];
+    $decodedWipPages = json_decode(file_get_contents($wipConfig), true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedWipPages)) {
+        $wipPages = array_values(array_filter($decodedWipPages, static function ($pageName): bool {
+            return is_string($pageName) && $pageName !== '';
+        }));
+    } else {
+        error_log('Portfolio: invalid wip_pages.json - ' . json_last_error_msg());
+    }
 }
 if (in_array($page, $wipPages, true)) {
     $controller->showWIP($page);
@@ -128,6 +134,18 @@ switch ($page) {
             $controller->handleLogin();
         }
         $controller->showLogin();
+        break;
+    case 'forgot-password':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->handleForgotPassword($_POST);
+        }
+        $controller->showForgotPassword();
+        break;
+    case 'reset-password':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->handleResetPassword($_POST);
+        }
+        $controller->showResetPassword();
         break;
     case 'register':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {

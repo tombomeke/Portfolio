@@ -27,8 +27,10 @@ require_once __DIR__ . '/../Models/NewsModel.php';
 require_once __DIR__ . '/../Models/FaqModel.php';
 require_once __DIR__ . '/../Models/NewsCommentModel.php';
 require_once __DIR__ . '/../Models/SiteSettingModel.php';
+require_once __DIR__ . '/../Models/ActivityLogModel.php';
 require_once __DIR__ . '/../Models/UserModel.php';
 require_once __DIR__ . '/../Models/UserSkillModel.php';
+require_once __DIR__ . '/../Models/PasswordResetTokenModel.php';
 require_once __DIR__ . '/../Models/ReadmeSyncScanLogModel.php';
 require_once __DIR__ . '/../Services/ProjectRoadmapService.php';
 require_once __DIR__ . '/../Auth/Auth.php';
@@ -43,6 +45,7 @@ class PortfolioController {
     private $commentModel;
     private $userModel;
     private $userSkillModel;
+    private $passwordResetTokenModel;
     private $readmeSyncScanLogModel;
     private $projectRoadmapService;
     private $contactRecipient;
@@ -57,6 +60,7 @@ class PortfolioController {
         $this->commentModel   = new NewsCommentModel();
         $this->userModel      = new UserModel();
         $this->userSkillModel = new UserSkillModel();
+        $this->passwordResetTokenModel = new PasswordResetTokenModel();
         $this->readmeSyncScanLogModel = new ReadmeSyncScanLogModel();
         $this->projectRoadmapService = new ProjectRoadmapService();
         $this->contactRecipient = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com');
@@ -99,7 +103,7 @@ class PortfolioController {
         $r6Stats = $this->gameStatsModel->getR6Stats();
 
         $data = [
-            'title' => 'Gaming Stats',
+            'title' => trans('nav_games'),
             'minecraft' => $mcStats,
             'r6siege' => $r6Stats
         ];
@@ -133,10 +137,8 @@ class PortfolioController {
         }
         unset($p);
 
-        // TODO(i18n): [P3] page titles in showProjects/showProjectRoadmaps/showGames/showNews/showFaq/showContact
-        // are hardcoded strings — replace with trans() calls once keys are added to translations.php.
         $data = [
-            'title'        => 'Projecten',
+            'title'        => trans('nav_projects'),
             'projects'     => $projects,
             'projectModel' => $this->projectModel,
         ];
@@ -201,7 +203,7 @@ class PortfolioController {
         $syncSummary   = $this->projectRoadmapService->getSyncSummary($projectIds);
 
         $this->render('project-roadmaps', [
-            'title'         => 'Project Roadmaps',
+            'title'         => trans('project_roadmaps_title'),
             'projects'      => $projects,
             'roadmapsByKey' => $roadmapsByKey,
             'syncSummary'   => $syncSummary,
@@ -212,7 +214,7 @@ class PortfolioController {
         // TODO(settings): done - contact_form_enabled gate respected; shows disabled-state when setting is off.
         $contactEnabled = (bool) SiteSettingModel::get('contact_form_enabled', true);
         $data = [
-            'title'          => 'Contact',
+            'title'          => trans('nav_contact'),
             'success'        => $_SESSION['contact_success'] ?? false,
             'error'          => $_SESSION['contact_error'] ?? false,
             'contactEnabled' => $contactEnabled,
@@ -229,17 +231,34 @@ class PortfolioController {
             exit;
         }
 
-        // TODO(security): [P2] add rate limiting / honeypot field to prevent contact form spam
-        // TODO(input): [P2] sanitizeInput() applies htmlspecialchars() before storage, causing double-encoding
-        // TODO(i18n): done - Dutch validation/error strings replaced with trans() keys.
-        // when data is displayed later (view would encode again). Use trim() here for storage,
-        // htmlspecialchars() only at display time in the view.
-        $name = $this->sanitizeInput($postData['name'] ?? '');
-        $email = $this->sanitizeInput($postData['email'] ?? '');
-        $message = $this->sanitizeInput($postData['message'] ?? '');
+        if (!Auth::verifyCsrf($postData['_csrf'] ?? '')) {
+            $_SESSION['contact_error'] = trans('contact_security_token_invalid');
+            header('Location: ?page=contact');
+            exit;
+        }
+
+        if (!$this->canSubmitContact()) {
+            $_SESSION['contact_error'] = trans('contact_too_many_attempts');
+            header('Location: ?page=contact');
+            exit;
+        }
+
+        $honeypot = trim((string) ($postData['company'] ?? ''));
+        $submittedAt = (int) ($postData['contact_ts'] ?? 0);
+        if ($honeypot !== '' || ($submittedAt > 0 && (time() - $submittedAt) < 2)) {
+            $this->registerContactAttempt();
+            $_SESSION['contact_error'] = trans('contact_spam_detected');
+            header('Location: ?page=contact');
+            exit;
+        }
+
+        // Store trimmed raw values; HTML escaping belongs in the view layer.
+        $name = trim((string) ($postData['name'] ?? ''));
+        $email = trim((string) ($postData['email'] ?? ''));
+        $message = trim((string) ($postData['message'] ?? ''));
 
         if (empty($name) || empty($email) || empty($message)) {
-            $_SESSION['contact_error'] = trans('form_all_required');
+            $_SESSION['contact_error'] = trans('contact_form_all_required');
             header('Location: ?page=contact');
             exit;
         }
@@ -251,19 +270,21 @@ class PortfolioController {
         }
 
         if (strlen($name) < 2) {
-            $_SESSION['contact_error'] = trans('form_name_short');
+            $_SESSION['contact_error'] = trans('contact_name_short');
             header('Location: ?page=contact');
             exit;
         }
 
         if (strlen($message) < 10) {
-            $_SESSION['contact_error'] = trans('form_message_short');
+            $_SESSION['contact_error'] = trans('contact_message_short');
             header('Location: ?page=contact');
             exit;
         }
 
+        $this->registerContactAttempt();
+
         if (!function_exists('mail')) {
-            $_SESSION['contact_error'] = trans('form_mail_unavailable') . $this->contactRecipient;
+            $_SESSION['contact_error'] = trans('contact_mail_unavailable') . $this->contactRecipient;
             header('Location: ?page=contact');
             exit;
         }
@@ -289,7 +310,7 @@ class PortfolioController {
         $headerString = implode("\r\n", $headers);
 
         // Always save to database so nothing is lost
-        $this->contactModel->save(trim($postData['name']), trim($postData['email']), trim($postData['message']));
+        $this->contactModel->save($name, $email, $message);
 
         if (mail($to, $subject, $emailBody, $headerString)) {
             $_SESSION['contact_success'] = trans('contact_success_sent');
@@ -331,7 +352,7 @@ class PortfolioController {
         $items     = $this->newsModel->getAll($lang, $perPage, $offset, $activeTag ?: null);
 
         $this->render('news', [
-            'title'      => 'News',
+            'title'      => trans('nav_news'),
             'items'      => $items,
             'page'       => $page,
             'totalPages' => (int) ceil($total / $perPage),
@@ -464,11 +485,6 @@ class PortfolioController {
             exit;
         }
 
-        // TODO(security): [P2] require current password confirmation before sensitive settings updates (email/password/profile security fields).
-        // Rotate CSRF token on every successful settings POST to shrink the replay window.
-        Auth::rotateCsrf();
-
-
         $authUser = Auth::user();
         $action = (string) ($post['settings_action'] ?? 'profile');
 
@@ -523,12 +539,27 @@ class PortfolioController {
             exit;
         }
 
+        $currentPassword = (string) ($post['current_password'] ?? '');
+        if ($currentPassword === '') {
+            $_SESSION['settings_flash'] = ['type' => 'error', 'message' => trans('settings_current_password_required')];
+            header('Location: ?page=settings');
+            exit;
+        }
+
+        if (!$this->userModel->verifyPassword((int) $authUser['id'], $currentPassword)) {
+            $_SESSION['settings_flash'] = ['type' => 'error', 'message' => trans('settings_current_password_invalid')];
+            header('Location: ?page=settings');
+            exit;
+        }
+
         // TODO(profile): done - Added missing email notification preference in user settings migration.
         // TODO(profile): [P3] add optional timezone setting support (users.timezone) and persist it in updateSettings().
         $preferredLanguage = (string) ($post['preferred_language'] ?? 'nl');
         $publicProfile = isset($post['public_profile']) && $post['public_profile'] === '1';
         $emailNotifications = isset($post['email_notifications']) && $post['email_notifications'] === '1';
         $this->userModel->updateSettings((int) $authUser['id'], $preferredLanguage, $publicProfile, $emailNotifications);
+
+        Auth::rotateCsrf();
 
         $_SESSION['auth_user']['preferred_language'] = $preferredLanguage === 'en' ? 'en' : 'nl';
         $_SESSION['settings_flash'] = ['type' => 'success', 'message' => 'Settings opgeslagen.'];
@@ -548,8 +579,137 @@ class PortfolioController {
             'title'    => 'Inloggen',
             'redirect' => $redirect,
             'error'    => $_SESSION['login_error'] ?? null,
+            'flash'    => $_SESSION['login_flash'] ?? ($_SESSION['reset_password_flash'] ?? null),
         ]);
-        unset($_SESSION['login_error']);
+        unset($_SESSION['login_error'], $_SESSION['login_flash'], $_SESSION['reset_password_flash']);
+    }
+
+    public function showForgotPassword(): void {
+        if (Auth::check()) {
+            header('Location: ?page=home');
+            exit;
+        }
+
+        $this->render('forgot-password', [
+            'title' => trans('auth_forgot_password_title'),
+            'error' => $_SESSION['forgot_password_error'] ?? null,
+            'flash' => $_SESSION['forgot_password_flash'] ?? null,
+        ]);
+        unset($_SESSION['forgot_password_error'], $_SESSION['forgot_password_flash']);
+    }
+
+    public function handleForgotPassword(array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) {
+            $_SESSION['forgot_password_error'] = 'Ongeldig beveiligingstoken.';
+            header('Location: ?page=forgot-password');
+            exit;
+        }
+
+        $email = trim((string) ($post['email'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['forgot_password_error'] = trans('form_email_invalid');
+            header('Location: ?page=forgot-password');
+            exit;
+        }
+
+        $user = $this->userModel->getByEmail($email);
+        if ($user && !empty($user['id'])) {
+            $tokenData = $this->passwordResetTokenModel->createForUser((int) $user['id'], (string) $email, 60);
+            $resetUrl = $this->buildAbsoluteUrl('?page=reset-password&token=' . urlencode((string) $tokenData['token']));
+
+            if (function_exists('mail')) {
+                $subject = trans('auth_reset_email_subject');
+                $body = trans('auth_reset_email_body_prefix') . "\r\n\r\n" . $resetUrl . "\r\n\r\n" . $this->buildResetEmailFooter();
+                @mail($email, $subject, $body, $this->buildMailHeaders());
+            }
+        }
+
+        $_SESSION['forgot_password_flash'] = trans('auth_reset_link_sent');
+        header('Location: ?page=forgot-password');
+        exit;
+    }
+
+    public function showResetPassword(): void {
+        if (Auth::check()) {
+            header('Location: ?page=home');
+            exit;
+        }
+
+        $token = trim((string) ($_GET['token'] ?? ''));
+        $tokenRow = $token !== '' ? $this->passwordResetTokenModel->findValidToken($token) : null;
+
+        $this->render('reset-password', [
+            'title' => trans('auth_reset_password_title'),
+            'token' => $token,
+            'error' => $_SESSION['reset_password_error'] ?? null,
+            'flash' => $_SESSION['reset_password_flash'] ?? null,
+            'tokenValid' => (bool) $tokenRow,
+        ]);
+        unset($_SESSION['reset_password_error'], $_SESSION['reset_password_flash']);
+    }
+
+    public function handleResetPassword(array $post): void {
+        if (!Auth::verifyCsrf($post['_csrf'] ?? '')) {
+            $_SESSION['reset_password_error'] = 'Ongeldig beveiligingstoken.';
+            header('Location: ?page=reset-password');
+            exit;
+        }
+
+        $token = trim((string) ($post['token'] ?? ''));
+        $password = (string) ($post['password'] ?? '');
+        $passwordConfirmation = (string) ($post['password_confirmation'] ?? '');
+
+        if ($token === '') {
+            $_SESSION['reset_password_error'] = trans('auth_reset_token_missing');
+            header('Location: ?page=reset-password');
+            exit;
+        }
+
+        $tokenRow = $this->passwordResetTokenModel->findValidToken($token);
+        if (!$tokenRow) {
+            $_SESSION['reset_password_error'] = trans('auth_reset_invalid');
+            header('Location: ?page=reset-password');
+            exit;
+        }
+
+        if (strlen($password) < 8) {
+            $_SESSION['reset_password_error'] = trans('auth_reset_password_short');
+            header('Location: ?page=reset-password&token=' . urlencode($token));
+            exit;
+        }
+
+        if ($password !== $passwordConfirmation) {
+            $_SESSION['reset_password_error'] = trans('auth_reset_password_mismatch');
+            header('Location: ?page=reset-password&token=' . urlencode($token));
+            exit;
+        }
+
+        $this->userModel->updatePassword((int) $tokenRow['user_id'], $password);
+        $this->passwordResetTokenModel->consume((int) $tokenRow['id']);
+
+        $_SESSION['reset_password_flash'] = trans('auth_reset_success');
+        header('Location: ?page=login');
+        exit;
+    }
+
+    private function buildAbsoluteUrl(string $path): string {
+        $configuredBaseUrl = rtrim(trim((string) portfolioEnv('PORTFOLIO_APP_URL', '')), '/');
+        if ($configuredBaseUrl !== '') {
+            return $configuredBaseUrl . '/' . ltrim($path, '/');
+        }
+
+        $scheme = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https' : 'http';
+        $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        return $scheme . '://' . $host . '/' . ltrim($path, '/');
+    }
+
+    private function buildResetEmailFooter(): string {
+        return 'If you did not request this reset, you can ignore this email.';
+    }
+
+    private function buildMailHeaders(): string {
+        $from = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', $this->contactRecipient);
+        return "From: {$from}\r\nReply-To: {$from}\r\nContent-Type: text/plain; charset=UTF-8";
     }
 
     public function handleLogin(): void {
@@ -599,7 +759,6 @@ class PortfolioController {
     }
 
     public function showRegister(): void {
-        // TODO(profile): Ask for preferred language during signup or derive it from the current site language instead of defaulting to Dutch.
         if (Auth::check()) {
             header('Location: ?page=home');
             exit;
@@ -646,6 +805,7 @@ class PortfolioController {
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         $confirm  = $_POST['password_confirmation'] ?? '';
+        $preferredLanguage = Translations::getCurrentLang() === 'en' ? 'en' : 'nl';
 
         $_SESSION['register_old'] = ['name' => $name, 'email' => $email];
 
@@ -677,17 +837,14 @@ class PortfolioController {
 
         try {
             $id = $this->userModel->createPublicUser($name, $email, $password);
+            $this->userModel->setPreferredLanguage($id, $preferredLanguage);
             $user = $this->userModel->getById($id);
+            if (!$user) {
+                throw new \RuntimeException('Created user could not be loaded');
+            }
+            $user['preferred_language'] = $preferredLanguage;
             session_regenerate_id(true);
-            // TODO(auth): [P3] use Auth::makeSessionUser($user) here instead of manually building the
-            // session payload — keeps session shape consistent with login() and avoids missing
-            // fields (profile_photo_path, preferred_language) that the navbar expects.
-            $_SESSION['auth_user'] = [
-                'id'       => $user['id'],
-                'username' => $user['username'],
-                'email'    => $user['email'],
-                'role'     => $user['role'],
-            ];
+            Auth::setSessionUser($user);
             unset($_SESSION['register_old']);
             header('Location: ?page=home');
             exit;
@@ -701,7 +858,7 @@ class PortfolioController {
     public function showFaq() {
         $lang = Translations::getCurrentLang();
         $this->render('faq', [
-            'title'      => 'FAQ',
+            'title'      => trans('nav_faq'),
             'categories' => $this->faqModel->getAllWithItems($lang),
         ]);
     }
@@ -1016,6 +1173,30 @@ class PortfolioController {
         }
     }
 
+    private function canSubmitContact(): bool {
+        $windowSeconds = 600;
+        $maxAttempts = 5;
+        $now = time();
+        $record = $_SESSION['contact_attempts'] ?? null;
+
+        if (!is_array($record) || empty($record['first_at']) || ($now - (int) $record['first_at']) > $windowSeconds) {
+            $_SESSION['contact_attempts'] = ['count' => 0, 'first_at' => $now];
+            return true;
+        }
+
+        return ((int) ($record['count'] ?? 0)) < $maxAttempts;
+    }
+
+    private function registerContactAttempt(): void {
+        $now = time();
+        $record = $_SESSION['contact_attempts'] ?? ['count' => 0, 'first_at' => $now];
+        if (($now - (int) ($record['first_at'] ?? $now)) > 600) {
+            $record = ['count' => 0, 'first_at' => $now];
+        }
+        $record['count'] = (int) ($record['count'] ?? 0) + 1;
+        $_SESSION['contact_attempts'] = $record;
+    }
+
     private function getPageLabel($page) {
         $labels = [
             'home' => trans('nav_about'),
@@ -1042,68 +1223,141 @@ class PortfolioController {
      * Token-protected cron endpoint for periodic roadmap sync.
      * Call via: GET ?page=cron-sync-roadmaps&token=SECRET
      * Set CRON_SYNC_TOKEN as an environment variable on the server.
+     * Min interval is configured in admin site settings (cron_sync_min_interval_seconds).
      * Returns JSON — not meant for browser viewing.
      */
     public function cronSyncRoadmaps(): void {
         header('Content-Type: application/json');
 
+        $runId = bin2hex(random_bytes(8));
+        $minIntervalSeconds = $this->getCronSyncMinIntervalSeconds();
+
         $token    = trim((string) ($_GET['token'] ?? ''));
         $envToken = trim((string) portfolioEnv('CRON_SYNC_TOKEN'));
 
         if ($envToken === '' || $token !== $envToken) {
+            $this->logCronSyncEvent('unauthorized', [
+                'run_id' => $runId,
+                'min_interval_seconds' => $minIntervalSeconds,
+                'token_configured' => $envToken !== '',
+            ]);
             http_response_code(403);
             echo json_encode(['ok' => false, 'error' => 'Unauthorized']);
             exit;
         }
 
-        // Rate-limit: refuse if the last successful global sync was less than 60 minutes ago.
+        // Rate-limit: refuse if the last successful global sync was too recent.
+        $lastRun = null;
         try {
             $db     = \Database::getConnection();
             $lastRun = $db->query(
                 "SELECT MAX(created_at) FROM project_sync_log WHERE success = 1"
             )->fetchColumn();
 
-            if ($lastRun && (time() - strtotime((string) $lastRun)) < 3600) {
+            if ($lastRun && (time() - strtotime((string) $lastRun)) < $minIntervalSeconds) {
+                $this->logCronSyncEvent('skipped', [
+                    'run_id' => $runId,
+                    'reason' => 'too_soon',
+                    'last_successful_run' => (string) $lastRun,
+                    'min_interval_seconds' => $minIntervalSeconds,
+                ]);
                 http_response_code(429);
                 echo json_encode([
                     'ok'     => false,
                     'status' => 'skipped',
                     'reason' => 'too_soon',
                     'last_run' => $lastRun,
+                    'min_interval_seconds' => $minIntervalSeconds,
+                    'run_id' => $runId,
                 ]);
                 exit;
             }
         } catch (\Throwable $e) {
             // DB unavailable — skip the check and let sync proceed
+            $this->logCronSyncEvent('warning', [
+                'run_id' => $runId,
+                'reason' => 'rate_limit_check_failed',
+                'error' => $e->getMessage(),
+                'min_interval_seconds' => $minIntervalSeconds,
+            ]);
         }
 
         @set_time_limit(120);
 
-        $projects = $this->projectModel->getAllProjects();
-        $synced = 0; $failed = 0; $skipped = 0; $results = [];
+        try {
+            $projects = $this->projectModel->getAllProjects();
+            $synced = 0; $failed = 0; $skipped = 0; $results = [];
 
-        foreach ($projects as $project) {
-            $repoUrl = trim((string) ($project['repo_url'] ?? ''));
-            if ($repoUrl === '') { $skipped++; continue; }
+            foreach ($projects as $project) {
+                $repoUrl = trim((string) ($project['repo_url'] ?? ''));
+                if ($repoUrl === '') {
+                    $skipped++;
+                    continue;
+                }
 
-            $result = $this->projectRoadmapService->syncProjectRoadmap($project);
-            if ($result['ok'] ?? false) {
-                $synced++;
-                $results[] = ['slug' => $project['slug'], 'ok' => true, 'items' => $result['itemCount'] ?? 0];
-            } else {
-                $failed++;
-                $results[] = ['slug' => $project['slug'], 'ok' => false, 'error' => $result['error'] ?? ''];
+                $result = $this->projectRoadmapService->syncProjectRoadmap($project);
+                if ($result['ok'] ?? false) {
+                    $synced++;
+                    $results[] = ['slug' => $project['slug'], 'ok' => true, 'items' => $result['itemCount'] ?? 0];
+                } else {
+                    $failed++;
+                    $results[] = ['slug' => $project['slug'], 'ok' => false, 'error' => $result['error'] ?? ''];
+                }
             }
-        }
 
-        echo json_encode([
-            'ok'      => true,
-            'synced'  => $synced,
-            'failed'  => $failed,
-            'skipped' => $skipped,
-            'results' => $results,
-        ]);
+            $this->logCronSyncEvent('completed', [
+                'run_id' => $runId,
+                'project_count' => count($projects),
+                'synced' => $synced,
+                'failed' => $failed,
+                'skipped' => $skipped,
+                'last_successful_run' => $lastRun,
+                'min_interval_seconds' => $minIntervalSeconds,
+            ]);
+
+            echo json_encode([
+                'ok'      => true,
+                'synced'  => $synced,
+                'failed'  => $failed,
+                'skipped' => $skipped,
+                'results' => $results,
+                'min_interval_seconds' => $minIntervalSeconds,
+                'run_id' => $runId,
+            ]);
+        } catch (\Throwable $e) {
+            $this->logCronSyncEvent('failed', [
+                'run_id' => $runId,
+                'error' => $e->getMessage(),
+                'min_interval_seconds' => $minIntervalSeconds,
+            ]);
+            http_response_code(500);
+            echo json_encode([
+                'ok' => false,
+                'error' => 'Cron sync failed',
+                'run_id' => $runId,
+                'min_interval_seconds' => $minIntervalSeconds,
+            ]);
+        }
         exit;
+    }
+
+    private function getCronSyncMinIntervalSeconds(): int {
+        $value = (int) SiteSettingModel::get('cron_sync_min_interval_seconds', 3600);
+        return max(60, min(86400, $value));
+    }
+
+    private function logCronSyncEvent(string $status, array $data): void {
+        ActivityLogModel::log(
+            'cron_sync',
+            'Cron roadmap sync ' . $status,
+            'cron_sync',
+            null,
+            $data + [
+                'status' => $status,
+                'ip' => (string) ($_SERVER['REMOTE_ADDR'] ?? ''),
+                'user_agent' => substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 200),
+            ]
+        );
     }
 }
 ?>
