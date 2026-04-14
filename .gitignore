@@ -38,6 +38,9 @@ dist/
 build/
 coverage/
 
+# Local agent/editor state
+.claude/settings.local.json
+
 # Local cache artifacts
 cache/*.tmp
 cache/*.log

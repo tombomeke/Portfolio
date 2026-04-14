@@ -302,8 +302,7 @@ class PortfolioController {
     }
 
     public function downloadCV() {
-        // TODO(download): done - stub guard added; real CV file still needed at public/files/CV_JouwNaam.pdf.
-        // Replace the file when the actual CV is ready; the download will work immediately.
+        // TODO(download): Replace the placeholder CV PDF with the real file and verify the download route.
         $file = __DIR__ . '/../../public/files/CV_JouwNaam.pdf';
 
         // Refuse to serve a placeholder/empty file (< 1 KB is treated as a stub)

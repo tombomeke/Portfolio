@@ -208,16 +208,19 @@ Dit is externe feedback uit een gebruikers-test. Sommige punten zijn al opgelost
 - [P2] `TODO(news)`: Verify comment post/refresh flow so new comments are visible immediately after submit.
 - [P2] `TODO(projects)`: Remove or replace the Portfolio Website demo link and use a real website screenshot instead of Minecraft art.
 - [P2] `TODO(dev-life)`: Deduplicate repeated Dev Life entries and trim misleading level labels.
-- [P2] `TODO(i18n)`: Finish the English audit on the contact page and remove remaining hardcoded labels.
 - [P2] `TODO(download)`: Replace the placeholder CV PDF with the real file and verify the download route.
-- [P2] `TODO(ui)`: Verify the footer mail button and remove it if the mailto target is not useful.
-- [P2] `TODO(content)`: Replace the placeholder FAQ content or remove the FAQ section entirely.
-- [P3] `TODO(ui)`: Remove the optional green Live badge from ReadmeSync if it does not add value.
-- [P3] `TODO(nav)`: Remove Games from public navigation while the section stays WIP.
 - [P2] `TODO(dev-life)`: Fill or remove the blank Education & Certificates and Current Learning Goals sections.
-- [P1] `TODO(upload)`: Audit profile image uploads for MIME validation, metadata stripping, and payload hardening.
+- [P2] `TODO(content)`: Replace the placeholder FAQ content or remove the FAQ section entirely.
 - [P3] `TODO(profile)`: Ask for preferred language during signup or derive it from the current site language instead of defaulting to Dutch.
 - [P3] `TODO(content)`: Reframe News as blog/articles if that matches the site direction better.
+
+**Opgelost in TODO sweep (April 2026)**
+- [x] `TODO(upload)`: Audit profile image uploads for MIME validation — extension now derived from validated MIME map; Uploads::safeDelete() blocks path traversal deletes.
+- [x] `TODO(i18n)`: Finish the English audit on the contact page — E-mail/LinkedIn/GitHub headings + PDF suffix use trans() keys.
+- [x] `TODO(ui)`: Footer mail button guarded on empty PORTFOLIO_CONTACT_EMAIL env var.
+- [x] `TODO(ui)`: Green Live badge removed from ReadmeSync header.
+- [x] `TODO(nav)`: Games removed from public nav while section is WIP.
+- [x] `TODO(projects)`: Portfolio Website demo_url set to NULL (migrate_v4.sql for prod); old link was stale placeholder.
 
 **Al opgelost / eerder afgerond**
 - Admin dashboard/admin route hardening en role checks.
@@ -299,13 +302,22 @@ Open TODO's (volgende iteraties):
 - [x] `TODO(ui)`: Snelle admin-link toegevoegd naar eigen publieke profiel (sidebar account sectie)
 
 **Roadmap / ReadmeSync**
-- [P2] `TODO(roadmap)`: Roadmap items handmatig markeren als done/open in admin (zonder re-sync)
-- [P2] `TODO(roadmap)`: Diff/versiehistoriek per sync — "nieuw vs. verdwenen items" badge → `ProjectRoadmapModel::upsertFromSync()`
-- [P2] `TODO(roadmap)`: Preserve manually-set 'done' status across syncs → `ProjectRoadmapModel::upsertFromSync()`
-- [P1] `TODO(roadmap)`: Retry met exponential backoff bij API-fouten → `ProjectRoadmapService::syncProjectRoadmap()`
+- [x] `TODO(roadmap)`: Roadmap items handmatig markeren als done/open in admin — `?page=admin&section=project-roadmap-items&project_id=N`
+- [x] `TODO(roadmap)`: Diff counters (new/kept/removed) per sync — returned by `ProjectRoadmapModel::upsertFromSync()`
+- [x] `TODO(roadmap)`: Preserve manually-set 'done' status across syncs — implemented in `upsertFromSync()`
+- [x] `TODO(roadmap)`: Retry met exponential backoff bij API-fouten — 3 attempts, 0/400/1200ms, bails on 4xx
 - [P3] `TODO(roadmap)`: Optional "target section" input voor admin roadmap parser → `AdminController.php:~1595`
 - [P3] `TODO(roadmap)`: Keep source line numbers in roadmap UI traceability → `AdminController.php:~2374`
-- [P2] `TODO(cron)`: Last-run timestamp check om te-frequent cron calls te voorkomen → `PortfolioController::cronSyncRoadmaps()`
+- [x] `TODO(cron)`: Last-run guard in `cronSyncRoadmaps()` — queries MAX(created_at) from project_sync_log; 429 if < 60 min
+
+**Migratiekansen uit backend-web-portfolio**
+- [x] `TODO(settings)`: `contact_form_enabled` gate in `showContact()` + `handleContact()`; disabled-state block in contact.php
+- [x] `TODO(ops)`: `maintenance_mode` gate in `index.php` → renders `app/Views/maintenance.php` (503); admins bypass
+- [P2] `TODO(security)`: Voeg current-password confirm stap toe voor gevoelige settings-updates in `PortfolioController::handleSettings()` — `UserModel::verifyPassword()` now available
+- [P2] `TODO(auth)`: Implementeer token-based forgot-password flow (`password_reset_tokens`) voor self-service account recovery
+- [P3] `TODO(profile)`: Voeg `users.timezone` veld + settings input toe en gebruik het voor toekomstige tijdsweergave
+- [P3] `TODO(email)`: Migreer admin contact replies van plain-text `mail()` naar herbruikbare HTML e-mail templates
+- [P3] `TODO(i18n)`: Overweeg SetLocale-achtige centrale locale resolver i.p.v. verspreide taalchecks in controllers/views
 
 **Gallery / Projects**
 - [P2] `TODO(gallery)`: Drag-and-drop sort_order reordering voor gallery images in admin edit view
@@ -313,19 +325,27 @@ Open TODO's (volgende iteraties):
 
 **Auth / Security**
 - [P3] `TODO(auth)`: E-mailverificatie flow voor nieuw aangemaakte admin accounts
-- [P1] `TODO(upload)`: Server-side MIME type validatie op image uploads (niet alleen extensie)
-- [P1] `TODO(csrf)`: Audit alle admin POST forms — elk form heeft `Auth::csrfField()` + handler verifieert
+- [x] `TODO(upload)`: Server-side MIME type validatie op image uploads — `handleImageUpload()` derives extension from MIME map; `Uploads::safeDelete()` guards unlink
+- [x] `TODO(csrf)`: Audit alle admin POST forms — setup.php gap fixed; all other forms audited and compliant
+- [x] `TODO(csrf)`: Rotate CSRF token na succesvolle gevoelige POST-acties — `Auth::rotateCsrf()` added; wired into admin password change + settings POST
+- [x] `TODO(security)`: Valideer `realpath()` bij `unlink()` — `Uploads::safeDelete()` in `app/Support/Uploads.php`
+- [P2] `TODO(security)`: Voeg SRI (`integrity` + `crossorigin`) toe voor externe CDN assets in publieke layout
 
 **Code kwaliteit / architectuur**
 - [P2] `TODO(cache)`: `GameStatsModel` raakt externe API bij elke pageload — voeg bestandscache toe (10 min TTL)
+- [P2] `TODO(config)`: Valideer `wip_pages.json` schema en log parsefouten i.p.v. stil fallbackgedrag
+- [x] `TODO(performance)`: News tags N+1 fixed — `getTagsForItems()` batch loads tags in one IN query
 
 **i18n**
 - [P3] `TODO(i18n)`: Volledige audit op hardcoded NL strings in views (bekende locaties: `project-detail.php`, `project-roadmaps.php`, admin views)
 - [P3] `TODO(i18n)`: Ontbrekende vertaalsleutels toevoegen voor roadmap UI labels (open/done/high filters, sync timestamp, progress)
+- [P2] `TODO(i18n)`: Vervang hardcoded NL validatie- en foutmeldingen in `PortfolioController::handleContact()` door `trans()` keys
 
 **Tests**
 - [P2] `TODO(test)`: `tests/ProjectImageTest.php` schrijven (gallery CRUD + sort_order)
 - [P2] `TODO(test)`: `tests/ProjectRoadmapModelTest.php` schrijven (upsertFromSync, logSync, getLastSync)
+- [P2] `TODO(test)`: Breid upload tests uit voor mismatched extension vs MIME in `AdminControllerUploadTest.php`
+- [P2] `TODO(test)`: Voeg retry/backoff tests toe voor `ProjectRoadmapService::syncProjectRoadmap()`
 
 Documentatie: `docs/architecture.md`, `docs/readmesync-integration.md`, `docs/database-schema.md`
 
