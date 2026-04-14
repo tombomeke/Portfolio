@@ -466,11 +466,25 @@ class Translations {
             'contact_available_collab' => 'Open voor samenwerkingen',
             'contact_response_time' => 'Reactietijd: binnen 24 uur',
 
+            // Contact methods headings
+            'contact_email_heading'    => 'E-mail',
+            'contact_linkedin_heading' => 'LinkedIn',
+            'contact_github_heading'   => 'GitHub',
+            'contact_cv_pdf_suffix'    => '(PDF)',
+
             // Form Validation
-            'form_required' => 'Dit veld is verplicht',
-            'form_email_invalid' => 'Voer een geldig e-mailadres in',
-            'form_name_short' => 'Naam moet minimaal 2 karakters bevatten',
-            'form_message_short' => 'Bericht moet minimaal 10 karakters bevatten',
+            'form_required'        => 'Dit veld is verplicht',
+            'form_all_required'    => 'Alle velden zijn verplicht.',
+            'form_email_invalid'   => 'Voer een geldig e-mailadres in',
+            'form_name_short'      => 'Naam moet minimaal 2 karakters bevatten',
+            'form_message_short'   => 'Bericht moet minimaal 10 karakters bevatten',
+            'form_mail_unavailable' => 'Mailfunctie is niet beschikbaar op deze server. Mail direct naar ',
+            'contact_success_sent'  => 'Bericht succesvol verzonden! Ik neem zo snel mogelijk contact met je op.',
+            'contact_success_received' => 'Bericht ontvangen! Ik neem zo snel mogelijk contact met je op.',
+
+            // Roadmap UI labels
+            'roadmap_last_sync' => 'Laatste sync',
+            'roadmap_progress'  => 'Voortgang',
 
             // Footer
             'footer_rights' => 'Alle rechten voorbehouden',
@@ -1140,11 +1154,25 @@ class Translations {
             'contact_available_collab' => 'Open for collaborations',
             'contact_response_time' => 'Response time: within 24 hours',
 
+            // Contact methods headings
+            'contact_email_heading'    => 'E-mail',
+            'contact_linkedin_heading' => 'LinkedIn',
+            'contact_github_heading'   => 'GitHub',
+            'contact_cv_pdf_suffix'    => '(PDF)',
+
             // Form Validation
-            'form_required' => 'This field is required',
-            'form_email_invalid' => 'Please enter a valid email address',
-            'form_name_short' => 'Name must be at least 2 characters',
-            'form_message_short' => 'Message must be at least 10 characters',
+            'form_required'        => 'This field is required',
+            'form_all_required'    => 'All fields are required.',
+            'form_email_invalid'   => 'Please enter a valid email address',
+            'form_name_short'      => 'Name must be at least 2 characters',
+            'form_message_short'   => 'Message must be at least 10 characters',
+            'form_mail_unavailable' => 'Mail function is not available on this server. Email directly to ',
+            'contact_success_sent'  => 'Message sent successfully! I\'ll get back to you as soon as possible.',
+            'contact_success_received' => 'Message received! I\'ll get back to you as soon as possible.',
+
+            // Roadmap UI labels
+            'roadmap_last_sync' => 'Last sync',
+            'roadmap_progress'  => 'Progress',
 
             // Footer
             'footer_rights' => 'All rights reserved',

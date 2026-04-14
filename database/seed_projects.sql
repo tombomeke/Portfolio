@@ -18,7 +18,7 @@ INSERT INTO projects (slug, category, status, image_path, repo_url, demo_url, te
     'active',
     'public/images/projects/p2.png',
     'https://github.com/tombomeke/portfolio',
-    'https://tomdekoning.nl',
+    NULL,
     '["PHP","JavaScript","CSS Grid","HTML5"]',
     2
 );

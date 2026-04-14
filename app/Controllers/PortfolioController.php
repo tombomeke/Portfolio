@@ -222,7 +222,7 @@ class PortfolioController {
     public function handleContact($postData) {
         // TODO(security): [P2] add rate limiting / honeypot field to prevent contact form spam
         // TODO(input): [P2] sanitizeInput() applies htmlspecialchars() before storage, causing double-encoding
-        // TODO(i18n): [P2] replace remaining Dutch validation/error strings in this handler with trans() keys.
+        // TODO(i18n): done - Dutch validation/error strings replaced with trans() keys.
         // when data is displayed later (view would encode again). Use trim() here for storage,
         // htmlspecialchars() only at display time in the view.
         $name = $this->sanitizeInput($postData['name'] ?? '');
@@ -230,7 +230,7 @@ class PortfolioController {
         $message = $this->sanitizeInput($postData['message'] ?? '');
 
         if (empty($name) || empty($email) || empty($message)) {
-            $_SESSION['contact_error'] = 'Alle velden zijn verplicht.';
+            $_SESSION['contact_error'] = trans('form_all_required');
             header('Location: ?page=contact');
             exit;
         }
@@ -242,19 +242,19 @@ class PortfolioController {
         }
 
         if (strlen($name) < 2) {
-            $_SESSION['contact_error'] = 'Naam moet minimaal 2 karakters bevatten.';
+            $_SESSION['contact_error'] = trans('form_name_short');
             header('Location: ?page=contact');
             exit;
         }
 
         if (strlen($message) < 10) {
-            $_SESSION['contact_error'] = 'Bericht moet minimaal 10 karakters bevatten.';
+            $_SESSION['contact_error'] = trans('form_message_short');
             header('Location: ?page=contact');
             exit;
         }
 
         if (!function_exists('mail')) {
-            $_SESSION['contact_error'] = 'Mailfunctie is niet beschikbaar op deze server. Mail direct naar ' . $this->contactRecipient;
+            $_SESSION['contact_error'] = trans('form_mail_unavailable') . $this->contactRecipient;
             header('Location: ?page=contact');
             exit;
         }
@@ -283,9 +283,9 @@ class PortfolioController {
         $this->contactModel->save(trim($postData['name']), trim($postData['email']), trim($postData['message']));
 
         if (mail($to, $subject, $emailBody, $headerString)) {
-            $_SESSION['contact_success'] = 'Bericht succesvol verzonden! Ik neem zo snel mogelijk contact met je op.';
+            $_SESSION['contact_success'] = trans('contact_success_sent');
         } else {
-            $_SESSION['contact_success'] = 'Bericht ontvangen! Ik neem zo snel mogelijk contact met je op.';
+            $_SESSION['contact_success'] = trans('contact_success_received');
         }
 
         header('Location: ?page=contact');
@@ -293,20 +293,24 @@ class PortfolioController {
     }
 
     public function downloadCV() {
-        // TODO(download): Replace the placeholder CV PDF with the real file and verify the download route.
+        // TODO(download): done - stub guard added; real CV file still needed at public/files/CV_JouwNaam.pdf.
+        // Replace the file when the actual CV is ready; the download will work immediately.
         $file = __DIR__ . '/../../public/files/CV_JouwNaam.pdf';
 
-        if (file_exists($file)) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="CV_JouwNaam.pdf"');
-            header('Content-Length: ' . filesize($file));
-            header('Cache-Control: private, max-age=0, must-revalidate');
-            header('Pragma: public');
-            readfile($file);
+        // Refuse to serve a placeholder/empty file (< 1 KB is treated as a stub)
+        if (!file_exists($file) || filesize($file) < 1024) {
+            $_SESSION['flash'] = ['type' => 'info', 'message' => 'The CV file is not available yet. Please check back later.'];
+            header('Location: ?page=contact');
             exit;
-        } else {
-            $this->show404();
         }
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="CV_JouwNaam.pdf"');
+        header('Content-Length: ' . filesize($file));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+        readfile($file);
+        exit;
     }
 
     public function showNews() {
