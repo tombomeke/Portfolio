@@ -171,6 +171,8 @@ Short version:
 - Auto-sync runs when a project with `repo_url` is saved in admin.
 - Bulk sync: `?page=admin&section=projects&action=sync-all` (rate-limited to once per 5 min).
 - Cron: `?page=cron-sync-roadmaps&token=CRON_SYNC_TOKEN`.
+- Cron interval is configured via site setting `cron_sync_min_interval_seconds` in admin settings.
+- Cron run events are written to `activity_logs` (action `cron_sync`) and visible in the admin activity log view.
 
 ---
 

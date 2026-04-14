@@ -25,6 +25,7 @@ INSERT INTO site_settings (`key`, value, type, `group`, label, description) VALU
 ('max_login_attempts',           '5', 'integer', 'security', 'Max Login Attempts',          'Login throttle limit'),
 ('contact_rate_limit_enabled',   '1', 'boolean', 'security', 'Enable Contact Rate Limit',   'Protect contact form from spam'),
 ('contact_rate_limit_per_minute','5', 'integer', 'security', 'Contact Rate Limit/minute',   'Max submissions per minute per IP'),
+('cron_sync_min_interval_seconds','3600','integer','security','Cron Sync Min Interval (seconds)','Minimum seconds between successful cron roadmap sync runs'),
 -- UX
 ('default_language',    'nl', 'string',  'ux', 'Default Language',   'Default UI language (nl/en)'),
 ('show_cookie_notice',  '0',  'boolean', 'ux', 'Show Cookie Notice', 'Show cookie banner on first visit')

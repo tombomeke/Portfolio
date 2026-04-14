@@ -82,9 +82,10 @@ GET ?page=cron-sync-roadmaps&token=<CRON_SYNC_TOKEN>
 
 - Token is validated against the `CRON_SYNC_TOKEN` environment variable.
 - Syncs all projects that have a `repo_url`.
-- Returns plain-text status output (not HTML).
+- Returns JSON output (not HTML).
 - A 5-minute cooldown is enforced in `AdminController` for the admin bulk-sync button.
-  The cron endpoint has no server-side cooldown — the cron schedule itself controls frequency.
+- The cron endpoint enforces a server-side minimum interval via site setting `cron_sync_min_interval_seconds` (default 3600).
+- Every cron hit is logged to `activity_logs` with action `cron_sync`, visible in admin activity logs.
 
 ---
 

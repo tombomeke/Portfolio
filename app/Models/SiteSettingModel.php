@@ -58,6 +58,18 @@ class SiteSettingModel {
         }
     }
 
+    public function ensureCronSettings(): void {
+        try {
+            Database::getConnection()->prepare(
+                "INSERT INTO site_settings (`key`, value, type, `group`, label, description)
+                 VALUES ('cron_sync_min_interval_seconds', '3600', 'integer', 'security', 'Cron Sync Min Interval (seconds)', 'Minimum seconds between successful cron roadmap sync runs')
+                 ON DUPLICATE KEY UPDATE `key` = `key`"
+            )->execute();
+        } catch (\Throwable $e) {
+            // Keep settings page usable when seed insert cannot run.
+        }
+    }
+
     public function count(): int {
         try {
             return (int) Database::getConnection()->query("SELECT COUNT(*) FROM site_settings")->fetchColumn();

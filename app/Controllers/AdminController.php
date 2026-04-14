@@ -1498,6 +1498,8 @@ class AdminController {
     // ═══════════════════════════════════════════════════════════════════════
 
     private function routeSettings(string $action, bool $isPost): void {
+        $this->settings->ensureCronSettings();
+
         if ($isPost && Auth::verifyCsrf($_POST['_csrf'] ?? '')) {
             $allSettings = $this->settings->getAll();
             $this->settings->updateAll($_POST, $allSettings);
