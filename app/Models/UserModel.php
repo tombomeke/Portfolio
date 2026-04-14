@@ -27,6 +27,7 @@ class UserModel {
     public function getById(int $id): ?array {
         $db = Database::getConnection();
         try {
+            // TODO(profile): [P3] include users.timezone in this query after timezone migration lands.
             $stmt = $db->prepare(
                 "SELECT id, username, email, role, birthday, profile_photo_path, about, public_profile, preferred_language, email_notifications, created_at
                  FROM users WHERE id = :id LIMIT 1"
@@ -76,6 +77,7 @@ class UserModel {
     }
 
     public function updateSettings(int $id, string $preferredLanguage, bool $publicProfile, bool $emailNotifications): void {
+        // TODO(profile): [P3] extend this update with timezone column once users.timezone migration is added.
         Database::getConnection()->prepare(
             "UPDATE users
              SET preferred_language = :preferred_language,
@@ -95,6 +97,20 @@ class UserModel {
         Database::getConnection()->prepare(
             "UPDATE users SET password=:pass, updated_at=NOW() WHERE id=:id"
         )->execute([':pass' => password_hash($password, PASSWORD_DEFAULT), ':id' => $id]);
+    }
+
+    /**
+     * Verify a plain-text password against the stored hash for a given user.
+     * Use before allowing sensitive settings updates (password change, email change).
+     * Returns false if the user is not found.
+     */
+    public function verifyPassword(int $id, string $plainPassword): bool {
+        $stmt = Database::getConnection()->prepare(
+            "SELECT password FROM users WHERE id = :id LIMIT 1"
+        );
+        $stmt->execute([':id' => $id]);
+        $hash = $stmt->fetchColumn();
+        return is_string($hash) && $hash !== '' && password_verify($plainPassword, $hash);
     }
 
     public function updateRole(int $id, string $role): void {

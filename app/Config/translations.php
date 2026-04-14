@@ -471,6 +471,7 @@ class Translations {
             'contact_linkedin_heading' => 'LinkedIn',
             'contact_github_heading'   => 'GitHub',
             'contact_cv_pdf_suffix'    => '(PDF)',
+            'contact_form_disabled'    => 'Het contactformulier is tijdelijk uitgeschakeld. Neem direct contact op via e-mail.',
 
             // Form Validation
             'form_required'        => 'Dit veld is verplicht',
@@ -1159,6 +1160,7 @@ class Translations {
             'contact_linkedin_heading' => 'LinkedIn',
             'contact_github_heading'   => 'GitHub',
             'contact_cv_pdf_suffix'    => '(PDF)',
+            'contact_form_disabled'    => 'The contact form is temporarily disabled. Please reach out directly via email.',
 
             // Form Validation
             'form_required'        => 'This field is required',

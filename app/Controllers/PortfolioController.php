@@ -209,17 +209,26 @@ class PortfolioController {
     }
 
     public function showContact() {
-        // TODO(settings): [P2] respect contact_form_enabled site setting and show a disabled-state message when contact is turned off.
+        // TODO(settings): done - contact_form_enabled gate respected; shows disabled-state when setting is off.
+        $contactEnabled = (bool) SiteSettingModel::get('contact_form_enabled', true);
         $data = [
-            'title' => 'Contact',
-            'success' => $_SESSION['contact_success'] ?? false,
-            'error' => $_SESSION['contact_error'] ?? false
+            'title'          => 'Contact',
+            'success'        => $_SESSION['contact_success'] ?? false,
+            'error'          => $_SESSION['contact_error'] ?? false,
+            'contactEnabled' => $contactEnabled,
         ];
         unset($_SESSION['contact_success'], $_SESSION['contact_error']);
         $this->render('contact', $data);
     }
 
     public function handleContact($postData) {
+        // Guard: refuse submissions when contact form is disabled via site settings.
+        if (!(bool) SiteSettingModel::get('contact_form_enabled', true)) {
+            http_response_code(403);
+            header('Location: ?page=contact');
+            exit;
+        }
+
         // TODO(security): [P2] add rate limiting / honeypot field to prevent contact form spam
         // TODO(input): [P2] sanitizeInput() applies htmlspecialchars() before storage, causing double-encoding
         // TODO(i18n): done - Dutch validation/error strings replaced with trans() keys.

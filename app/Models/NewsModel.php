@@ -33,12 +33,15 @@ class NewsModel {
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         $rows = $stmt->fetchAll();
+        if (empty($rows)) return $rows;
 
-        // TODO(performance): [P2] remove this N+1 loop by loading tags in one grouped query for listed news IDs.
-        // Attach tags to each item
+        // TODO(performance): done - tags loaded in a single batch query instead of one query per news item.
+        $ids          = array_column($rows, 'id');
+        $tagsByItemId = $this->getTagsForItems($ids);
         foreach ($rows as &$row) {
-            $row['tags'] = $this->getTagsForItem($row['id']);
+            $row['tags'] = $tagsByItemId[$row['id']] ?? [];
         }
+        unset($row);
         return $rows;
     }
 
@@ -89,6 +92,36 @@ class NewsModel {
             );
             $stmt->execute([':id' => $newsItemId]);
             return $stmt->fetchAll();
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Batch load tags for multiple news items in one query.
+     * Returns [news_item_id => [tag, ...]] so callers can avoid N+1 loops.
+     */
+    private function getTagsForItems(array $newsItemIds): array {
+        if (empty($newsItemIds)) return [];
+        try {
+            $db           = Database::getConnection();
+            $placeholders = implode(',', array_fill(0, count($newsItemIds), '?'));
+            $stmt         = $db->prepare(
+                "SELECT nit.news_item_id, t.*
+                   FROM tags t
+                   JOIN news_item_tag nit ON nit.tag_id = t.id
+                  WHERE nit.news_item_id IN ({$placeholders})
+                  ORDER BY t.name ASC"
+            );
+            $stmt->execute(array_values($newsItemIds));
+            $grouped = [];
+            foreach ($stmt->fetchAll() as $row) {
+                $newsId = (int) $row['news_item_id'];
+                // Remove the join key so the shape matches getTagsForItem()
+                unset($row['news_item_id']);
+                $grouped[$newsId][] = $row;
+            }
+            return $grouped;
         } catch (\Throwable $e) {
             return [];
         }

@@ -29,6 +29,12 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
         <div class="contact-content">
             <div class="contact-form-wrapper">
                 <h2 data-translate="contact_send_message"><?= trans('contact_send_message') ?></h2>
+                <?php if (!($contactEnabled ?? true)): ?>
+                <div class="alert alert-info">
+                    <i class="fas fa-ban"></i>
+                    <?= trans('contact_form_disabled') ?>
+                </div>
+                <?php else: ?>
                 <form method="POST" action="index.php?page=contact" class="contact-form">
                     <div class="form-group">
                         <label for="name">
@@ -67,6 +73,7 @@ $contactEmail = portfolioEnv('PORTFOLIO_CONTACT_EMAIL', 'tom1dekoning@gmail.com'
                         <i class="fas fa-paper-plane"></i> <span data-translate="contact_send"><?= trans('contact_send') ?></span>
                     </button>
                 </form>
+                <?php endif; ?>
             </div>
             <div class="contact-info-wrapper">
                 <h2 data-translate="contact_direct"><?= trans('contact_direct') ?></h2>

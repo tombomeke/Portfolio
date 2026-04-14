@@ -52,10 +52,23 @@ if ($page === 'admin' || $page === 'setup') {
 require_once 'app/Controllers/PortfolioController.php';
 $controller = new PortfolioController();
 
+// TODO(ops): done - maintenance_mode gate added; public visitors see maintenance.php; admins/owners bypass it.
+try {
+    require_once 'app/Models/SiteSettingModel.php';
+    if (SiteSettingModel::get('maintenance_mode', '0') === '1' && !Auth::isAdmin()) {
+        http_response_code(503);
+        require 'app/Views/maintenance.php';
+        exit;
+    }
+} catch (\Throwable $e) {
+    // SiteSettingModel or DB unavailable — skip maintenance gate
+}
+
 // Pages temporarily showing WIP — configured via admin panel (?page=admin&section=wip)
 $wipPages = [];
 $wipConfig = __DIR__ . '/app/Config/wip_pages.json';
 if (file_exists($wipConfig)) {
+    // TODO(config): [P2] validate wip_pages.json schema and log malformed JSON instead of silently falling back.
     $wipPages = json_decode(file_get_contents($wipConfig), true) ?? [];
 }
 if (in_array($page, $wipPages, true)) {
